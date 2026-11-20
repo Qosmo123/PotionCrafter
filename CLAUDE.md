@@ -1,0 +1,193 @@
+# CLAUDE.md — 3D Tactile Alchemical & Arcane Physics Sandbox
+
+## 1. Project Vision & Core Pillars
+
+An endlessly emergent, hyper-tactile **3D tabletop physics sandbox** combining **real-world chemistry/thermodynamics** with **systemic arcane magic** and **potion crafting**, built in **Godot 4 (3D)** for **PC** and **Android**.
+
+Every script, 3D scene (`.tscn`), resource (`.tres`), and shader (`.gdshader`) must uphold four pillars:
+
+1. **Emergence Over Hardcoding:** Never hardcode fixed recipe pairs (e.g., `if a == "fire_herb" and b == "water"`). Every reaction, color shift, phase change, explosion, and potion effect must emerge mathematically from continuous physical and arcane property vectors.
+2. **Hyper-Tactile 3D Physicality:** Nothing happens via abstract progress bars or menu clicks. Players physically uncork bottles with pop resistance, grind crystals into dynamic powder piles in a 3D mortar, tilt flasks to pour viscous streams, scratch runes into glass, and feel every clink, bubble, and simmer through coupled audio and haptics.
+3. **Gorgeous, Smartly Scaled 3D Visuals:** Stylized PBR workbench aesthetics, analytical 3D sloshing liquid volumes, glowing arcane precipitates, and GPU particles—scaling cleanly between **PC Forward+** and **Android Vulkan Mobile**.
+4. **Native PC & Android Parity:** Precision mouse/scroll-wheel 3D manipulation on PC and intuitive single-finger drag, two-finger twist/tilt, and haptic touch ergonomics on Android, powered by one unified physics interaction rig.
+
+---
+
+## 2. Tech Stack, Hardware Guardrails & Render Targets
+
+* **Engine:** Godot 4.4+ (3D) with **Jolt Physics 3D** enabled as the default physics backend.
+* **Languages:**
+  * **GDScript (Typed):** Strict static typing (`var temp_kelvin: float = 293.15`) for gameplay, tools, UI, and state orchestration.
+  * **GLSL / `.gdshader`:** Analytical 3D liquid volumes, dual-tier glass shaders, chalk/etching masks, and GPU particle shaders.
+  * **GDExtension (C++ / Rust) [Optional Hotpaths]:** Reserved strictly if cellular powder/gas or multi-vessel network solvers exceed $2.0\text{ ms}$ per frame in GDScript.
+* **Developer Hardware Guardrails (RTX 3060 Ti $8\text{ GB}$ VRAM / $16\text{ GB}$ System RAM):**
+  * Keep project VRAM footprint under $3.5\text{ GB}$ on PC Ultra ($2\text{K}$ max PBR texture atlases, compressed `.ktx2` / Basis Universal textures for mobile/PC parity).
+  * Avoid bloated binary assets or massive uncompressed `.wav` files; keep editor memory lean ($< 3\text{ GB}$ RAM) so Godot, Blender, Android ADB, and Claude Code run concurrently without swap thrashing.
+  * All scenes (`.tscn`) and data assets (`.tres`) must remain **text-encoded** so Claude can inspect, diff, and author nodes cleanly.
+* **Target Runtime Performance:**
+  * **PC (Forward+ Vulkan):** $90\text{--}144\text{ FPS}$ at $1440\text{p}$; volumetric fog, SSR, SDFGI/LightmapGI, chromatic glass refraction, $50,000+$ GPU particles.
+  * **Android (Vulkan Mobile):** Locked $60\text{ FPS}$ on mid-range SoCs; $< 150$ draw calls, $< 250,000$ visible triangles, zero transparent glass overdraw spikes, zero runtime GC allocations.
+
+---
+
+## 3. CLI Build, Test & Verification Commands
+
+Claude should run these headless commands to validate work autonomously:
+
+```bash
+# Validate GDScript static types, scene integrity, and shader compilation
+godot --headless --check-only
+
+# Run deterministic unit, thermodynamics, and conservation-law tests (gdUnit4)
+godot --headless -s addons/gdUnit4/bin/GdUnitCmdTool.gd --add res://tests/
+
+# Run chemical/arcane reaction fuzzer (checks for NaN/Inf & runaway loops)
+godot --headless --script res://tools/fuzz_reactions_3d.gd
+
+# Export PC Debug Build
+godot --headless --export-debug "Windows Desktop" builds/pc/alchemy_3d_debug.exe
+
+# Export Android APK & push to connected test device via ADB
+godot --headless --export-debug "Android" builds/android/alchemy_3d_debug.apk
+adb install -r builds/android/alchemy_3d_debug.apk
+```
+
+---
+
+## 4. 3D Repository Architecture & Physics Layers
+
+```text
+res://
+├── core/
+│   ├── simulation/        # Fixed-tick coordinator, conservation assertions
+│   ├── chemistry/         # Mixture math, pH, enthalpy, phase transitions, solubility
+│   ├── arcana/            # Mana polarity, rune geometry parser, transmutation vectors
+│   └── networks/          # Pressurized tubing graph solver (PV = nRT flow between rigs)
+├── tactile_3d/
+│   ├── grabber/           # 6DoF spring-damper raycast manipulator & gesture router
+│   ├── interactions/      # Uncorking, mortar crushing, stirring vortex, rune stylus
+│   ├── pouring/           # Lip-spill detection, viscous ballistic stream & splash pool
+│   └── audio_haptics/     # Impact velocity -> procedural clink/scrape pitch + Android haptics
+├── world_3d/
+│   ├── vessels/           # Modular flasks, retorts, stoppers, pre-fractured glass meshes
+│   ├── contraptions/      # Snap-fit glass tubes, valves, bellows, condensers, burners
+│   ├── terrarium/         # Interactive test chamber, homunculi, reactive test props
+│   └── grimoire_system/   # Procedural naming, purity grading, dynamic 3D bottle labels
+├── visuals_3d/
+│   ├── shaders/           # liquid_volume_3d.gdshader, glass_pc.gdshader, glass_mobile.gdshader
+│   ├── vfx/               # GPU boil bubbles, fumes, arcane precipitates, glass shatter
+│   └── scalability/       # Runtime PC Forward+ vs. Android Mobile quality switcher
+├── content/
+│   ├── substances/        # Declarative SubstanceData (.tres) files
+│   └── materials_3d/      # Shared ORM/PBR atlases (.tres)
+└── tests/
+    ├── unit/              # Mixture conservation, pressure math, procedural naming tests
+    └── perf/              # 3D rigidbody pile, glass overdraw, & tubing stress scenes
+```
+
+### Jolt 3D Physics Collision Layers (`project.godot`)
+1. `STATIC_BENCH` (Tabletop, shelves, walls, furnace housing)
+2. `RIGID_VESSEL` (Glass flasks, cauldrons, alembics, stoppers)
+3. `SOLID_REAGENT` (Whole herbs, crystals, chunks, metal ingots, powder clumps)
+4. `TACTILE_TOOL` (Pestle, stirring rod, tongs, pipette, diamond stylus, bellows)
+5. `POUR_STREAM_RAY` (Lightweight ray/sphere-cast sensors for liquid streams & drips)
+6. `TERRARIUM_ENTITY` (Homunculi, clockwork targets, living flora)
+7. `SNAP_SOCKET` (Glass tubing ports, cork necks, burner stands—Area3D triggers only)
+
+---
+
+## 5. Hyper-Tactile 3D Interaction Architecture (CRITICAL)
+
+Every interaction must feel physically weighted, springy, and responsive—never snapped rigidly to cursor coordinates.
+
+### 5.1 6DoF Spring-Damper Manipulation (`TactileGrabber3D`)
+* **Never** teleport `RigidBody3D.global_position` directly to the pointer ray (this breaks Jolt collision impulses and tunnels through glass).
+* Drive held objects via a critically damped spring-damper force & torque solver:
+  $$F_{\text{pull}} = k_p \cdot (x_{\text{target}} - x_{\text{body}}) - c_d \cdot v_{\text{body}}$$
+* **Weight Perception:** Heavy iron cauldrons lag subtly behind fast hand movements and sag slightly before lifting; light glass vials feel crisp and nimble.
+* **Surface Sliding & Depth Planes:** Dragging across the workbench glides naturally along an ergonomic hover plane above obstacles; holding the **Tilt Modifier** (Right-Mouse / Scroll Wheel on PC; Two-Finger Twist or dedicated thumb arc-slider on Android) smoothly rotates the vessel's pour roll angle $\theta \in [-\pi, \pi]$.
+
+### 5.2 Micro-Tactile Object Mechanics
+* **Physical Corks & Stoppers:** Corks sit in flask necks via friction joints. Pulling upward builds spring tension until overcoming static friction—releasing a satisfying upward pop impulse, hollow acoustic *plop*, vapor puff, and crisp $12\text{ ms}$ Android haptic tick.
+* **3D Mortar & Pestle Grinding:** Moving the pestle in circular or downward pounding motions inside the mortar bowls calculates normal impulse $J_n$ and tangential shear $J_t$ against `SOLID_REAGENT` chunks:
+  * Chunks fracture progressively from `COARSE_CHUNK` $\rightarrow$ `CRUSHED_GRIT` $\rightarrow$ `FINE_POWDER` (increasing `surface_area_multiplier`, which exponentially accelerates chemical reaction rates!).
+  * Volatile crystals crushed too violently (`J_n > detonation_threshold`) spark and micro-detonate right inside the mortar.
+* **Fluid Stirring & Vortexes:** Moving a glass or silver rod through a cauldron injects angular momentum $\omega_{\text{swirl}}$ into the `MixtureContainer`. Stirring clockwise vs. counter-clockwise alters arcane `chirality_spin`, visually deepens the 3D shader's meniscus funnel, cools hot liquids faster, and dissolves bottom sediment.
+* **Viscous Pouring & Meniscus Snap:** Each vessel computes its 3D rim lowest-lip point relative to liquid fill height and surface tilt.
+  * Water/alcohol pours in a thin, fast ballistic ribbon with droplets.
+  * Honey/slime/tar stretches into a thick cohesive rope (`viscosity_pas`), dripping slowly from the glass lip via surface tension before snapping.
+* **Velocity-Mapped Procedural Audio & Haptics:** Every `body_entered` contact reads relative normal velocity $v_{\text{rel}}$ and material resonance (`BOROSILICATE`, `CERAMIC`, `IRON`, `CRYSTAL`, `WOOD`) to modulate multi-sampled impact pitch/gain and continuous scraping grain synthesis, paired with subtle Android `VibrationEffect` waveforms.
+
+---
+
+## 6. Systemic Chemistry, Thermodynamics & Arcane Solver
+
+Simulation advances on a deterministic fixed tick ($\Delta t = \frac{1}{60}\text{ s}$).
+
+### 6.1 Continuous `SubstanceData` Vectors
+Every substance in `content/substances/` is defined purely by continuous floats/vectors:
+* **Physical Axes:** `molar_mass`, `density_kg_m3`, `specific_heat_j_kg_k`, `melting_point_k`, `boiling_point_k`, `viscosity_pas`, `pka_acidity`, `redox_potential`, `flammability`, `surface_tension`, `base_albedo_rgba`, `turbidity`, `ior` (index of refraction).
+* **Arcane Axes:** `thaumic_density` ($\text{thaums/mol}$), `polarity_charge` ($[-1.0, 1.0]$), `entropy_flux`, `vitality_resonance`, `chronal_dilation`, `gravity_coupling` ($[-2.0, 2.0]$), `transmutation_valence`, `emissive_aura_hdr`.
+
+### 6.2 Thermodynamic Conservation & Phase States
+* **Strict Conservation:** Total mass and enthalpy across reactions must balance within $\epsilon = 10^{-5}$. Heat transfer obeys:
+  $$Q = m \cdot c \cdot \Delta T + \Delta H_{\text{rxn}} + \Phi_{\text{thaumic}}$$
+* **5 Dynamic Phases:** `SOLID` (chunks, crystals, settling precipitates), `LIQUID` (miscible solutions & immiscible density-stratified layers like oil over mercury), `GAS` (buoyant fumes or trapped vessel pressure), `PLASMA` (arcing bottle lightning), and `AETHER_CONDENSATE` (zero-viscosity glowing superfluid).
+* **Vessel Fracture Mechanics:** Glassware tracks wall temperature $T_{\text{wall}}$ and internal gas pressure $P = \frac{nRT}{V_{\text{headspace}}}$. Exceeding `thermal_shock_limit` or `burst_pressure_kpa` swaps the intact mesh for pre-fractured 3D Voronoi glass shards, spraying pressurized liquid and shrapnel outward.
+
+---
+
+## 7. Signature Gameplay Systems & Strategic Expansions
+
+### 7.1 Strategic Expansion: Procedural Grimoire & Tactile Bottle-Label System
+Because potions are emergent rather than preset, the game features an intelligent **Alchemical Spectrometer & Grimoire Engine**:
+* **Vector-to-Nomenclature Synthesis:** When a player stabilizes and corks a novel mixture, the engine analyzes dominant effect vectors, phase layers, purity, and side-effects to procedurally coin authentic titles (e.g., *"Fuming Vitriol of Buoyant Stasis"*, *"Crystalline Elixir of Hyper-Regeneration [Impure]"*).
+* **Potency, Stability & Toxicity Grading:** Computes an $S/A/B/C/D/F$ alchemical grade based on unreacted sediment waste, thermal stability, and side-effect entropy.
+* **Physical 3D Parchment Labels & Wax Seals:** Players physically slap a parchment label onto any 3D bottle, stamp hot colored sealing wax over the cork with a brass signet ring, and watch procedural ink sigils + shimmering crystal precipitates form inside the bottle.
+* **Auto-Illustrated Grimoire & Shareable Sigil Seeds:** Discovered concoctions log automatically into a physical 3D leather book on the desk—recording the exact thermodynamic curve, property radar chart, and a deterministic **Alchemical Hex-Sigil** players can share across PC and Android.
+
+### 7.2 Modular 3D Glassblowing & Pressurized Conduit Rigs
+Players aren't restricted to single-pot brewing—they can engineer custom tabletop contraptions:
+* **Snap-Fit 3D Apparatus:** Connect round-bottom boiling flasks, spiral Liebig condensers, fractional distillation columns, Y-splitters, manual brass stopcocks, and leather bellows via `SNAP_SOCKET` joints with rubber grommets.
+* **Live Vapor & Condensate Flow:** Vapors boil out of heated flasks, travel visibly as colored mist through 3D glass tubes, condense into pure droplets inside water-cooled spirals, and drip into receiving vials—separating complex mixtures by boiling point and arcane volatility!
+* **Tactile Failure States:** Leaving a brass valve closed while heating a sealed retort causes rubber tubing to visibly bulge, hiss steam from joints, pop corks across the room, or rupture fragile glass bends.
+
+### 7.3 Tactile Rune Etching & Workbench Chalk Geometry
+Magic interacts directly with physical craft through hand-drawn 3D geometry:
+* **Workbench Chalk Circles:** Pick up sticks of blessed chalk, salt, charcoal, or powdered silver to draw freehand containment rings and harmonic polygons directly onto the wooden 3D tabletop.
+* **Diamond Stylus Vessel Etching:** Scratch physical micro-runes directly onto the curved 3D glass surface of a flask (accompanied by gritty glass-etching audio and subtle haptic vibration).
+* **Geometric Solver (No Preset QTEs):** An analytical stroke recognizer evaluates geometric properties of drawn strokes—**symmetry**, **closure**, **vertex count** ($3, 4, 5, 6, 8$), and **chalk material conductivity**—to generate live localized fields (e.g., thermal insulation wards, zero-gravity stasis bubbles, magnetic stir fields, or containment shields against explosions).
+
+### 7.4 Living Bio-Arcane Test Terrarium & Homunculus Sandbox
+A dedicated, interactive **3D Bell-Jar Terrarium & Testing Stage** sits at the edge of the lab so players can immediately experiment with anything they brew:
+* **Reactive Test Subjects:** Populate the stage with clockwork automatons, iron/lead ingots, crystal saplings, elemental slimes, bone constructs, or clay **Homunculi**.
+* **Dropper, Atomizer & Immersion Testing:** Use a glass pipette to drop $1\text{ mL}$ of potion onto a plant, mist vapor inside the bell jar with a squeeze-bulb atomizer, or dunk a rusty sword into a beaker.
+* **Systemic World Effects:** Observe continuous physical mutations—petrification into heavy stone, metallic transmutation (lead $\rightarrow$ gold), biological overgrowth/flowering, shrinkage/gigantism, anti-gravity floating, frost crystallization, acid melting, or animating inanimate clay into helpful tiny lab assistants!
+
+---
+
+## 8. 3D Graphics, Analytical Liquid Shaders & Mobile Optimization
+
+### 8.1 The 80/20 Analytical 3D Liquid Volume (`liquid_volume_3d.gdshader`)
+* **Rule:** Never simulate SPH particle fluids inside containers (destroys Android frame rates).
+* Every transparent vessel contains an inner liquid mesh rendered with a custom analytical volume shader driven by a spring-damper 2D wobble pendulum (`wobble_x`, `wobble_z`):
+  * Slices the mesh in world space along an angled plane normal $N_{\text{meniscus}}$, rendering a crisp bright meniscus rim, surface foam/bubbles, internal rising gas effervescence, depth-based Beers-Law light absorption, glowing arcane swirls, and up to **3 immiscible density layers** smoothly stratified inside one draw call.
+  * Physical 3D droplets/ribbons (`GPUParticles3D` + pooled `Area3D` sensor beads) spawn **only** during active pouring, splashing, or vessel shattering.
+
+### 8.2 Dual-Tier Glass & Transparency Overdraw Guardrails
+Overlapping 3D glass vessels are the #1 GPU bottleneck on mobile tile-based renderers.
+* **PC Tier (`Forward+`):** Full `SCREEN_TEXTURE` chromatic refraction, dual-sided specular highlights, real-time shadow attenuation through colored liquid, and volumetric vapor plumes.
+* **Android Tier (`Vulkan Mobile`):** **Never** use `SCREEN_TEXTURE` grabs on standard shelf glassware (causes catastrophic tile-flush stalls on Mali/Adreno GPUs). Automatically assign `glass_mobile.gdshader`, which uses single-pass alpha-blended PBR Fresnel + pre-filtered local ReflectionProbe cubemaps + analytical specular highlights, keeping 20+ overlapping bottles at a rock-solid $60\text{ FPS}$.
+
+---
+
+## 9. Coding Standards & Autonomous Workflow Rules for Claude
+
+1. **Zero Hardcoded Recipes:** If asked to implement *"a potion of levitation"* or *"aqua regia"*, define the underlying reagent `SubstanceData` resources and verify the solver naturally produces negative `gravity_coupling` or noble-metal dissolution via `pka_acidity` + `redox_potential`.
+2. **Hot-Loop Allocation Ban:** Zero `.new()`, dictionary allocations, or array resizing inside `_physics_process()`. Pre-allocate `PackedFloat32Array` buffers for substance concentrations and use strict `Node3D` object pools for droplets, bubbles, fumes, and glass shards.
+3. **Explicit Scientific & Arcane Units:** Suffix every numeric property and variable with physical units: `_kelvin`, `_kpa`, `_moles`, `_kg`, `_meters`, `_pas` (Pascal-seconds), `_joules`, `_thaums`.
+4. **Touch-First 3D Ergonomics:** Maintain minimum $48 \times 48\text{ dp}$ screen-space pick margins for small stoppers, valves, and pipettes on Android via dynamically inflated `CollisionShape3D` raycast hulls when touch mode is active, plus safe-area inset margins on all HUD/Grimoire panels.
+5. **Definition of Done:** Before marking any task complete:
+   * Run `--check-only` and `gdUnit4` tests cleanly.
+   * Confirm conservation laws hold and `is_nan()` / `is_inf()` clamps guard extreme temperatures ($0.1\text{ K}$ to $10,000\text{ K}$).
+   * Verify shader material variants exist for both PC (`Forward+`) and Android (`Mobile`).
