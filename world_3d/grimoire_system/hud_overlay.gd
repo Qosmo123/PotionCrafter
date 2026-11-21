@@ -44,6 +44,7 @@ const HELP_TEXT: String = """[b][color=#F4D06F]Hands[/color][/b]
   Rock crusher  ·  drop a rock in the hopper, give the crank a good turn: the flywheel keeps it going
   Sand sifter  ·  drop a sand bag in, shake the handle: it keeps rocking for a while
   Storage cabinet  ·  drop finds on its tray, set a beaker of powder on its pan
+  Discover  ·  crushed powders dissolved or soaked in your liquids become new ingredients ("???" in the satchel shows a hint)
   Polisher / faceting machine  ·  click the brass switch, hold a stone on the wheel
   Faceting: click the grey dial to choose a cut; keep your hand steady!
 

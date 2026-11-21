@@ -86,7 +86,7 @@ func _ready() -> void:
 	add_child(_status)
 	# Catch zone over the hopper: a rock let go roughly above it drops in.
 	MachineIntake.make(self, "rock crusher", Vector3(0.3, 0.34, 0.5), Vector3(0.0, hopper_height_meters + 0.22, 0.0),
-		Vector3(0.0, hopper_height_meters - 0.01, 0.0), _takes)
+		Vector3(0.0, hopper_height_meters - 0.01, 0.0), _takes).wants = "rough rocks (cut gems go in the cabinet)"
 	_build_detail()
 
 
@@ -218,7 +218,7 @@ func _finish(rock: Rock3D) -> void:
 
 func _takes(b: Node) -> bool:
 	var rock: Rock3D = b as Rock3D
-	return rock != null and rock.mineral != null and rock.mineral.kind != MineralData.Kind.SAND
+	return rock != null and rock.mineral != null and rock.mineral.kind != MineralData.Kind.SAND and rock.cut == RockMeshes.Cut.NONE
 
 
 ## Short hover text.

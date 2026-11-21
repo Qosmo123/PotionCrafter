@@ -50,6 +50,8 @@ var _ring: MeshInstance3D
 var _ring_mat: StandardMaterial3D
 var _milestone: int = 0
 var _ray_spin: float = 0.0
+## Close-up inset of the stone on the lap (shared by both machines).
+static var _loupe: FacetLoupe = null
 
 
 func _ready() -> void:
@@ -363,8 +365,17 @@ static func _orient_ray(ray: MeshInstance3D, a: Vector3, b: Vector3, cam: Camera
 	ray.set_instance_shader_parameter(&"strength", strength)
 
 
+## The shared close-up loupe, created on first use.
+func _get_loupe() -> FacetLoupe:
+	if _loupe == null or not is_instance_valid(_loupe):
+		_loupe = FacetLoupe.new()
+		get_tree().root.add_child(_loupe)
+	return _loupe
+
+
 func _physics_process(delta: float) -> void:
 	_sparks.emitting = false
+	_update_loupe()
 	if not running:
 		return
 	var stone: Rock3D = null
@@ -434,8 +445,32 @@ func _physics_process(delta: float) -> void:
 			elif suit < 0.8:
 				tip = "  Tip: opaque or phenomenal stones look best as a Cabochon."
 			_announce(stone, "Faceted a %s! Quality %d%%, worth %d ◉%s" % [stone.describe_name(), int(stone.cut_quality * 100.0), stone.value(), tip])
+			# Hero shot of the finished gem.
+			var grade: String = "flawless" if stone.cut_quality >= 0.92 else ("fine" if stone.cut_quality >= 0.75 else ("good" if stone.cut_quality >= 0.5 else "rough"))
+			GemShowcase.play(stone, "Faceted  ·  %s cut" % RockMeshes.CUT_NAMES[selected_cut], stone.describe_name(),
+				"%s work, quality %d%%  ·  worth %d coins  ·  Mohs %.1f" % [grade.capitalize(), int(stone.cut_quality * 100.0), stone.value(), stone.mineral.hardness_mohs],
+				clampi(stone.mineral.rarity + (1 if stone.cut_quality >= 0.92 else 0), 1, 4))
 			_cut_progress = 0.0
 			_work_target = null
+
+
+## Keep the close-up on the stone while this machine is working it.
+func _update_loupe() -> void:
+	var stone: Rock3D = _work_target if running else null
+	if stone == null or not is_instance_valid(stone):
+		if _loupe != null and is_instance_valid(_loupe) and _loupe.get_meta(&"owner", null) == self:
+			_loupe.hide_loupe()
+		return
+	var loupe: FacetLoupe = _get_loupe()
+	loupe.set_meta(&"owner", self)
+	if mode == Mode.POLISH:
+		loupe.show_on(stone, stone.polish, 1.0, stone.mineral.display_name, "polishing  ·  %d%%" % int(stone.polish * 100.0))
+	elif stone.mineral.can_facet and stone.polish >= 0.3:
+		loupe.show_on(stone, _cut_progress, live_steadiness, "%s  ·  %s cut" % [stone.mineral.display_name, RockMeshes.CUT_NAMES[selected_cut]],
+			"%d%%  ·  hold steady (%d%% steady)" % [int(_cut_progress * 100.0), int(live_steadiness * 100.0)])
+	else:
+		loupe.show_on(stone, stone.polish / 0.3, 1.0, stone.mineral.display_name,
+			"can't be faceted: try a gem" if not stone.mineral.can_facet else "polish it to 30% first")
 
 
 func _announce(stone: Rock3D, text: String) -> void:

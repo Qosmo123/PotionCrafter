@@ -30,7 +30,7 @@ FINDS = {
                         color=(1.0, 0.8, 0.3), luster=2, shape=6, value=120, crush={"gold_flecks": 1.0},
                         fact="Gold is so soft you can squash it flat with your fingers, and it never rusts. Pirates loved it!"),
     "pink_salt": dict(name="Pink Salt Crystal", formula="NaCl (Fe)", kind=2, rarity=0, hardness=2.5, density=2160, mass=0.01,
-                      color=(1.0, 0.7, 0.75), luster=1, shape=1, value=6, crush={"halite_powder": 1.0},
+                      color=(1.0, 0.7, 0.75), luster=1, shape=1, value=6, crush={"halite_powder": 0.75, "baking_soda": 0.25},  # natron crust: salt of soda
                       fact="Salt crystals grow as perfect little cubes. Lick test not recommended in a real lab!"),
     "moonstone": dict(name="Moonstone", formula="KAlSi₃O₈ (Æ)", kind=3, rarity=2, hardness=6, density=2560, mass=0.01,
                       color=(0.85, 0.9, 1.0), luster=4, shape=0, value=60, facet=True, emission=(0.15, 0.2, 0.4),
@@ -101,7 +101,7 @@ ROCKS = {
                            incl={"fool_gold_cube": 0.6, "gold_nugget": 0.08},
                            fact="Strike pyrite against steel and it makes sparks. Its name comes from the Greek word for fire."),
     "halite_rock": dict(name="Rock Salt", formula="NaCl", kind=0, rarity=0, hardness=2.5, density=2160, mass=0.1,
-                        color=(0.95, 0.85, 0.85), luster=1, shape=1, value=2, crush={"halite_powder": 1.0},
+                        color=(0.95, 0.85, 0.85), luster=1, shape=1, value=2, crush={"halite_powder": 0.75, "baking_soda": 0.25},  # natron crust: salt of soda
                         incl={"pink_salt": 0.5},
                         fact="Rock salt is what is left of an ancient sea that dried up millions of years ago."),
     "moonstone_ore": dict(name="Moonstone Ore", formula="KAlSi₃O₈ (Æ)", kind=0, rarity=2, hardness=6, density=2560, mass=0.1,

@@ -48,3 +48,13 @@ SUBSTANCES = {
     "coal_dust": powder("Coal Dust", "C (+ H, S)", 0.012, 1350, (0.08, 0.08, 0.08), "Black, sooty and flammable.", flammability=0.5, flash_point_kelvin=420, combustion_enthalpy_j_kg=-29e6, odor=0.2, products={"carbon_dioxide": 0.9, "sulfur_dioxide": 0.1}),
     "boracite_powder": powder("Borax Powder", "Na₂B₄O₇·10H₂O", 0.381, 1730, (0.98, 0.98, 0.98), "Crushed borax crystals: dissolve to make slime activator.", dissolves_in_water=True, dissolution_enthalpy_j_mol=110000, products={"borax_solution": 1.0}),
 }
+
+
+# Discovery routes (2026-11-21): crushed minerals that become shelf
+# ingredients when put into water. Each is an ordinary dissolution, so the
+# player finds them by experiment rather than by recipe.
+PATCH = {
+    "halite_powder": dict(dissolves_in_water=True, dissolution_enthalpy_j_mol=3900, products={"salt_brine": 1.0}),
+    "luminite_dust": dict(dissolves_in_water=True, dissolution_enthalpy_j_mol=2000, products={"moonwater": 1.0}),
+    "firepepper_powder": dict(decomposition_rate_per_s=0.0, dissolves_in_water=True, dissolution_enthalpy_j_mol=-150000, products={"salamander_oil": 1.0}),
+}

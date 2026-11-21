@@ -1188,6 +1188,10 @@ func _update_machine_hints() -> void:
 		_assist_note = (held_body as MachineHandle3D).hint
 	elif held_body is Hammer3D:
 		_assist_note = "Hold it over a rock and click (or hold Space for a big swing)"
+	if intake_target == null and pour_target == null and dock_seat.is_empty():
+		var refusing: MachineIntake = MachineIntake.refusing(held_body, held_body.global_position.x)
+		if refusing != null and held_body.global_position.y > refusing.global_position.y - 0.25:
+			_assist_note = "The %s only takes %s" % [refusing.machine_name, refusing.wants]
 	MachineIntake.update_markers(held_body, intake_target)
 
 

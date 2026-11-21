@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="SubstanceData" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
-[ext_resource type="Resource" path="res://content/substances/dissolved_salts.tres" id="p0"]
+[ext_resource type="Resource" path="res://content/substances/salt_brine.tres" id="p0"]
 
 [resource]
 script = ExtResource("1_sub")
@@ -23,5 +23,7 @@ precipitant_charge = -1
 glitter = 0.2
 flame_color = Color(1, 0.85, 0.2, 1)
 flame_strength = 0.9
+dissolves_in_water = true
+dissolution_enthalpy_j_mol = 3900
 reaction_products = Array[Resource]([ExtResource("p0")])
 reaction_product_mass_fractions = PackedFloat32Array(1)

@@ -88,7 +88,7 @@ func _ready() -> void:
 	add_child(_status)
 	# Catch zone over the hopper: a sand bag let go roughly above it drops in.
 	MachineIntake.make(self, "sand sifter", Vector3(0.3, 0.3, 0.5), Vector3(0.0, deck_height_meters + 0.3, 0.0),
-		Vector3(0.0, deck_height_meters + 0.08, 0.0), _takes)
+		Vector3(0.0, deck_height_meters + 0.08, 0.0), _takes).wants = "sand bags"
 	_build_shaker.call_deferred()
 
 

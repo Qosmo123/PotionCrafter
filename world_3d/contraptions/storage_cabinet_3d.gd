@@ -91,8 +91,10 @@ func _ready() -> void:
 	_pan.position = Vector3(0.058, top + 0.006, 0.0)
 	add_child(_pan)
 	# Finds dropped over the tray are put away.
-	MachineIntake.make(self, "storage cabinet", Vector3(0.12, 0.3, 0.5), Vector3(-0.055, top + 0.2, 0.0),
-		Vector3(-0.055, top + 0.02, 0.0), _takes).on_catch = _store_rock
+	var tray: MachineIntake = MachineIntake.make(self, "storage cabinet", Vector3(0.12, 0.3, 0.5), Vector3(-0.055, top + 0.2, 0.0),
+		Vector3(-0.055, top + 0.02, 0.0), _takes)
+	tray.on_catch = _store_rock
+	tray.wants = "stones and gems (set beakers of powder on its brass pan)"
 	_caption = ClickSwitch.make_caption(self, Vector3(0.0, HEIGHT_METERS + 0.1, 0.05))
 	_update_caption()
 

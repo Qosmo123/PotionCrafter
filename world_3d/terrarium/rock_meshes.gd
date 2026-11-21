@@ -670,8 +670,8 @@ static func outline(cut: int) -> PackedVector2Array:
 				var hz: float = 13.0 * cos(t) - 5.0 * cos(2.0 * t) - 2.0 * cos(3.0 * t) - cos(4.0 * t)
 				pts.append(Vector2(hx, -hz) / 17.0)
 		Cut.OVAL:
-			for k: int in 16:
-				var a: float = TAU * float(k) / 16.0
+			for k: int in 32:
+				var a: float = TAU * float(k) / 32.0
 				pts.append(Vector2(cos(a), sin(a) * 0.72))
 		Cut.PEAR:
 			for k: int in 18:
@@ -682,8 +682,8 @@ static func outline(cut: int) -> PackedVector2Array:
 				var a: float = TAU * float(k) / 16.0
 				pts.append(Vector2(cos(a), 0.5 * sin(a) * absf(sin(a)) + 0.12 * sin(a)))
 		Cut.CUSHION:
-			for k: int in 16:
-				var a: float = TAU * float(k) / 16.0
+			for k: int in 32:
+				var a: float = TAU * float(k) / 32.0
 				var c: float = cos(a)
 				var s: float = sin(a)
 				var r: float = pow(pow(absf(c), 3.0) + pow(absf(s), 3.0), -1.0 / 3.0) * 0.82
@@ -699,8 +699,9 @@ static func outline(cut: int) -> PackedVector2Array:
 				var a: float = TAU * float(k) / 24.0
 				pts.append(Vector2(cos(a), sin(a) * 0.8))
 		_:
-			for k: int in 16:
-				var a: float = TAU * float(k) / 16.0
+			# 32 around the girdle: a full brilliant's worth of facets.
+			for k: int in 32:
+				var a: float = TAU * float(k) / 32.0
 				pts.append(Vector2(cos(a), sin(a)))
 	return pts
 
@@ -747,8 +748,9 @@ static func profile(style: int) -> Array:
 			return [[0.5, 0.34, 0], [0.68, 0.28, 1], [0.84, 0.18, 0], [0.95, 0.08, 1], [1.0, 0.01, 0], [1.0, -0.02, 0], [0.76, -0.24, 1], [0.48, -0.48, 0], [0.18, -0.7, 1], [0.0, -0.84, 0]]
 		Style.OLD_MINE:
 			return [[0.42, 0.42, 0], [0.74, 0.27, 1], [1.0, 0.03, 0], [1.0, -0.02, 0], [0.5, -0.45, 1], [0.12, -0.78, 0], [0.0, -0.8, 0]]
-	# Classic brilliant: table, star facets, girdle, pavilion mains, culet.
-	return [[0.55, 0.32, 0], [0.8, 0.2, 1], [1.0, 0.02, 0], [1.0, -0.02, 0], [0.5, -0.45, 1], [0.0, -0.86, 0]]
+	# Classic brilliant: table, star facets, bezel/kite facets, upper girdle
+	# halves, a thin girdle band, lower girdle halves, pavilion mains, culet.
+	return [[0.56, 0.33, 0], [0.78, 0.22, 1], [0.95, 0.08, 0], [1.0, 0.03, 1], [1.0, -0.02, 1], [0.84, -0.16, 0], [0.5, -0.45, 1], [0.0, -0.86, 0]]
 
 
 static func faceted(cut: int, radius: float) -> Mesh:

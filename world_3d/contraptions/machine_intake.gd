@@ -16,6 +16,9 @@ var accepts: Callable = Callable()
 ## Optional: called with each caught item instead of placing it in the
 ## hopper (the storage cabinet puts items away).
 var on_catch: Callable = Callable()
+## What the machine takes, for the refusal hint ("rough rocks"). Things it
+## doesn't take that end up in the zone are nudged back out.
+var wants: String = ""
 
 var _marker: MeshInstance3D
 var _marker_label: Label3D
@@ -41,7 +44,7 @@ static func make(machine: Node3D, name_: String, size: Vector3, center: Vector3,
 
 func _ready() -> void:
 	collision_layer = 0
-	collision_mask = SimConstants.LAYER_SOLID_REAGENT
+	collision_mask = SimConstants.LAYER_SOLID_REAGENT | SimConstants.LAYER_RIGID_VESSEL | SimConstants.LAYER_TACTILE_TOOL
 	monitorable = false
 	all_intakes.append(self)
 	var quad: QuadMesh = QuadMesh.new()
@@ -99,6 +102,32 @@ static func under(body: Node, x: float) -> MachineIntake:
 	return best
 
 
+## The intake under a carried `body` that won't take it (for a hint), or null.
+static func refusing(body: Node, x: float) -> MachineIntake:
+	for intake: MachineIntake in all_intakes:
+		if not intake.is_inside_tree() or intake.wants == "" or intake.takes(body) or body is MachineHandle3D:
+			continue
+		if absf(intake.drop_world().x - x) < 0.1:
+			return intake
+	return null
+
+
+## Push something the machine doesn't take back out of its hopper, sideways
+## toward the player, and say what the machine is for (once per item).
+func _refuse(rb: RigidBody3D) -> void:
+	var now: int = Time.get_ticks_msec()
+	if now - int(rb.get_meta(&"intake_refused_ms", -100000)) < 1200:
+		return
+	rb.set_meta(&"intake_refused_ms", now)
+	var side: float = signf(rb.global_position.x - drop_world().x)
+	if side == 0.0:
+		side = 1.0
+	rb.linear_velocity = Vector3(side * 0.9, 1.1, 0.25)
+	if not rb.has_meta(&"intake_refused_told") and GrimoireJournal.instance != null:
+		rb.set_meta(&"intake_refused_told", true)
+		GrimoireJournal.instance.toast.emit("The %s only takes %s" % [machine_name, wants], &"warning")
+
+
 ## Show markers for a carried `body` (null hides them); `chosen` pulses.
 static func update_markers(body: Node, chosen: MachineIntake) -> void:
 	for intake: MachineIntake in all_intakes:
@@ -116,7 +145,12 @@ func _physics_process(delta: float) -> void:
 	# Guide anything let go over the machine into the hopper.
 	for body: Node3D in get_overlapping_bodies():
 		var rb: RigidBody3D = body as RigidBody3D
-		if rb == null or rb == TactileGrabber3D.current_held or rb.freeze or not takes(rb):
+		if rb == null or rb == TactileGrabber3D.current_held or rb.freeze:
+			continue
+		if not takes(rb):
+			# Never the machine's own parts (crank handle, shaker).
+			if wants != "" and rb.global_position.y < global_position.y and not rb is MachineHandle3D and not get_parent().is_ancestor_of(rb):
+				_refuse(rb)
 			continue
 		if not on_catch.is_valid() and rb.global_position.distance_to(drop_world()) < 0.03:
 			continue

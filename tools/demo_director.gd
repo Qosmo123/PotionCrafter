@@ -89,6 +89,18 @@ func _process(_delta: float) -> void:
 		_machines_demo(bench)
 	if _args.has("bottles"):
 		_bottles_demo(bench)
+	if _args.has("labels"):
+		_labels_demo(bench)
+	if _args.has("hero"):
+		_hero_demo(bench)
+	if _args.has("kit") and _frames == 3 and DiscoveryProgress.instance != null:
+		# Discovery mode's starter lab (without touching the save).
+		var dp: DiscoveryProgress = DiscoveryProgress.instance
+		dp.persist = false
+		dp.active = true
+		for id: String in DiscoveryProgress.STARTER_SUBSTANCES:
+			dp.known[id] = true
+		dp._apply_starter_kit()
 	if _args.has("pourshot") and _frames == SHOT_FRAME - 5:
 		# Mid-pour still: spirits into the beaker, honey onto the bench.
 		var beaker: Vessel3D = bench.get_node("Vessels/Beaker") as Vessel3D
@@ -422,6 +434,39 @@ func _machines_demo(bench: Node) -> void:
 
 ## Bottle seats: a flask in the hand over the spare bottle board (its free
 ## rings glowing) and the burner on a medium flame under the honey.
+## Gem hero shot (or, with "find", a legendary find's) for a still.
+func _hero_demo(bench: Node) -> void:
+	if _frames == 5:
+		GemShowcase.enabled = true
+		var find: bool = _args.has("find")
+		var m: MineralData = Rock3D.get_mineral("ammonite_fossil" if _args.has("fossil") else ("star_sapphire" if find else "sapphire"))
+		if m == null:
+			m = Rock3D.get_mineral("sapphire")
+		var stone: Rock3D = Rock3D.spawn(bench, m, Vector3(3.5, 1.0, 0.2), 0.012)
+		stone.freeze = true
+		if find:
+			GemShowcase.play(stone, "Legendary find!", m.display_name, "Gemstone  ·  Mohs %.1f  ·  worth about %d coins" % [m.hardness_mohs, m.value_coins], 4)
+		else:
+			stone.set_polish(1.0)
+			stone.apply_cut(RockMeshes.Cut.ROUND, 0.94)
+			GemShowcase.play(stone, "Faceted  ·  Round Brilliant cut", stone.describe_name(), "Flawless work, quality 94%%  ·  worth %d coins  ·  Mohs %.1f" % [stone.value(), m.hardness_mohs], 4)
+
+
+## Close, slightly angled look at the bottle labels on the front board.
+func _labels_demo(bench: Node) -> void:
+	var cam: Camera3D = bench.get_node("Camera3D") as Camera3D
+	if _frames >= 2:
+		var at: Vector3 = Vector3(-0.12, 0.86, 0.08)
+		var spot: String = "side" if _args.has("side") else ""
+		if spot == "side":
+			cam.global_transform = Transform3D(Basis(), at + Vector3(0.18, 0.03, 0.2)).looking_at(at, Vector3.UP)
+		else:
+			cam.global_transform = Transform3D(Basis(), at + Vector3(0.05, 0.04, 0.3)).looking_at(at, Vector3.UP)
+		cam.fov = 40.0
+		cam.set_process(false)
+		cam.set_physics_process(false)
+
+
 func _bottles_demo(bench: Node) -> void:
 	var cam: Camera3D = bench.get_node("Camera3D") as Camera3D
 	var grabber: TactileGrabber3D = bench.get_node("Grabber") as TactileGrabber3D

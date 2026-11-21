@@ -24,7 +24,7 @@ MESH_DIR = os.path.join(ROOT, "world_3d", "vessels", "meshes")
 PROFILE_DIR = os.path.join(ROOT, "world_3d", "vessels", "profiles")
 BLEND_PATH = os.path.join(ROOT, "art_source", "glassware.blend")
 
-SEGMENTS = 64
+SEGMENTS = 128  # smooth silhouettes and highlights up close (4K)
 GLASS_DENSITY_KG_M3 = 2230.0  # borosilicate
 LIQUID_INSET_M = 0.0004
 

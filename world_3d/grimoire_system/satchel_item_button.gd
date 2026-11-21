@@ -43,6 +43,12 @@ func _gui_input(event: InputEvent) -> void:
 
 
 func _make_custom_tooltip(_for_text: String) -> Object:
+	if has_meta(&"locked_text"):
+		# Undiscovered: don't give the name away in the card.
+		var plain: Label = CosmicTheme.label(String(get_meta(&"locked_text")), 15, CosmicTheme.TEXT)
+		var box: PanelContainer = PanelContainer.new()
+		box.add_child(plain)
+		return box
 	return build_card(item)
 
 

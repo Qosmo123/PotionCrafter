@@ -55,6 +55,7 @@ func _ready() -> void:
 	if get_tree().current_scene == null or not OS.get_cmdline_user_args().is_empty():
 		persist = false
 	_load()
+	add_child(DiscoveryProgress.new())
 	if RecipeBook.instance != null:
 		RecipeBook.instance.recipe_discovered.connect(_on_recipe_discovered)
 	_refill_commissions.call_deferred()
@@ -176,8 +177,8 @@ func _complete_commissions(traits: Dictionary, grade: String) -> void:
 
 ## Three first commissions that teach the basics, offered once.
 const TUTORIAL_ORDERS: Array = [
-	["volcano_fizz", "The Apprentice's Volcano", "Lesson 1 · pour vinegar onto Salt of Soda, watch it foam, then cork it in the cork & wax dish", 25],
-	["levitation", "Weightless Dew", "Lesson 2 · moonwater whose gravity coupling drops below zero floats: bottle it and see", 35],
+	["volcano_fizz", "The Apprentice's Volcano", "Lesson 1 · in the Mineral Lab (2), crush rock salt: its crust holds Salt of Soda. Pour vinegar on the powder, watch it foam, then cork it in the cork & wax dish", 25],
+	["levitation", "Weightless Dew", "Lesson 2 · crush moonstone ore and stir the glittering dust into water: moonwater. Lower its gravity coupling below zero and it floats", 35],
 	["hot_ice", "Hot Ice", "Lesson 3 · heat on the burner, cool it slowly, then seed it with a pinch of crystals", 40],
 ]
 var tutorials_offered: bool = false

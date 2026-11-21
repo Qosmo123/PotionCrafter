@@ -12,5 +12,5 @@ liquid_mesh = ExtResource("3_liquid")
 inner_profile = PackedVector2Array(0.000000, -0.048188, 0.044000, -0.048188, 0.045236, -0.047992, 0.046351, -0.047424, 0.047236, -0.046539, 0.047804, -0.045424, 0.048000, -0.044188, 0.048000, 0.043812, 0.049440, 0.048813)
 outer_radius_meters = 0.052565
 height_meters = 0.101375
-glass_mass_kg = 0.211692
-modelled_capacity_m3 = 0.000652748
+glass_mass_kg = 0.211948
+modelled_capacity_m3 = 0.000653535

@@ -232,6 +232,23 @@ func _on_contact(body: Node) -> void:
 	AudioDirector.contact(self, body, speed, global_position, _size_pitch())
 
 
+## Play the find's hero shot once the crack and reveal have had a moment.
+static func _showcase_later(find: Rock3D, m: MineralData, first_time: bool) -> void:
+	if not GemShowcase.enabled:
+		return
+	var tree: SceneTree = find.get_tree()
+	if tree == null:
+		return
+	await tree.create_timer(1.1).timeout
+	if not is_instance_valid(find):
+		return
+	var kicker: String = ("New fossil!" if m.kind == MineralData.Kind.FOSSIL else "%s find!" % m.rarity_name()) if first_time else "%s find" % m.rarity_name()
+	var detail: String = "%s  ·  Mohs %.1f  ·  worth about %d coins" % [["Rock", "Sand", "Mineral", "Gemstone", "Fossil"][int(m.kind)], m.hardness_mohs, m.value_coins]
+	if m.can_facet:
+		detail += "  ·  polish and facet it on the lapidary bench"
+	GemShowcase.play(find, kicker, m.display_name, detail, m.rarity)
+
+
 ## Split open: roll inclusions into new finds, leave a couple of smaller fragments.
 func crack() -> void:
 	AudioDirector.play(&"rock_crack", global_position, -1.0, _size_pitch())
@@ -247,10 +264,15 @@ func crack() -> void:
 					find_mineral.typical_mass_kg * rng.randf_range(0.6, 1.4))
 				find.linear_velocity = Vector3(rng.randf_range(-0.3, 0.3), 0.8, rng.randf_range(-0.3, 0.3))
 				finds.append(find_mineral.display_name)
+				var first_time: bool = false
 				if GrimoireJournal.instance != null:
-					GrimoireJournal.instance.record_find(find_mineral)
+					first_time = GrimoireJournal.instance.record_find(find_mineral)
 				if find_mineral.rarity >= REVEAL_RARITY:
 					_reveal(find, find_mineral)
+				# Cinematic for special finds: anything Epic or better, a new
+				# Rare, and the first of each fossil.
+				if find_mineral.rarity >= 3 or (first_time and (find_mineral.rarity >= 2 or find_mineral.kind == MineralData.Kind.FOSSIL)):
+					_showcase_later(find, find_mineral, first_time)
 	var pieces: int = fragment_count(mineral.cleavage, rng)
 	var breaks_true: bool = mineral.kind != MineralData.Kind.ROCK and mineral.kind != MineralData.Kind.FOSSIL
 	if mass_kg > 0.004:

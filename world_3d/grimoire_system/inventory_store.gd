@@ -180,10 +180,109 @@ func drop_point(camera: Camera3D, screen: Vector2) -> Dictionary:
 	return {"valid": true, "position": pos, "reason": ""}
 
 
-## Take an item and put it straight into the hand (Shift-click / Shift+Enter).
+## The substance an item's stock bottle is named for (or &"" if none).
+static func main_substance(item: Dictionary) -> StringName:
+	match int(item.get("category", -1)):
+		Category.REAGENTS, Category.CHEMICALS, Category.FUN:
+			# The first ingredient that isn't plain water names the bottle.
+			var subs: Array = item.get("substances", [])
+			for sid: Variant in subs:
+				if StringName(sid) != &"water":
+					return StringName(sid)
+			return StringName(subs[0]) if not subs.is_empty() else &""
+		Category.BERRIES:
+			var juice: SubstanceData = item.get("juice") as SubstanceData
+			return juice.substance_id if juice != null else &""
+	return &""
+
+
+## Discovery mode: whether an item is still unknown, with a hint on how to
+## find it (or "" when it can only be bought). {locked, hint, substance}
+func discovery_lock(item: Dictionary) -> Dictionary:
+	var sid: StringName = main_substance(item)
+	var dp: DiscoveryProgress = DiscoveryProgress.instance
+	if sid == &"" or dp == null or dp.is_known(sid):
+		return {"locked": false, "hint": "", "substance": sid}
+	return {"locked": true, "hint": dp.hint_for(sid), "substance": sid}
+
+
+## True if the satchel has a stock bottle (or berry) for this substance.
+func has_stock_for(substance_id: StringName) -> bool:
+	for item: Dictionary in items:
+		if main_substance(item) == substance_id:
+			return true
+	return false
+
+
+## Discovery mode: glassware and tool counts follow what has been earned
+## (less whatever is out on the bench).
+func apply_discovery_counts() -> void:
+	var dp: DiscoveryProgress = DiscoveryProgress.instance
+	if dp == null or not dp.active:
+		return
+	const TOOL_NODES: Dictionary = {"wooden_spoon": "StirTools/WoodenSpoon", "whisk": "StirTools/Whisk", "silver_rod": "StirTools/SilverRod", "arcane_wand": "StirTools/ArcaneWand"}
+	for item: Dictionary in items:
+		var target: int = -2
+		match int(item["category"]):
+			Category.GLASSWARE:
+				target = dp.glass_count(String(item["profile"]))
+			Category.TOOLS:
+				var tid: String = String(item["id"]).trim_prefix("tool:")
+				if TOOL_NODES.has(tid):
+					target = 1 if dp.equipment_unlocked(TOOL_NODES[tid]) else 0
+		if target >= -1:
+			item["count"] = maxi(target - int(item.get("taken", 0)), 0)
+	changed.emit()
+
+
+## Station index of the Mineral Lab (LabCamera3D.station).
+const MINERAL_LAB_STATION: int = 1
+
+
+## Why `item` can't be taken out at the current station ("" when it can).
+## The Mineral Lab only works stone: rocks, sand bags, the hammer, finds, the
+## lens and empty glass to catch powder in. Reagents, berries and stirring
+## tools stay at the Potion Bench.
+func station_block_reason(item: Dictionary) -> String:
+	if LabCamera3D.instance == null or LabCamera3D.instance.station != MINERAL_LAB_STATION:
+		return ""
+	match int(item.get("category", -1)):
+		Category.ROCKS, Category.FINDS, Category.GLASSWARE, Category.MATERIALS:
+			return ""
+		Category.TOOLS:
+			if String(item.get("id", "")) == "lens":
+				return ""
+			return "Stirring tools belong at the Potion Bench (1)"
+	return "The Mineral Lab only takes rocks, sand bags, finds and empty glass: brew that at the Potion Bench (1)"
+
+
+## Take an item and put it straight into the hand. Whatever the hand held
+## goes back in the satchel (or is set down if it can't be stored).
 func take_to_hand(id: String) -> RigidBody3D:
-	var body: RigidBody3D = take(id, grabber.global_position + Vector3(0.0, grabber.hover_plane_y_meters - grabber.global_position.y, 0.15) if grabber != null else Vector3.INF)
-	if body != null and grabber != null:
+	if grabber == null:
+		return take(id)
+	var item: Dictionary = find_item(id)
+	if item.is_empty():
+		return null
+	var why: String = station_block_reason(item)
+	if why != "":
+		last_message = why
+		changed.emit()
+		return null
+	if grabber.held_body != null and is_instance_valid(grabber.held_body):
+		var old: RigidBody3D = grabber.held_body
+		grabber.release()
+		if old.has_meta(&"inventory_id") or old is Rock3D:
+			stash(old)
+	# Appear in the hand above the middle of the station, clear of the bench.
+	var at: Vector3 = grabber.global_position + Vector3(0.0, grabber.hover_plane_y_meters - grabber.global_position.y, 0.15)
+	if grabber.is_side_view():
+		var mid: Vector3 = grabber.cursor_on_plane(get_viewport().get_visible_rect().size * Vector2(0.45, 0.4), 0.1)
+		var s: Vector2 = grabber.surface_under(mid.x, mid.y + 0.3, 0.1)
+		at = Vector3(mid.x, maxf(s.x + 0.14, mid.y), s.y) - Vector3(0.0, 0.12, 0.0)
+	var body: RigidBody3D = take(id, at)
+	if body != null:
+		body.linear_velocity = Vector3.ZERO
 		grabber.grab(body)
 		last_message = "In hand: %s" % find_item(id).get("label", "")
 		changed.emit()
@@ -294,6 +393,14 @@ func take(id: String, drop_at: Vector3 = Vector3.INF) -> RigidBody3D:
 		last_message = "No %s left in storage" % item["label"]
 		changed.emit()
 		return null
+	var block: String = station_block_reason(item)
+	var lock: Dictionary = discovery_lock(item)
+	if lock["locked"]:
+		block = "Undiscovered. " + (("Hint: " + String(lock["hint"])) if lock["hint"] != "" else "Click it to buy it for %d coins" % DiscoveryProgress.BUY_PRICE_COINS)
+	if block != "":
+		last_message = block
+		changed.emit()
+		return null
 	var body: RigidBody3D = null
 	match item["category"]:
 		Category.REAGENTS, Category.CHEMICALS, Category.FUN:
@@ -356,6 +463,7 @@ func take(id: String, drop_at: Vector3 = Vector3.INF) -> RigidBody3D:
 		_refresh_material(item)
 	elif item["count"] > 0:
 		item["count"] -= 1
+		item["taken"] = int(item.get("taken", 0)) + 1
 	last_message = "Took out: %s" % item["label"]
 	changed.emit()
 	return body
@@ -399,6 +507,7 @@ func stash(body: RigidBody3D) -> bool:
 		return false
 	if item["count"] >= 0:
 		item["count"] += 1
+		item["taken"] = int(item.get("taken", 0)) - 1
 	if grabber != null and grabber.held_body == body:
 		grabber.release()
 	body.queue_free()

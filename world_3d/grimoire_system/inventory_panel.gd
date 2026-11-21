@@ -81,7 +81,7 @@ func _ready() -> void:
 	_width_button = _header_button("⇔", "Compact / wide drawer", func() -> void: set_compact(not _compact))
 	title_row.add_child(_width_button)
 	title_row.add_child(_header_button("»", "Tuck the satchel away (Tab)", toggle))
-	var hint: Label = CosmicTheme.label("Click: place  ·  Shift-click: to hand  ·  Drag: drop anywhere  ·  E: return", CosmicTheme.SIZE_CAPTION, CosmicTheme.TEXT_FAINT)
+	var hint: Label = CosmicTheme.label("Click: into your hand  ·  Drag: set it down anywhere  ·  E: put back", CosmicTheme.SIZE_CAPTION, CosmicTheme.TEXT_FAINT)
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	column.add_child(hint)
 	_search = LineEdit.new()
@@ -164,6 +164,8 @@ func _process(_delta: float) -> void:
 		_last_station = LabCamera3D.instance.station
 		if _last_station < STATION_TABS.size() and _search.text == "":
 			_tabs.current_tab = STATION_TABS[_last_station]
+		if _root.visible:
+			refresh()  # grey out what the new station can't use
 
 
 func _input(event: InputEvent) -> void:
@@ -243,9 +245,25 @@ func _fill_grid(grid: VBoxContainer, entries: Array[Dictionary]) -> void:
 		else:
 			button.text = "%s   ·   %s   %s" % [item["label"], item["detail"], count_text]
 		button.disabled = item["count"] == 0
+		var lock: Dictionary = InventoryStore.instance.discovery_lock(item) if InventoryStore.instance != null else {"locked": false}
+		if lock["locked"]:
+			# Undiscovered: no name, just how to find it (or its price).
+			var how: String = ("hint: " + String(lock["hint"])) if lock["hint"] != "" else "buy for %d coins" % DiscoveryProgress.BUY_PRICE_COINS
+			button.text = "???   ·   %s" % how
+			button.tooltip_text = "Undiscovered ingredient. " + how
+			button.modulate = Color(0.75, 0.72, 0.85, 0.7)
+			button.icon = CosmicTheme.orb_icon(Color(0.35, 0.32, 0.45), 0, 26)
+		var blocked: String = InventoryStore.instance.station_block_reason(item) if InventoryStore.instance != null else ""
+		if blocked != "":
+			# Shown but greyed: it belongs at another station.
+			button.modulate = Color(1.0, 1.0, 1.0, 0.38)
+			button.tooltip_text = blocked
 		var mineral: MineralData = item.get("mineral") as MineralData
 		var aura: int = mineral.rarity if mineral != null else 0
-		button.icon = CosmicTheme.orb_icon(item["color"], aura, 30 if aura > 0 else 26)
+		if not lock["locked"]:
+			button.icon = CosmicTheme.orb_icon(item["color"], aura, 30 if aura > 0 else 26)
+		else:
+			button.set_meta(&"locked_text", button.tooltip_text)
 		button.add_theme_constant_override(&"h_separation", 12)
 		button.add_theme_stylebox_override(&"normal", _row_style(Color(CosmicTheme.DEEP, 0.7), Color(CosmicTheme.VIOLET, 0.25)))
 		button.add_theme_stylebox_override(&"hover", _row_style(Color(CosmicTheme.NEBULA, 0.7), Color(CosmicTheme.rarity_aura(aura) if aura > 0 else CosmicTheme.STARLIGHT_GOLD, 0.8)))
@@ -263,11 +281,18 @@ func _on_item_pressed(button: SatchelItemButton) -> void:
 	if button.dragging or InventoryStore.instance == null:
 		return
 	var id: String = button.item["id"]
-	var body: RigidBody3D
-	if Input.is_key_pressed(KEY_SHIFT):
-		body = InventoryStore.instance.take_to_hand(id)
-	else:
-		body = InventoryStore.instance.take(id)
+	var lock: Dictionary = InventoryStore.instance.discovery_lock(button.item)
+	if lock["locked"]:
+		if lock["hint"] == "" and DiscoveryProgress.instance != null:
+			if DiscoveryProgress.instance.buy(lock["substance"]):
+				refresh()
+			else:
+				warn("Undiscovered. It costs %d coins: earn them from commissions" % DiscoveryProgress.BUY_PRICE_COINS)
+		else:
+			warn("Undiscovered. Hint: " + String(lock["hint"]))
+		return
+	# A click puts it in your hand (drag it out to set it somewhere instead).
+	var body: RigidBody3D = InventoryStore.instance.take_to_hand(id)
 	if body == null:
 		warn(InventoryStore.instance.last_message)
 
