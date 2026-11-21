@@ -1,4 +1,4 @@
-[gd_scene load_steps=137 format=3]
+[gd_scene load_steps=138 format=3]
 
 [ext_resource type="PackedScene" path="res://world_3d/vessels/vessel_3d.tscn" id="1_vessel"]
 [ext_resource type="Resource" path="res://content/substances/moonwater.tres" id="2_moon"]
@@ -59,6 +59,7 @@
 [ext_resource type="Script" path="res://visuals_3d/vfx/candle_flame.gd" id="56_candle"]
 [ext_resource type="Script" path="res://world_3d/props/candle_body.gd" id="100_candlebody"]
 [ext_resource type="Script" path="res://world_3d/props/lab_dressing.gd" id="101_labdress"]
+[ext_resource type="Script" path="res://world_3d/props/science_dressing.gd" id="102_scidress"]
 [ext_resource type="Script" path="res://visuals_3d/vfx/ambient_dust.gd" id="57_dust"]
 [ext_resource type="Script" path="res://world_3d/contraptions/tool_crock_3d.gd" id="58_crock"]
 [ext_resource type="PackedScene" path="res://world_3d/props/tool_crock.gltf" id="59_crockm"]
@@ -727,6 +728,9 @@ kind = 2
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.6, 0.8, -0.2)
 script = ExtResource("91_sci")
 kind = 3
+
+[node name="ScienceDressing" type="Node3D" parent="ScienceBench"]
+script = ExtResource("102_scidress")
 
 [node name="SampleWater" parent="ScienceBench" instance=ExtResource("1_vessel")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.45, 0.852, 0.3)
