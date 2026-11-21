@@ -89,7 +89,7 @@ func _rebuild() -> void:
 	_visual.mesh = mesh
 	_visual.material_override = RockMeshes.material_for(mineral, polish, cut)
 	_visual.material_overlay = _crack_mat
-	_collider.shape = mesh.create_convex_shape(true, true)
+	_collider.shape = RockMeshes.convex_for(mesh)
 
 
 func set_polish(value: float) -> void:

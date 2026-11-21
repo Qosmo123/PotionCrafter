@@ -48,14 +48,14 @@ static func for_mineral(m: MineralData, radius: float, seed_value: int, cut: int
 			MineralData.Shape.CLUSTER: mesh = crystal(radius, seed_value, 4)
 			MineralData.Shape.BAG: mesh = sack(radius)
 			MineralData.Shape.SHELL: mesh = shell(radius)
-			MineralData.Shape.NUGGET: mesh = blob(radius, seed_value, 0.45, 3.5)
-			MineralData.Shape.GEODE: mesh = blob(radius, seed_value, 0.22, 2.0)
+			MineralData.Shape.NUGGET: mesh = natural_rock(radius, seed_value, RockForm.LUMPY)
+			MineralData.Shape.GEODE: mesh = natural_rock(radius, seed_value, RockForm.ROUND, 0.1)
 			MineralData.Shape.CUBE: mesh = box_habit(radius, Vector3(1.0, 0.95, 1.0), 0.0, seed_value)
 			MineralData.Shape.RHOMB: mesh = box_habit(radius, Vector3(1.0, 0.8, 0.9), 0.45, seed_value)
 			MineralData.Shape.PLATE: mesh = box_habit(radius, Vector3(1.3, 0.25, 1.1), 0.0, seed_value)
 			MineralData.Shape.BLADE: mesh = blade(radius, seed_value)
 			MineralData.Shape.OCTAHEDRON: mesh = octahedron(radius, 1.0)
-			_: mesh = blob(radius, seed_value, 0.3, 2.2)
+			_: mesh = natural_rock(radius, seed_value, style_for_mineral(m))
 	_cache[key] = mesh
 	return mesh
 
@@ -138,6 +138,205 @@ static func blob(radius: float, seed_value: int, roughness: float, frequency: fl
 	for i: int in range(0, indices.size(), 3):
 		tb.tri(verts[indices[i]], verts[indices[i + 1]], verts[indices[i + 2]])
 	return tb.commit(Vector3.ZERO, false)
+
+
+# ------------------------------------------------------------ natural rocks
+## Smooth, high-detail stones. Each starts as a random ellipsoid that is cut
+## by random fracture planes (blended with a smooth minimum, so the broken
+## faces meet in softened edges rather than sharp polygons), then gets
+## low- and high-frequency noise. Normals are smooth and shared (no seams).
+enum RockForm { ANGULAR, LAYERED, PEBBLE, LUMPY, ROUND }
+
+const ICO_LEVEL: int = 4  # 2562 vertices, 5120 triangles
+static var _ico_verts: PackedVector3Array = PackedVector3Array()
+static var _ico_tris: PackedInt32Array = PackedInt32Array()
+static var _shape_cache: Dictionary = {}
+
+
+static func style_for_mineral(m: MineralData) -> int:
+	if m.mineral_id.contains("pearl"):
+		return RockForm.ROUND
+	match m.kind:
+		MineralData.Kind.ROCK:
+			return RockForm.LAYERED if m.mineral_class.contains("Sedimentary") else RockForm.ANGULAR
+		MineralData.Kind.GEM, MineralData.Kind.FOSSIL:
+			return RockForm.PEBBLE
+	return RockForm.ANGULAR
+
+
+## Convex collision hull for a rock mesh, built once per mesh.
+static func convex_for(mesh: Mesh) -> Shape3D:
+	var id: int = mesh.get_instance_id()
+	if not _shape_cache.has(id):
+		_shape_cache[id] = mesh.create_convex_shape(true, true)
+	return _shape_cache[id]
+
+
+static func _icosphere() -> void:
+	if not _ico_verts.is_empty():
+		return
+	var t: float = (1.0 + sqrt(5.0)) * 0.5
+	var verts: Array[Vector3] = []
+	for v: Vector3 in [Vector3(-1, t, 0), Vector3(1, t, 0), Vector3(-1, -t, 0), Vector3(1, -t, 0),
+			Vector3(0, -1, t), Vector3(0, 1, t), Vector3(0, -1, -t), Vector3(0, 1, -t),
+			Vector3(t, 0, -1), Vector3(t, 0, 1), Vector3(-t, 0, -1), Vector3(-t, 0, 1)]:
+		verts.append(v.normalized())
+	var tris: Array[int] = [0, 11, 5, 0, 5, 1, 0, 1, 7, 0, 7, 10, 0, 10, 11, 1, 5, 9, 5, 11, 4, 11, 10, 2,
+		10, 7, 6, 7, 1, 8, 3, 9, 4, 3, 4, 2, 3, 2, 6, 3, 6, 8, 3, 8, 9, 4, 9, 5, 2, 4, 11, 6, 2, 10, 8, 6, 7, 9, 8, 1]
+	for _level: int in ICO_LEVEL:
+		var mids: Dictionary = {}
+		var next: Array[int] = []
+		for i: int in range(0, tris.size(), 3):
+			var m: Array[int] = []
+			for e: int in 3:
+				var a: int = tris[i + e]
+				var b: int = tris[i + (e + 1) % 3]
+				var key: int = mini(a, b) * 100000 + maxi(a, b)
+				if not mids.has(key):
+					mids[key] = verts.size()
+					verts.append(((verts[a] + verts[b]) * 0.5).normalized())
+				m.append(mids[key])
+			next.append_array([tris[i], m[0], m[2], m[0], tris[i + 1], m[1], m[2], m[1], tris[i + 2], m[0], m[1], m[2]])
+		tris = next
+	_ico_verts = PackedVector3Array(verts)
+	_ico_tris = PackedInt32Array(tris)
+
+
+static func _smin(a: float, b: float, k: float) -> float:
+	var h: float = clampf(0.5 + 0.5 * (b - a) / k, 0.0, 1.0)
+	return lerpf(b, a, h) - k * h * (1.0 - h)
+
+
+static func natural_rock(radius: float, seed_value: int, style: int, roughness: float = -1.0) -> Mesh:
+	_icosphere()
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = seed_value * 7919 + style
+	# Per-style recipe: ellipsoid, fracture planes, edge softness, noise.
+	var axes: Vector3 = Vector3(1.0, rng.randf_range(0.7, 0.9), rng.randf_range(0.78, 0.95))
+	var cut_count: int = 0
+	var cut_depth: Vector2 = Vector2(0.7, 0.9)
+	var soft: float = 0.06
+	var lumps: float = 0.05
+	var grain: float = 0.012
+	var bands: float = 0.0
+	match style:
+		RockForm.ANGULAR:
+			cut_count = rng.randi_range(8, 11)
+			cut_depth = Vector2(0.55, 0.88)
+			soft = 0.035
+			grain = 0.018
+		RockForm.LAYERED:
+			axes = Vector3(1.0, rng.randf_range(0.5, 0.65), rng.randf_range(0.8, 0.95))
+			cut_count = rng.randi_range(5, 7)
+			cut_depth = Vector2(0.65, 0.88)
+			soft = 0.035
+			bands = 0.016
+		RockForm.PEBBLE:
+			cut_count = rng.randi_range(4, 6)
+			cut_depth = Vector2(0.72, 0.9)
+			soft = 0.28
+			lumps = 0.035
+			grain = 0.004
+		RockForm.LUMPY:
+			lumps = 0.26
+			grain = 0.02
+		RockForm.ROUND:
+			axes = Vector3(1.0, rng.randf_range(0.9, 1.0), rng.randf_range(0.92, 1.0))
+			lumps = roughness if roughness >= 0.0 else 0.03
+			grain = 0.003
+	var normals: Array[Vector3] = []
+	var depths: Array[float] = []
+	for k: int in cut_count:
+		var n: Vector3 = Vector3(rng.randf_range(-1, 1), rng.randf_range(-1, 1), rng.randf_range(-1, 1)).normalized()
+		if style == RockForm.LAYERED and k < 2:
+			n = Vector3(rng.randf_range(-0.15, 0.15), 1.0 if k == 0 else -1.0, rng.randf_range(-0.15, 0.15)).normalized()
+		normals.append(n)
+		depths.append(rng.randf_range(cut_depth.x, cut_depth.y))
+	var low: FastNoiseLite = FastNoiseLite.new()
+	low.seed = seed_value
+	low.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
+	low.frequency = 1.1 if style != RockForm.LUMPY else 1.6
+	low.fractal_octaves = 3
+	var fine: FastNoiseLite = FastNoiseLite.new()
+	fine.seed = seed_value + 101
+	fine.frequency = 7.0
+	fine.fractal_octaves = 2
+	var band_phase: float = rng.randf() * TAU
+	var band_tilt: Vector3 = Vector3(rng.randf_range(-0.2, 0.2), 1.0, rng.randf_range(-0.2, 0.2)).normalized()
+
+	var count: int = _ico_verts.size()
+	var verts: PackedVector3Array = PackedVector3Array()
+	verts.resize(count)
+	var max_len: float = 0.0
+	for i: int in count:
+		var d: Vector3 = _ico_verts[i]
+		# Ellipsoid radius along d.
+		var q: Vector3 = d / axes
+		var r: float = 1.0 / q.length()
+		for k: int in normals.size():
+			var c: float = d.dot(normals[k])
+			if c > 0.05:
+				r = _smin(r, depths[k] / c, soft)
+		r *= 1.0 + low.get_noise_3dv(d) * lumps + fine.get_noise_3dv(d) * grain
+		if bands > 0.0:
+			r *= 1.0 + sin(d.dot(band_tilt) * r * 38.0 + band_phase) * bands
+		var v: Vector3 = d * r
+		verts[i] = v
+		max_len = maxf(max_len, v.length())
+	var scale: float = radius / maxf(max_len, 1e-4)
+	for i: int in count:
+		verts[i] *= scale
+	# Smooth area-weighted normals and a simple tangent frame.
+	var nrm: PackedVector3Array = PackedVector3Array()
+	nrm.resize(count)
+	for i: int in range(0, _ico_tris.size(), 3):
+		var a: int = _ico_tris[i]
+		var b: int = _ico_tris[i + 1]
+		var c: int = _ico_tris[i + 2]
+		var fn: Vector3 = (verts[b] - verts[a]).cross(verts[c] - verts[a])
+		if fn.dot(verts[a]) < 0.0:
+			fn = -fn
+		nrm[a] += fn
+		nrm[b] += fn
+		nrm[c] += fn
+	var tangents: PackedFloat32Array = PackedFloat32Array()
+	tangents.resize(count * 4)
+	for i: int in count:
+		var n2: Vector3 = nrm[i].normalized()
+		nrm[i] = n2
+		var t2: Vector3 = Vector3.UP.cross(n2)
+		if t2.length_squared() < 1e-6:
+			t2 = Vector3.RIGHT
+		t2 = t2.normalized()
+		tangents[i * 4] = t2.x
+		tangents[i * 4 + 1] = t2.y
+		tangents[i * 4 + 2] = t2.z
+		tangents[i * 4 + 3] = 1.0
+	# Godot front faces wind clockwise seen from outside: emit each triangle
+	# so that (b-a)x(c-a) points inward.
+	var idx: PackedInt32Array = PackedInt32Array()
+	idx.resize(_ico_tris.size())
+	for i: int in range(0, _ico_tris.size(), 3):
+		var a2: int = _ico_tris[i]
+		var b2: int = _ico_tris[i + 1]
+		var c2: int = _ico_tris[i + 2]
+		if (verts[b2] - verts[a2]).cross(verts[c2] - verts[a2]).dot(verts[a2]) > 0.0:
+			idx[i] = a2
+			idx[i + 1] = c2
+			idx[i + 2] = b2
+		else:
+			idx[i] = a2
+			idx[i + 1] = b2
+			idx[i + 2] = c2
+	var arrays: Array = []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = verts
+	arrays[Mesh.ARRAY_NORMAL] = nrm
+	arrays[Mesh.ARRAY_TANGENT] = tangents
+	arrays[Mesh.ARRAY_INDEX] = idx
+	var mesh: ArrayMesh = ArrayMesh.new()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	return mesh
 
 
 static func crystal(radius: float, seed_value: int, count: int) -> Mesh:
@@ -239,7 +438,7 @@ static func cleavage_fragment(cleavage: int, radius: float, seed_value: int) -> 
 		MineralData.Cleavage.OCTAHEDRAL: return octahedron(radius, 0.9 + float(seed_value % 3) * 0.1)
 		MineralData.Cleavage.BASAL: return box_habit(radius, Vector3(1.4, 0.18, 1.15), 0.08, seed_value)
 		MineralData.Cleavage.PRISMATIC: return blade(radius, seed_value)
-		MineralData.Cleavage.POOR: return blob(radius, seed_value, 0.38, 1.6)
+		MineralData.Cleavage.POOR: return natural_rock(radius, seed_value, RockForm.ANGULAR)
 	return conchoidal_shard(radius, seed_value)
 
 
@@ -266,7 +465,7 @@ static func conchoidal_shard(radius: float, seed_value: int) -> Mesh:
 
 
 static func sack(radius: float) -> Mesh:
-	return blob(radius, 3, 0.08, 1.2)
+	return natural_rock(radius, 3, RockForm.ROUND, 0.05)
 
 
 static func shell(radius: float) -> Mesh:
