@@ -431,7 +431,7 @@ drag_coefficient = 0.9
 hover_offset_meters = -0.09
 
 [node name="ArcaneWand" type="RigidBody3D" parent="StirTools"]
-transform = Transform3D(-4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, 0.04, 0.808, 0.31)
+transform = Transform3D(-4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, -0.5, 0.808, 0.42)
 script = ExtResource("31_stir")
 model = ExtResource("37_wand")
 tool_mass_kg = 0.025
@@ -449,6 +449,27 @@ model = ExtResource("38_magm")
 [node name="CorkRing" type="StaticBody3D" parent="Stands"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.43, 0.8, -0.1)
 script = ExtResource("18_stand")
+
+[node name="BottleBoardBack" type="StaticBody3D" parent="Stands"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.21, 0.8, -0.1)
+script = ExtResource("18_stand")
+kind = 3
+socket_count = 2
+socket_size_meters = 0.14
+
+[node name="BottleBoardFront" type="StaticBody3D" parent="Stands"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08, 0.8, 0.12)
+script = ExtResource("18_stand")
+kind = 3
+socket_count = 3
+socket_size_meters = 0.115
+
+[node name="BottleBoardSpare" type="StaticBody3D" parent="Stands"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.315, 0.8, 0.3)
+script = ExtResource("18_stand")
+kind = 3
+socket_count = 2
+socket_size_meters = 0.23
 
 [node name="TubeRack" type="StaticBody3D" parent="Stands"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.086, 0.8, -0.1)
@@ -481,13 +502,13 @@ initial_substances = Array[Resource]([ExtResource("2_moon")])
 initial_moles = Array[float]([8.0])
 
 [node name="FlaskHoney" parent="Vessels" instance=ExtResource("1_vessel")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.28, 0.874, -0.1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.28, 0.896, -0.1)
 profile = ExtResource("14_perl")
 initial_substances = Array[Resource]([ExtResource("3_honey")])
 initial_moles = Array[float]([0.9])
 
 [node name="FlaskSpirits" parent="Vessels" instance=ExtResource("1_vessel")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.14, 0.866, -0.1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.14, 0.888, -0.1)
 profile = ExtResource("15_pbottle")
 initial_substances = Array[Resource]([ExtResource("4_water"), ExtResource("5_ethanol")])
 initial_moles = Array[float]([6.0, 1.5])
@@ -509,19 +530,19 @@ initial_substances = Array[Resource]([ExtResource("4_water"), ExtResource("40_ac
 initial_moles = Array[float]([6.0, 1.2])
 
 [node name="ReagentGlue" parent="Vessels" instance=ExtResource("1_vessel")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.2, 0.873, 0.12)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.195, 0.895, 0.12)
 profile = ExtResource("14_perl")
 initial_substances = Array[Resource]([ExtResource("42_pva")])
 initial_moles = Array[float]([2.5])
 
 [node name="ReagentBorax" parent="Vessels" instance=ExtResource("1_vessel")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.04, 0.866, 0.13)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.035, 0.888, 0.12)
 profile = ExtResource("15_pbottle")
 initial_substances = Array[Resource]([ExtResource("43_borax")])
 initial_moles = Array[float]([5.0])
 
 [node name="BubbleBase" parent="Vessels" instance=ExtResource("1_vessel")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.07, 0.873, 0.12)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08, 0.895, 0.12)
 profile = ExtResource("14_perl")
 initial_substances = Array[Resource]([ExtResource("44_soap"), ExtResource("45_glyc")])
 initial_moles = Array[float]([4.0, 0.6])
@@ -606,11 +627,11 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0.76, 0)
 size = Vector3(2, 0.08, 1.2)
 
 [node name="CrusherTray" parent="MineralLab" instance=ExtResource("1_vessel")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.45, 0.852, -0.1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.53, 0.852, -0.1)
 profile = ExtResource("17_pbeaker")
 
 [node name="RockCrusher" type="StaticBody3D" parent="MineralLab" node_paths=PackedStringArray("tray")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.45, 0.8, -0.34)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.53, 0.8, -0.34)
 script = ExtResource("66_crusher")
 model = ExtResource("71_crusherm")
 tray = NodePath("../CrusherTray")
@@ -641,7 +662,7 @@ model = ExtResource("74_polm")
 camera = NodePath("../../Camera3D")
 
 [node name="Faceter" type="StaticBody3D" parent="MineralLab" node_paths=PackedStringArray("camera")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.62, 0.8, 0.12)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.55, 0.8, 0.12)
 script = ExtResource("68_lap")
 mode = 1
 model = ExtResource("75_facm")
@@ -682,7 +703,7 @@ random_kinds = PackedInt32Array(2, 3, 4)
 script = ExtResource("101_labdress")
 
 [node name="StreakPlate" type="StaticBody3D" parent="MineralLab"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.62, 0.8, 0.42)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.55, 0.8, 0.42)
 script = ExtResource("90_streak")
 
 [node name="ScienceBench" type="Node3D" parent="."]

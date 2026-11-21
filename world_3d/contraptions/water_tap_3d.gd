@@ -105,6 +105,7 @@ func _ready() -> void:
 		tray_body.add_child(slat_mi)
 	var seat: SupportStand3D = SupportStand3D.new()
 	seat.kind = SupportStand3D.Kind.PAD
+	seat.seat_name = "tap tray"
 	seat.pad_radius_meters = 0.05
 	seat.position.y = 0.015
 	add_child(seat)
@@ -207,3 +208,10 @@ func _physics_process(delta: float) -> void:
 	var text: String = "Tap · filling" if filling != null else ("Tap · running" if running_free else ("Tap · full" if v != null else "Tap · set a glass under it"))
 	if _caption.text != text:
 		_caption.text = text
+
+
+
+## Short hover text.
+func hover_info() -> String:
+	var state: String = "running" if running_free else ("filling" if filling != null else "off")
+	return "[b]Water Tap[/b]  [color=#5CE1E6]%s[/color]  [color=#B3ADD6]hold a glass under it to fill; click the handle to leave it running[/color]" % state

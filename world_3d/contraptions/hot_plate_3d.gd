@@ -89,6 +89,7 @@ func _ready() -> void:
 	_build_controls()
 	var seat: SupportStand3D = SupportStand3D.new()
 	seat.kind = SupportStand3D.Kind.PAD
+	seat.seat_name = "hot plate"
 	seat.pad_radius_meters = plate_radius_meters * 0.7
 	seat.position.y = plate_height_meters * 0.5 + 0.001
 	add_child(seat)
@@ -192,4 +193,10 @@ func _update_glow() -> void:
 	if _knob_visual != null:
 		_knob_visual.rotation.z = -float(level) * 0.9
 	if _caption != null:
-		_caption.text = "Stove · %s  (click knob)" % LEVEL_NAMES[level]
+		_caption.text = "Stove · %s\nclick the knob" % LEVEL_NAMES[level]
+
+
+
+## Short hover text.
+func hover_info() -> String:
+	return "[b]Hot Plate[/b]  [color=#5CE1E6]%s · %.0f °C[/color]  [color=#B3ADD6]click the knob to change the heat[/color]" % [LEVEL_NAMES[level], plate_temperature_kelvin - 273.15]

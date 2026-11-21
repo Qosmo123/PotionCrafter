@@ -446,7 +446,14 @@ func _announce(stone: Rock3D, text: String) -> void:
 
 func _update_status() -> void:
 	var title: String = "Gem Polisher" if mode == Mode.POLISH else "Faceting Machine"
-	var state: String = "ON: hold a stone on the wheel" if running else "click the brass switch to start"
+	var state: String = "on · hold a stone on the wheel" if running else "click the brass switch"
 	if mode == Mode.FACET:
-		state += "\ncut: %s%s\n(click the dial or press F to choose)" % [RockMeshes.CUT_NAMES[selected_cut], "  ⚡" if quick_facet else ""]
+		title += "\ncut: %s%s  (F to change)" % [RockMeshes.CUT_NAMES[selected_cut], " ⚡" if quick_facet else ""]
 	_status.text = "%s\n%s" % [title, state]
+
+
+## Short hover text.
+func hover_info() -> String:
+	if mode == Mode.FACET:
+		return "[b]Faceting Machine[/b]  [color=#5CE1E6]%s · %s[/color]  [color=#B3ADD6]switch on, hold a polished gem on the wheel; F picks the cut[/color]" % ["on" if running else "off", RockMeshes.CUT_NAMES[selected_cut]]
+	return "[b]Gem Polisher[/b]  [color=#5CE1E6]%s[/color]  [color=#B3ADD6]switch on, hold a stone on the wheel until it shines[/color]" % ("on" if running else "off")

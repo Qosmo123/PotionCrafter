@@ -71,6 +71,10 @@ func _process(_delta: float) -> void:
 		_seal_demo(bench)
 	if _args.has("easy"):
 		_easy_demo(bench)
+	if _args.has("machines"):
+		_machines_demo(bench)
+	if _args.has("bottles"):
+		_bottles_demo(bench)
 	if _args.has("pourshot") and _frames == SHOT_FRAME - 5:
 		# Mid-pour still: spirits into the beaker, honey onto the bench.
 		var beaker: Vessel3D = bench.get_node("Vessels/Beaker") as Vessel3D
@@ -375,3 +379,42 @@ func _rocks_demo(bench: Node) -> void:
 		var rock: Rock3D = Rock3D.spawn(bench, m, Vector3(2.66 + 0.11 * float(i % 7), 1.08 - 0.11 * float(row), 0.35), m.typical_mass_kg * (3.0 if m.kind != MineralData.Kind.ROCK else 1.0))
 		rock.freeze = true
 		rock.rotation = Vector3(0.5, 0.4 * float(i), 0.2)
+
+
+
+## Mineral Lab machines: a rock grinding in the crusher (gauge part-way), a
+## bag in the sifter, and a rock carried over the crusher with its drop
+## marker glowing.
+func _machines_demo(bench: Node) -> void:
+	var cam: LabCamera3D = bench.get_node("Camera3D") as LabCamera3D
+	var grabber: TactileGrabber3D = bench.get_node("Grabber") as TactileGrabber3D
+	var crusher: RockCrusher3D = bench.get_node("MineralLab/RockCrusher") as RockCrusher3D
+	var sifter: SandSifter3D = bench.get_node("MineralLab/SandSifter") as SandSifter3D
+	if _frames == 2:
+		cam.go_to_station(1)
+	if _frames == 70:
+		Rock3D.spawn(bench, Rock3D.get_mineral("meteorite"), crusher.global_transform * Vector3(0.0, crusher.hopper_height_meters + 0.02, 0.0), 0.12)
+		Rock3D.spawn(bench, Rock3D.get_mineral("desert_sand"), sifter.global_transform * Vector3(0.0, sifter.deck_height_meters + 0.12, 0.0), 0.2)
+	if _frames == 90:
+		crusher.set("_work_joules", crusher.required_work_joules(crusher.get("_current")) * 0.4 if crusher.get("_current") != null else 0.0)
+		var held: Rock3D = Rock3D.spawn(bench, Rock3D.get_mineral("fizzrock"), Vector3(2.8, 1.0, 0.1), 0.06)
+		grabber.grab(held)
+	if _frames > 90:
+		grabber._pointer_screen = cam.unproject_position(Vector3(2.62, 1.2, 0.1))
+
+
+## Bottle seats: a flask in the hand over the spare bottle board (its free
+## rings glowing) and the burner on a medium flame under the honey.
+func _bottles_demo(bench: Node) -> void:
+	var cam: Camera3D = bench.get_node("Camera3D") as Camera3D
+	var grabber: TactileGrabber3D = bench.get_node("Grabber") as TactileGrabber3D
+	if _frames == 3:
+		var burner: Burner3D = bench.get_node("Stands/Burner") as Burner3D
+		burner.set_level(2)
+		var beaker: Vessel3D = bench.get_node("Vessels/Beaker") as Vessel3D
+		beaker.global_position = burner.global_position + Vector3(0.0, burner.gauze_height_meters + 0.06, 0.0)
+	if _frames == 20:
+		grabber.grab(bench.get_node("Vessels/FlaskSpirits") as Vessel3D)
+	if _frames > 20:
+		var board: SupportStand3D = bench.get_node("Stands/BottleBoardSpare") as SupportStand3D
+		grabber._pointer_screen = cam.unproject_position(board.seat_floor_world(0) + Vector3(0.0, 0.2, 0.0))

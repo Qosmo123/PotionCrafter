@@ -90,6 +90,8 @@ const MAX_OMEGA_DT: float = 0.3
 
 ## Set while another tool (e.g. chalk) owns pointer input.
 static var input_captured: bool = false
+## What the hands hold right now (machines read it to leave held items alone).
+static var current_held: RigidBody3D = null
 
 var held_body: RigidBody3D = null
 ## Pour roll angle around the camera's horizontal forward axis, in [-PI, PI].
@@ -143,6 +145,13 @@ var _pick_sphere: SphereShape3D
 ## Assists: the vessel being poured into / stirred, and whether the held
 ## vessel is being swirled by hand.
 var pour_target: Vessel3D = null
+## The vessel a pour would go into: it glows and the hint says "click to
+## pour"; nothing pours until the player clicks (pour_target is then set).
+var pour_candidate: Vessel3D = null
+## The machine hopper a carried rock would drop into on the next click.
+var intake_target: MachineIntake = null
+var _marked: Node3D = null
+static var _target_mat: ShaderMaterial = null
 ## The tap the held vessel is being filled at (held under its spout).
 var tap_target: WaterTap3D = null
 var stir_target: Vessel3D = null
@@ -246,7 +255,9 @@ func _unhandled_input(event: InputEvent) -> void:
 					else:
 						# Second click: stop pouring/stirring, use the item (hammer
 						# strike), or put it down.
-						if pour_target != null or stir_target != null:
+						if pour_target == null and pour_candidate != null and held_body is Vessel3D:
+							_start_pour(pour_candidate)
+						elif pour_target != null or stir_target != null:
 							_assist_suppressed = pour_target if pour_target != null else stir_target
 							_end_assist()
 						elif not placing:
@@ -377,7 +388,15 @@ func put_down() -> void:
 		return
 	var vessel: Vessel3D = held_body as Vessel3D
 	if vessel == null and not (held_body is StirTool3D):
+		var body: RigidBody3D = held_body
+		var intake: MachineIntake = MachineIntake.under(body, body.global_position.x)
 		release()
+		if intake != null:
+			# Into the hopper: the machine takes it from here.
+			body.global_position = intake.drop_world()
+			body.linear_velocity = Vector3(0.0, -0.2, 0.0)
+			body.angular_velocity = Vector3.ZERO
+			AudioDirector.impact(&"stone", 0.5, body.global_position, 0.9)
 		return
 	_end_assist()
 	swirling = false
@@ -450,6 +469,7 @@ func _physics_process(_delta: float) -> void:
 	if camera == null:
 		return
 	_update_gestures(1.0 / float(Engine.physics_ticks_per_second))
+	current_held = held_body
 	if _pick_requested:
 		_pick_requested = false
 		_do_pick()
@@ -464,7 +484,11 @@ func _physics_process(_delta: float) -> void:
 		_assist_note = ""
 		placing = false
 		dock_seat = {}
+		pour_candidate = null
+		intake_target = null
+		_mark_target(null)
 		SupportStand3D.update_hints(null, {}, 1.0 / float(Engine.physics_ticks_per_second))
+		MachineIntake.update_markers(null, null)
 		_update_hover()
 		return
 	_set_hovered(null)
@@ -488,6 +512,8 @@ func _physics_process(_delta: float) -> void:
 		_update_target()
 	if held_body == null:
 		return
+	_update_machine_hints()
+	_mark_target(pour_target if pour_target != null else pour_candidate)
 	_drive_linear()
 	if not (held_body.has_method(&"wants_free_rotation") and held_body.call(&"wants_free_rotation")):
 		_drive_angular()
@@ -727,17 +753,18 @@ func _update_assists(cursor: Vector3, dt: float) -> Variant:
 				break
 	# Pour: a vessel with liquid, held over another open vessel.
 	if tap_target == null and vessel != null and vessel.open_top and vessel.mixture != null and vessel.mixture.get_liquid_volume_m3() > 1e-6:
-		var target: Vessel3D = _pick_assist_target(cursor.x, pour_target, false) if _assist_armed and dock_seat.is_empty() else null
+		var target: Vessel3D = _pick_assist_target(cursor.x, pour_target if pour_target != null else pour_candidate, false) if _assist_armed and dock_seat.is_empty() else null
 		if target != null and target == pour_target:
 			result = _pour_into(vessel, target, dt)
-		elif target != null and not circling and _dwell(target, dt):
-			pour_target = target
-			_pour_side = 1.0 if _rim(target).x >= vessel.global_position.x else -1.0
-			result = _pour_into(vessel, target, dt)
-		elif target == null or circling:
+		elif target != null and not circling and pour_target == null:
+			pour_candidate = target
+		else:
 			_end_pour()
-	elif pour_target != null:
-		_end_pour()
+			pour_candidate = null
+	else:
+		if pour_target != null:
+			_end_pour()
+		pour_candidate = null
 	# Stir: a stirring tool held over a vessel with liquid in it.
 	if tool != null:
 		var stir: Vessel3D = _pick_assist_target(cursor.x, stir_target, true) if _assist_armed else null
@@ -848,6 +875,7 @@ func _end_pour() -> void:
 
 func _end_assist() -> void:
 	pour_target = null
+	pour_candidate = null
 	stir_target = null
 	_assist_candidate = null
 	_assist_dwell_s = 0.0
@@ -898,9 +926,11 @@ func _describe_assist(vessel: Vessel3D, tool: StirTool3D) -> String:
 	if tap_target != null:
 		return "Full  ·  move away" if tap_target.filling == null else "Filling with water  ·  move away to stop"
 	if pour_target != null:
-		return "Pouring into the %s  ·  wheel: faster/slower  ·  move away or click to stop" % _vessel_label(pour_target)
+		return "Pouring into the %s  ·  wheel: faster/slower  ·  click or move away to stop" % _vessel_label(pour_target)
+	if pour_candidate != null:
+		return "Click to pour into the %s (%.0f mL in it)" % [_vessel_label(pour_candidate), pour_candidate.mixture.get_liquid_volume_m3() * 1e6 if pour_candidate.mixture != null else 0.0]
 	if not dock_seat.is_empty():
-		return "Click to set it in the %s" % ("rack" if (dock_seat["stand"] as SupportStand3D).kind == SupportStand3D.Kind.TUBE_RACK else "cork ring")
+		return "Click to set it %s" % (dock_seat["stand"] as SupportStand3D).seat_phrase()
 	if stir_target != null:
 		return "Stirring  ·  wiggle or circle the mouse, or hold S"
 	if swirling:
@@ -908,7 +938,7 @@ func _describe_assist(vessel: Vessel3D, tool: StirTool3D) -> String:
 	if _assist_note == "That one is full" and _assist_suppressed != null:
 		return _assist_note
 	if vessel != null and vessel.mixture != null and vessel.mixture.get_liquid_volume_m3() > 1e-6:
-		return "Hold it over another vessel to pour  ·  circle the mouse or hold S to swirl"
+		return "Hold it over another vessel, then click to pour  ·  circle the mouse or hold S to swirl"
 	if tool != null:
 		return "Hold it over a vessel to stir"
 	return ""
@@ -1085,3 +1115,56 @@ func _approx_inertia_kg_m2(body: RigidBody3D) -> float:
 		if inv_sum > 0.0:
 			return 3.0 / inv_sum
 	return body.mass * 0.002
+
+
+
+## Start pouring into `target` (the player confirmed with a click).
+func _start_pour(target: Vessel3D) -> void:
+	var vessel: Vessel3D = held_body as Vessel3D
+	if vessel == null or target == null:
+		return
+	pour_target = target
+	pour_candidate = null
+	_assist_suppressed = null
+	_pour_speed = 1.0
+	_pour_side = 1.0 if _rim(target).x >= vessel.global_position.x else -1.0
+	AudioDirector.play_ui(&"click", -14.0, 1.2)
+
+
+## Hints and drop markers for things that aren't glassware: rocks over a
+## machine hopper, machine handles, the hammer.
+func _update_machine_hints() -> void:
+	intake_target = null
+	if held_body is Rock3D:
+		intake_target = MachineIntake.under(held_body, held_body.global_position.x)
+		var rock: Rock3D = held_body as Rock3D
+		if intake_target != null:
+			_assist_note = "Click to drop it into the %s" % intake_target.machine_name
+		elif rock.mineral != null and rock.mineral.kind == MineralData.Kind.SAND:
+			_assist_note = "Carry it over the sand sifter (the glow) and click to drop it in"
+		else:
+			_assist_note = "Carry it over the rock crusher (the glow) and click  ·  or crack it on the anvil with the hammer"
+	elif held_body is MachineHandle3D:
+		_assist_note = (held_body as MachineHandle3D).hint
+	elif held_body is Hammer3D:
+		_assist_note = "Hold it over a rock and click (or hold Space for a big swing)"
+	MachineIntake.update_markers(held_body, intake_target)
+
+
+## Glow on the vessel a pour would go into (or is going into).
+func _mark_target(v: Node3D) -> void:
+	if v == _marked:
+		return
+	if _marked != null and is_instance_valid(_marked):
+		for n: Node in _marked.find_children("*", "GeometryInstance3D", true, false):
+			(n as GeometryInstance3D).material_overlay = null
+	_marked = v
+	if v == null:
+		return
+	if _target_mat == null:
+		_target_mat = ShaderMaterial.new()
+		_target_mat.shader = HOVER_SHADER
+		_target_mat.set_shader_parameter(&"rim_color", Color(0.45, 0.9, 1.0))
+		_target_mat.set_shader_parameter(&"strength", 0.9)
+	for n: Node in v.find_children("*", "MeshInstance3D", true, false):
+		(n as GeometryInstance3D).material_overlay = _target_mat

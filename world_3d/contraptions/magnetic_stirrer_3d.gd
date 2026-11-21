@@ -87,3 +87,9 @@ func _on_body_exited(body: Node3D) -> void:
 	var slot: int = _vessels.find(body as Vessel3D)
 	if slot >= 0:
 		_vessels[slot] = null
+
+
+
+## Short hover text.
+func hover_info() -> String:
+	return "[b]Magnetic Stirrer[/b]  [color=#B3ADD6]set a vessel on it; M changes the speed[/color]"

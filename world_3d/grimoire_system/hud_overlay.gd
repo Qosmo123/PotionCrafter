@@ -696,13 +696,26 @@ func _pick(screen: Vector2) -> Object:
 	var space: PhysicsDirectSpaceState3D = camera.get_world_3d().direct_space_state
 	var origin: Vector3 = camera.project_ray_origin(screen)
 	var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(origin, origin + camera.project_ray_normal(screen) * 6.0,
-		SimConstants.LAYER_RIGID_VESSEL | SimConstants.LAYER_SOLID_REAGENT | SimConstants.LAYER_TACTILE_TOOL)
+		SimConstants.LAYER_RIGID_VESSEL | SimConstants.LAYER_SOLID_REAGENT | SimConstants.LAYER_TACTILE_TOOL | SimConstants.LAYER_STATIC_BENCH | SimConstants.LAYER_CLICK_TARGET)
 	var hit: Dictionary = space.intersect_ray(query)
-	return hit.get("collider", null)
+	var collider: Object = hit.get("collider", null)
+	if collider is StaticBody3D:
+		# Machines and stands: the nearest owner that can describe itself.
+		var n: Node = collider as Node
+		for i: int in 4:
+			if n == null:
+				break
+			if n.has_method(&"hover_info"):
+				return n
+			n = n.get_parent()
+		return null
+	return collider
 
 
 ## One short line for the hover label: name plus the most useful number.
 static func describe_short(target: Object) -> String:
+	if target != null and target.has_method(&"hover_info"):
+		return String(target.call(&"hover_info"))
 	if target is Vessel3D:
 		var v: Vessel3D = target as Vessel3D
 		var m: MixtureContainer = v.mixture
@@ -716,7 +729,8 @@ static func describe_short(target: Object) -> String:
 	if target is Hammer3D:
 		return "[b]Hammer[/b]"
 	if target is MachineHandle3D:
-		return "[b]Handle[/b]  [color=#B3ADD6]drag it[/color]"
+		var handle: MachineHandle3D = target as MachineHandle3D
+		return "[b]%s[/b]  [color=#B3ADD6]%s[/color]" % [handle.label, handle.hint.to_lower()]
 	if target is StirTool3D:
 		return "[b]%s[/b]" % String((target as StirTool3D).name).capitalize()
 	if target is Berry3D:
@@ -725,6 +739,8 @@ static func describe_short(target: Object) -> String:
 
 
 static func describe(target: Object) -> String:
+	if target != null and target.has_method(&"hover_info"):
+		return String(target.call(&"hover_info"))
 	if target is Vessel3D:
 		var v: Vessel3D = target as Vessel3D
 		var m: MixtureContainer = v.mixture

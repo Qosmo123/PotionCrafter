@@ -161,3 +161,9 @@ func clear_plate() -> void:
 
 func streak_pixel(u: float, v: float) -> Color:
 	return _image.get_pixel(clampi(int(u * float(TEX_W - 1)), 0, TEX_W - 1), clampi(int(v * float(TEX_H - 1)), 0, TEX_H - 1))
+
+
+
+## Short hover text.
+func hover_info() -> String:
+	return "[b]Streak Plate[/b]  [color=#B3ADD6]rub a mineral across it: the streak colour helps identify it[/color]"

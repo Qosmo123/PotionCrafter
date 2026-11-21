@@ -45,7 +45,7 @@ func _dress() -> void:
 	_dress_sifter(_lab.get_node_or_null("SandSifter") as Node3D)
 	var bench: Node3D = _lab.get_node_or_null("LabBench") as Node3D
 	if bench != null:
-		_hang_mohs_chart(Vector3(bench.global_position.x - 0.325, 0.945, wall_z_meters))
+		_hang_mohs_chart(Vector3(bench.global_position.x - 0.285, 0.97, wall_z_meters), 0.68)
 		_hang_tool_rack(Vector3(bench.global_position.x + 0.255, 1.085, wall_z_meters))
 		_lay_sorting_mat(Vector3(bench.global_position.x - 0.14, bench_top_y_meters, 0.51))
 	_build_batches()
@@ -160,9 +160,9 @@ func _dress_sifter(sifter: Node3D) -> void:
 
 ## A parchment reference chart pinned to the wall: the ten Mohs minerals, each
 ## with a colour swatch and a bar as long as its hardness.
-func _hang_mohs_chart(at: Vector3) -> void:
+func _hang_mohs_chart(at: Vector3, k: float = 1.0) -> void:
 	var sheet: QuadMesh = QuadMesh.new()
-	sheet.size = Vector2(0.22, 0.31)
+	sheet.size = Vector2(0.22, 0.31) * k
 	var paper: StandardMaterial3D = PropMaterials.textured("parchment", Color(0.88, 0.8, 0.62), 0.25).duplicate() as StandardMaterial3D
 	paper.uv1_world_triplanar = true
 	sheet.material = paper
@@ -175,16 +175,16 @@ func _hang_mohs_chart(at: Vector3) -> void:
 	var z: float = at.z + 0.0032
 	var ink: Color = Color(0.17, 0.09, 0.05)
 	for sx: float in [-1.0, 1.0]:
-		_dome(&"brass", Vector3(at.x + sx * 0.098, at.y + 0.143, z), Vector3.BACK, 0.0035)
-	_text("MOHS SCALE", Vector3(at.x, at.y + 0.127, z), 0.16, 0.02, ink)
-	_tint(Vector3(at.x, at.y + 0.111, z), Vector3(0.18, 0.0012, 0.0004), ink)
+		_dome(&"brass", Vector3(at.x + sx * 0.098 * k, at.y + 0.143 * k, z), Vector3.BACK, 0.0035)
+	_text("MOHS SCALE", Vector3(at.x, at.y + 0.127 * k, z), 0.16 * k, 0.02 * k, ink)
+	_tint(Vector3(at.x, at.y + 0.111 * k, z), Vector3(0.18 * k, 0.0012, 0.0004), ink)
 	for i: int in MOHS.size():
-		var y: float = at.y + 0.09 - 0.0235 * float(i)
-		_tint(Vector3(at.x - 0.09, y, z), Vector3(0.017, 0.017, 0.0006), ink)
-		_tint(Vector3(at.x - 0.09, y, z + 0.0004), Vector3(0.014, 0.014, 0.0006), MOHS[i][1])
-		_text("%d  %s" % [i + 1, MOHS[i][0]], Vector3(at.x - 0.035, y, z), 0.085, 0.0098, ink)
-		var bar: float = 0.0085 * float(i + 1)
-		_tint(Vector3(at.x + 0.012 + bar * 0.5, y, z), Vector3(bar, 0.0045, 0.0004), ink.lerp(MOHS[i][1], 0.35))
+		var y: float = at.y + (0.09 - 0.0235 * float(i)) * k
+		_tint(Vector3(at.x - 0.09 * k, y, z), Vector3(0.017 * k, 0.017 * k, 0.0006), ink)
+		_tint(Vector3(at.x - 0.09 * k, y, z + 0.0004), Vector3(0.014 * k, 0.014 * k, 0.0006), MOHS[i][1])
+		_text("%d  %s" % [i + 1, MOHS[i][0]], Vector3(at.x - 0.035 * k, y, z), 0.085 * k, 0.0098 * k, ink)
+		var bar: float = 0.0085 * float(i + 1) * k
+		_tint(Vector3(at.x + 0.012 * k + bar * 0.5, y, z), Vector3(bar, 0.0045 * k, 0.0004), ink.lerp(MOHS[i][1], 0.35))
 
 
 ## A wooden rail with pegs, and the small tools of the trade hanging from it.

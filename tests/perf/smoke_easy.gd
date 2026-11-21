@@ -92,6 +92,19 @@ func _physics_process(_delta: float) -> bool:
 			_next()
 		1:
 			_grabber._pointer_screen = _screen_above(_beaker, 0.1)
+			# Nothing pours until the player confirms with a click.
+			if _grabber.pour_candidate == _beaker and _grabber.pour_target == null and not _seen.has("confirmed"):
+				_seen["confirmed"] = true
+				_check(not _moon.is_pouring, "hovering over a vessel doesn't pour by itself")
+				_check(_grabber.assist_hint().begins_with("Click to pour"), "the hint asks for a click to pour (\"%s\")" % _grabber.assist_hint())
+				var press: InputEventMouseButton = InputEventMouseButton.new()
+				press.button_index = MOUSE_BUTTON_LEFT
+				press.pressed = true
+				press.position = _grabber._pointer_screen
+				_grabber._unhandled_input(press)
+				var up: InputEventMouseButton = press.duplicate() as InputEventMouseButton
+				up.pressed = false
+				_grabber._unhandled_input(up)
 			if _grabber.pour_target == _beaker:
 				_seen["pour_target"] = true
 			if _grabber.assist_hint().begins_with("Pouring"):

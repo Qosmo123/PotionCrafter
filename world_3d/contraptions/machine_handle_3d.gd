@@ -7,8 +7,14 @@ extends RigidBody3D
 
 @export var knob_radius_meters: float = 0.018
 @export var knob_color: Color = Color(0.55, 0.25, 0.12)
+## What a drag does, shown as the hint while held ("drag in circles to ...").
+@export var hint: String = "Drag it"
+## Short name for the hover label.
+@export var label: String = "Handle"
 
-var _height_y: float = 0.0
+## Height the hand keeps the knob at. Read on first use: the machine moves
+## the handle into place after it enters the tree, so _ready is too early.
+var _height_y: float = NAN
 
 
 func _ready() -> void:
@@ -35,11 +41,12 @@ func _ready() -> void:
 	var cs: CollisionShape3D = CollisionShape3D.new()
 	cs.shape = shape
 	add_child(cs)
-	_height_y = global_position.y
 
 
 ## Keep the grabber's hover plane at the knob height so it drags, not yanks.
 func get_hover_override_y() -> float:
+	if is_nan(_height_y):
+		_height_y = global_position.y
 	return _height_y
 
 

@@ -8,6 +8,7 @@ extends StaticBody3D
 
 const SHAKE_RATE: float = 0.9
 const STROKE_METERS: float = 0.05
+const IDLE_TEXT: String = "Sand Sifter\ndrop a sand bag in the top"
 
 @export var model: PackedScene
 @export var deck_model: PackedScene
@@ -29,6 +30,7 @@ var _rain: GPUParticles3D
 var _rain_process: ParticleProcessMaterial
 var _status: Label3D
 var _rest_x: float = 0.0
+var _shake_hint_s: float = 0.0
 
 
 func _ready() -> void:
@@ -79,15 +81,20 @@ func _ready() -> void:
 	_status.pixel_size = 0.00045
 	_status.outline_size = 8
 	_status.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	_status.position = Vector3(0.0, deck_height_meters + 0.22, 0.0)
-	_status.text = "Sand Sifter\ndrop in a sand bag, shake the handle"
+	_status.position = Vector3(0.0, 0.17, 0.15)
+	_status.text = IDLE_TEXT
 	add_child(_status)
+	# Catch zone over the hopper: a sand bag let go roughly above it drops in.
+	MachineIntake.make(self, "sand sifter", Vector3(0.3, 0.3, 0.5), Vector3(0.0, deck_height_meters + 0.3, 0.0),
+		Vector3(0.0, deck_height_meters + 0.08, 0.0), _takes)
 	_build_shaker.call_deferred()
 
 
 func _build_shaker() -> void:
 	_handle = MachineHandle3D.new()
 	_handle.knob_color = Color(0.2, 0.35, 0.6)
+	_handle.label = "Shaker handle"
+	_handle.hint = "Drag the handle left and right to shake the sieve"
 	get_parent().add_child(_handle)
 	_handle.global_position = global_transform * Vector3(0.17, deck_height_meters + 0.05, 0.0)
 	_rest_x = (global_transform.affine_inverse() * _handle.global_position).x
@@ -103,6 +110,20 @@ func _build_shaker() -> void:
 	slider.set_param(SliderJoint3D.PARAM_LINEAR_LIMIT_LOWER, -STROKE_METERS)
 	slider.node_a = slider.get_path_to(self)
 	slider.node_b = slider.get_path_to(_handle)
+	# A push rod from the knob to the sieve deck, so it is clear what the
+	# handle moves.
+	if _deck != null:
+		var rod: MeshInstance3D = MeshInstance3D.new()
+		var rod_mesh: CylinderMesh = CylinderMesh.new()
+		var reach: float = _rest_x - 0.1
+		rod_mesh.top_radius = 0.004
+		rod_mesh.bottom_radius = 0.004
+		rod_mesh.height = reach
+		rod_mesh.material = PropMaterials.textured("metal", Color(0.85, 0.65, 0.3), 0.1, 0.9)
+		rod.mesh = rod_mesh
+		rod.rotation.z = PI * 0.5
+		rod.position = Vector3(0.1 + reach * 0.5, 0.05, 0.0)
+		_deck.add_child(rod)
 
 
 ## Size class of a grain substance: 0 coarse (top screen), 1 medium, 2 fine.
@@ -140,6 +161,12 @@ func _physics_process(delta: float) -> void:
 	_rain.emitting = shake > 0.05
 	AudioDirector.loop(&"sifter", &"sifter_loop", global_position, clampf(shake / 0.5, 0.0, 1.0) * clampf(fraction_left * 3.0 + 0.25, 0.0, 1.0), clampf(0.85 + shake * 0.4, 0.85, 1.3), -4.0)
 	_status.text = "Sifting %s  %d%%" % [_bag_name, int((1.0 - fraction_left) * 100.0)]
+	if shake < 0.05:
+		_shake_hint_s += delta
+		if _shake_hint_s > 2.0:
+			_status.text += "\ndrag the blue handle left-right"
+	else:
+		_shake_hint_s = 0.0
 	for t: int in _treasures.size():
 		if _treasure_thresholds[t] > 0.0 and fraction_left < _treasure_thresholds[t]:
 			_treasure_thresholds[t] = -1.0
@@ -148,6 +175,7 @@ func _physics_process(delta: float) -> void:
 	if fraction_left < 0.01:
 		_charge_total_kg = 0.0
 		_status.text = "Sand Sifter\ndone! drop in another bag"
+		_shake_hint_s = 0.0
 		if GrimoireJournal.instance != null:
 			GrimoireJournal.instance.toast.emit("Sifted %s into coarse, medium and fine trays" % _bag_name, &"bottle")
 
@@ -179,7 +207,7 @@ func _load_bag() -> void:
 			_treasure_thresholds.append(randf_range(0.15, 0.8))
 		_bag_name = m.display_name.replace(" Bag", "")
 		_rain_process.color = m.color
-		_status.text = "%s loaded\nshake the handle!" % _bag_name
+		_status.text = "%s loaded\ndrag the blue handle left-right" % _bag_name
 		bag.queue_free()
 		return
 
@@ -190,3 +218,15 @@ func _reveal(m: MineralData) -> void:
 	if GrimoireJournal.instance != null:
 		GrimoireJournal.instance.toast.emit("Something glints in the sieve... a %s!" % m.display_name, &"discovery")
 		GrimoireJournal.instance.record_find(m)
+
+
+func _takes(b: Node) -> bool:
+	var bag: Rock3D = b as Rock3D
+	return bag != null and bag.mineral != null and bag.mineral.kind == MineralData.Kind.SAND
+
+
+## Short hover text.
+func hover_info() -> String:
+	if _charge_total_kg > 0.0:
+		return "[b]Sand Sifter[/b]  [color=#5CE1E6]%s[/color]  [color=#B3ADD6]shake the blue handle[/color]" % _bag_name
+	return "[b]Sand Sifter[/b]  [color=#B3ADD6]drop a sand bag in the top, shake the handle; grains sort into three beakers[/color]"
