@@ -10,7 +10,8 @@ extends Node3D
 ##
 ## PC:      click an item to pick it up (no need to hold the button), move
 ##          the mouse, click again to put it down. Press-and-drag also works.
-##          Scroll wheel or right-drag = tilt/pour; Shift = slow, precise.
+##          Scroll wheel = tilt/pour; Shift = slow, precise. (Right-drag moves
+##          the view, see LabCamera3D.)
 ##          Items with a "click_use" action (the hammer) use it on the
 ##          second click when they have a target, instead of being dropped.
 ## Android: one finger = move, second finger twist = tilt/pour.
@@ -273,7 +274,7 @@ func _unhandled_input(event: InputEvent) -> void:
 						put_down()
 					# A quick click keeps holding the item until the next click.
 			MOUSE_BUTTON_RIGHT:
-				_mouse_tilting = mb.pressed
+				pass  # right-drag pans the view (LabCamera3D), even while carrying
 			MOUSE_BUTTON_WHEEL_UP:
 				if mb.pressed and held_body != null:
 					if pour_target != null:

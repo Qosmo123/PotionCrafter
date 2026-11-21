@@ -2,8 +2,8 @@ class_name LabCamera3D
 extends Camera3D
 ## Table-level camera with smooth zoom and panning.
 ## PC: scroll wheel zooms when nothing is held (while holding, the wheel tilts/pours);
-## right-drag with empty hands slides the view around (pressing the station's
-## number key again centres it).
+## right-drag slides the view around, also while carrying something (pressing
+## the station's number key again centres it).
 ## Android: two-finger pinch zooms when nothing is held.
 ## Zoom dollies along the view direction, so perspective stays natural.
 
@@ -84,13 +84,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		go_to_station(key.keycode - KEY_1)
 		return
 	if event is InputEventMouseButton and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_RIGHT:
-		# Right-drag pans with empty hands (holding something, it tilts it).
-		_panning = (event as InputEventMouseButton).pressed and not holding
+		# Right-drag pans, empty-handed or carrying (the wheel tilts by hand).
+		_panning = (event as InputEventMouseButton).pressed
 		return
 	if event is InputEventMouseMotion and _panning:
-		if holding:
-			_panning = false
-			return
 		var rel: Vector2 = (event as InputEventMouseMotion).relative
 		var meters_per_px: float = _view_height_meters() / maxf(get_viewport().get_visible_rect().size.y, 1.0)
 		# The bench follows the mouse, like dragging a sheet of paper.

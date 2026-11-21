@@ -1,7 +1,7 @@
 extends SceneTree
-## Smoke test: right-drag with empty hands pans the view; holding something,
-## right-drag tilts it instead and the view stays put; the station key
-## re-centres.
+## Smoke test: right-drag pans the view, empty-handed and while carrying a
+## flask (which keeps following the pointer and stays upright); panning
+## stops at its limit; the station key re-centres.
 ## Usage: godot --path . --resolution 1280x720 --script res://tests/perf/smoke_pan.gd
 
 var _bench: Node3D
@@ -70,8 +70,9 @@ func _process(_d: float) -> bool:
 				_drag(Vector2(-20.0, 0.0))
 			_right(false)
 		200:
-			_check(_camera.global_position.distance_to(_start) < 0.005, "holding something, right-drag doesn't move the view")
-			_check(absf(_grabber.pour_roll_rad) > 0.05, "holding something, right-drag tilts it")
+			_check(_camera.global_position.x - _start.x > 0.1, "carrying a flask, right-drag moves the view (%.0f mm)" % ((_camera.global_position.x - _start.x) * 1000.0))
+			_check(_grabber.held_body != null, "the flask stays in the hand while panning")
+			_check(absf(_grabber.pour_roll_rad) < 0.01, "panning doesn't tilt the flask")
 			print("PAN SMOKE %s" % ("PASS" if _failures == 0 else "FAIL"))
 			quit(0 if _failures == 0 else 1)
 	return false

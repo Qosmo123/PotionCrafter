@@ -21,8 +21,8 @@ const HELP_TEXT: String = """[b][color=#F4D06F]Hands[/color][/b]
   Put down  ·  click again: vials glide into the rack, round flasks onto cork rings, glass onto the stove, burner or tap tray
   Water  ·  hold a glass under the tap (or set it on the tray): it fills itself and stops when nearly full
   Heat  ·  click the stove's knob for off / low / medium / high  ·  click the burner to light it
-  Shift while moving  ·  slow, precise placement    ·    Wheel / right-drag  ·  tilt by hand
-  Wheel when empty-handed  ·  zoom    ·    Right-drag when empty-handed  ·  move the view (station key re-centres)
+  Shift while moving  ·  slow, precise placement    ·    Wheel while holding  ·  tilt by hand
+  Wheel when empty-handed  ·  zoom    ·    Right-drag  ·  move the view, also while carrying (station key re-centres)
   Two fingers  ·  twist to tilt, pinch to zoom
   E  ·  put the held item back in the satchel (gems go to Finds; a vessel's contents are kept under Materials)
 
