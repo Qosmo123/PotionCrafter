@@ -4,6 +4,8 @@ extends Node
 ## Render a still from the real game launch (see tools/render_still.sh):
 ##   godot --path . --resolution 1280x720 -- shot=_renders/out.png demo2
 ## Arguments after "--": shot=<png>, pour, demo, demo2, satchel, recipes.
+## Performance: "fps" (frame times per preset and station), "cost" (per-script
+## cost table, vessel breakdown and triangle budget).
 
 const SHOT_FRAME: int = 100
 
@@ -14,6 +16,10 @@ var _args: PackedStringArray = PackedStringArray()
 func _ready() -> void:
 	_args = OS.get_cmdline_user_args()
 	set_process(not _args.is_empty())
+	if _args.has("cost"):
+		add_child.call_deferred((load("res://tools/cost_probe.gd") as GDScript).new())
+	if _args.has("fps"):
+		add_child.call_deferred((load("res://tools/fps_probe.gd") as GDScript).new())
 
 
 func _process(_delta: float) -> void:

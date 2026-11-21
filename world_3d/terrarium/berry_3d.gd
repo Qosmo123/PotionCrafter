@@ -23,6 +23,8 @@ func _ready() -> void:
 	physics.bounce = 0.15
 	physics_material_override = physics
 	var mesh: SphereMesh = SphereMesh.new()
+	mesh.radial_segments = 20  # a berry is ~1 cm: 64x32 segments was 4k triangles each
+	mesh.rings = 10
 	mesh.radius = radius_meters
 	mesh.height = radius_meters * 1.9
 	var mat: StandardMaterial3D = StandardMaterial3D.new()

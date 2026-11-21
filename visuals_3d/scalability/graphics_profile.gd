@@ -8,6 +8,11 @@ extends Node
 ## HIGH:  SDFGI (3 cascades), SSR, SSAO, fog, 4K shadows.
 ## LOW:   shadows + glow only (mobile baseline).
 ## F5 cycles presets, F11 toggles fullscreen.
+##
+## Shadow budget: each shadowed omni light redraws the scene into a shadow map
+## (6 faces as a cube, 2 as dual-paraboloid), so only the lights at the
+## station you're looking at cast shadows. Below ULTRA they use dual-paraboloid
+## maps and the sun uses 2 cascades instead of 4.
 
 enum Preset { LOW, HIGH, ULTRA }
 
@@ -19,12 +24,45 @@ const PRESET_NAMES: PackedStringArray = ["LOW", "HIGH", "ULTRA"]
 
 static var active_preset_name: String = "ULTRA"
 
+## Omni lights that cast shadows in the scene as authored.
+var _shadow_lights: Array[OmniLight3D] = []
+var _station: int = -1
+
 
 func _ready() -> void:
 	if QualityTier.is_mobile_tier():
 		preset = Preset.LOW
 	get_viewport().size_changed.connect(_apply_upscaler)
+	_collect_shadow_lights.call_deferred()
 	apply()
+
+
+func _collect_shadow_lights() -> void:
+	var root: Node = get_tree().current_scene if get_tree().current_scene != null else get_parent()
+	for n: Node in root.find_children("*", "OmniLight3D", true, false):
+		var l: OmniLight3D = n as OmniLight3D
+		if l.shadow_enabled:
+			_shadow_lights.append(l)
+	_station = -1
+
+
+func _process(_delta: float) -> void:
+	var s: int = LabCamera3D.instance.station if LabCamera3D.instance != null else 0
+	if s != _station:
+		_station = s
+		_apply_light_shadows()
+
+
+## Shadows only from the lights that light the current station.
+func _apply_light_shadows() -> void:
+	var center_x: float = 0.0
+	if LabCamera3D.instance != null and _station >= 0 and _station < LabCamera3D.instance.station_offsets.size():
+		center_x = LabCamera3D.instance.station_offsets[_station].x
+	for l: OmniLight3D in _shadow_lights:
+		if not is_instance_valid(l):
+			continue
+		l.shadow_enabled = absf(l.global_position.x - center_x) < 1.8
+		l.omni_shadow_mode = OmniLight3D.SHADOW_CUBE if preset == Preset.ULTRA else OmniLight3D.SHADOW_DUAL_PARABOLOID
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -83,15 +121,18 @@ func apply() -> void:
 		key_light.shadow_enabled = true
 		key_light.light_angular_distance = 1.2 if high else 0.0
 		key_light.shadow_blur = 1.0
-		key_light.directional_shadow_max_distance = 6.0
+		key_light.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS if ultra else DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS
+		key_light.directional_shadow_max_distance = 6.0 if ultra else 4.0
 
 	var shadow_quality: RenderingServer.ShadowQuality = (RenderingServer.SHADOW_QUALITY_SOFT_ULTRA if ultra
 		else (RenderingServer.SHADOW_QUALITY_SOFT_HIGH if high else RenderingServer.SHADOW_QUALITY_SOFT_LOW))
-	RenderingServer.directional_shadow_atlas_set_size(8192 if ultra else (4096 if high else 2048), true)
+	RenderingServer.directional_shadow_atlas_set_size(8192 if ultra and DisplayServer.window_get_size().y >= 1400 else (4096 if high else 2048), true)
 	RenderingServer.directional_soft_shadow_filter_set_quality(shadow_quality)
 	RenderingServer.positional_soft_shadow_filter_set_quality(shadow_quality)
 	get_viewport().positional_shadow_atlas_size = 4096 if high else 2048
 	get_viewport().use_debanding = true
+	if not _shadow_lights.is_empty():
+		_apply_light_shadows()
 	_apply_upscaler()
 
 

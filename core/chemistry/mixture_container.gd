@@ -13,6 +13,12 @@ extends RefCounted
 ## plateaus, and evaporative cooling all come out of that one curve.
 ##
 ## Hot-loop safe: every buffer is allocated in _init(); no per-tick allocation.
+##
+## Performance: only the species actually present are visited. `_active` holds
+## their indices (sorted ascending after each compaction); every write that can
+## raise a species above zero marks it, and compaction drops emptied ones. This
+## turns the O(N) sums and O(N^2) pair scan (N = whole registry, ~200) into
+## O(k) / O(k^2) for the handful of species in a vessel.
 
 enum Phase { SOLID, LIQUID, GAS }
 
@@ -41,6 +47,9 @@ const CRYSTALLIZATION_RATE_PER_S: float = 2.5
 const SHEAR_GAIN: float = 60.0
 
 var species_count: int = 0
+var _active: PackedInt32Array = PackedInt32Array()
+var _active_n: int = 0
+var _is_active: PackedByteArray = PackedByteArray()
 var moles: PackedFloat64Array = PackedFloat64Array()
 var enthalpy_joules: float = 0.0
 var temperature_kelvin: float = SimConstants.AMBIENT_TEMP_KELVIN
@@ -149,6 +158,9 @@ func _init() -> void:
 	species_count = SubstanceRegistry.count()
 	moles.resize(species_count)
 	moles.fill(0.0)
+	_active.resize(species_count)
+	_is_active.resize(species_count)
+	_is_active.fill(0)
 	_molar_mass_kg_mol.resize(species_count)
 	_specific_heat_j_kg_k.resize(species_count)
 	_melting_point_kelvin.resize(species_count)
@@ -199,7 +211,7 @@ func _init() -> void:
 	_flame_col.resize(species_count)
 	_rx_start.resize(species_count + 1)
 	_cx_start.resize(species_count + 1)
-	for i: int in species_count:
+	for i: int in range(species_count):
 		var s: SubstanceData = SubstanceRegistry.get_substance(i)
 		_molar_mass_kg_mol[i] = maxf(s.molar_mass_kg_mol, 1e-6)
 		_specific_heat_j_kg_k[i] = maxf(s.specific_heat_j_kg_k, 1.0)
@@ -307,6 +319,7 @@ func add_substance(index: int, amount_moles: float, temp_kelvin: float) -> void:
 		return
 	var t: float = SimConstants.sanitize_temp_kelvin(temp_kelvin)
 	moles[index] += amount_moles
+	_mark(index)
 	enthalpy_joules += amount_moles * _molar_mass_kg_mol[index] * specific_enthalpy_j_kg(index, t)
 	_solve_temperature()
 
@@ -328,12 +341,14 @@ func transfer_fraction_to(dst: MixtureContainer, fraction: float) -> float:
 	if f <= 0.0:
 		return 0.0
 	var moved_mass_kg: float = 0.0
-	for i: int in species_count:
+	for _k1: int in _active_n:
+		var i: int = _active[_k1]
 		var amount: float = moles[i] * f
 		moles[i] -= amount
 		moved_mass_kg += amount * _molar_mass_kg_mol[i]
 		if dst != null:
 			dst.moles[i] += amount
+			dst._mark(i)
 	var moved_enthalpy: float = enthalpy_joules * f
 	enthalpy_joules -= moved_enthalpy
 	last_transfer_enthalpy_joules = moved_enthalpy
@@ -381,6 +396,8 @@ func step_thermal(delta_s: float, ambient_kelvin: float, conductance_w_k: float)
 
 func clear() -> void:
 	moles.fill(0.0)
+	_is_active.fill(0)
+	_active_n = 0
 	enthalpy_joules = 0.0
 	swirl_rad_s = 0.0
 
@@ -405,6 +422,7 @@ func step_reactions(delta_s: float, mixing: float, air_access: bool = true, igni
 	arcane_flash *= exp(-delta_s * 3.0)
 	odor_memory *= exp(-delta_s * 0.15)
 	active_reaction_pairs.resize(0)
+	_compact_active()
 	if get_total_mass_kg() < MIN_MASS_KG:
 		burning = false
 		return 0.0
@@ -417,13 +435,16 @@ func step_reactions(delta_s: float, mixing: float, air_access: bool = true, igni
 	var gas_before: float = get_gas_moles()
 	var catalysis_sum: float = 0.0
 	var total_n: float = maxf(get_total_moles(), 1e-12)
-	for c: int in species_count:
+	for _k2: int in _active_n:
+		var c: int = _active[_k2]
 		catalysis_sum += _catalyst[c] * moles[c] / total_n
-	for i: int in species_count:
+	for ka: int in _active_n:
+		var i: int = _active[ka]
 		if moles[i] <= 0.0:
 			continue
 		var i_has: bool = _product_start[i + 1] != _product_start[i]
-		for j: int in range(i + 1, species_count):
+		for kb: int in range(ka + 1, _active_n):
+			var j: int = _active[kb]
 			if moles[j] <= 0.0:
 				continue
 			var j_has: bool = _product_start[j + 1] != _product_start[j]
@@ -520,7 +541,8 @@ func _step_single_species_channels(delta_s: float, t: float, arrhenius: float, a
 	var thaums_per_mol: float = get_total_thaums() / total_moles
 	var fuel_moles: float = 0.0
 	var can_light: bool = false
-	for i: int in species_count:
+	for _k3: int in _active_n:
+		var i: int = _active[_k3]
 		if moles[i] <= 0.0:
 			continue
 		catalysis += _catalyst[i] * moles[i] / total_moles
@@ -536,7 +558,8 @@ func _step_single_species_channels(delta_s: float, t: float, arrhenius: float, a
 
 	var aqueous_fraction: float = 0.0
 	var any_solid: bool = false
-	for w: int in species_count:
+	for _k4: int in _active_n:
+		var w: int = _active[_k4]
 		if moles[w] > 0.0:
 			if _group[w] == 0:
 				aqueous_fraction += _species_phase_volume_m3(w, Phase.LIQUID)
@@ -544,7 +567,8 @@ func _step_single_species_channels(delta_s: float, t: float, arrhenius: float, a
 				any_solid = true
 	var liquid_total: float = maxf(get_liquid_volume_m3(), 1e-12)
 	aqueous_fraction = aqueous_fraction / liquid_total if get_liquid_volume_m3() > 0.0 else 0.0
-	for i: int in species_count:
+	for _k5: int in _active_n:
+		var i: int = _active[_k5]
 		if moles[i] <= 0.0 or _product_start[i + 1] == _product_start[i]:
 			continue
 		var n: float = _condensed_moles(i, t)
@@ -598,7 +622,8 @@ func get_flame_color() -> Color:
 	var g: float = 0.0
 	var b: float = 0.0
 	var w_total: float = 0.0
-	for i: int in species_count:
+	for _k6: int in _active_n:
+		var i: int = _active[_k6]
 		if moles[i] <= 0.0 or _flame_str[i] <= 0.0:
 			continue
 		var w: float = moles[i] * _flame_str[i] * _flame_str[i]
@@ -621,7 +646,8 @@ func hazard_level(kind: StringName) -> float:
 		&"flammable": values = PackedFloat64Array()
 	var total: float = maxf(get_total_moles(), 1e-12)
 	var worst: float = 0.0
-	for i: int in species_count:
+	for _k7: int in _active_n:
+		var i: int = _active[_k7]
 		if moles[i] <= 0.0:
 			continue
 		var share: float = clampf(moles[i] / total * 6.0, 0.0, 1.0)
@@ -669,7 +695,8 @@ func get_odor() -> float:
 func _condensed_weighted(values: PackedFloat64Array) -> float:
 	var total_m3: float = 0.0
 	var acc: float = 0.0
-	for i: int in species_count:
+	for _k8: int in _active_n:
+		var i: int = _active[_k8]
 		if moles[i] <= 0.0:
 			continue
 		var v: float = moles[i] * (1.0 - _boil_fraction(i, temperature_kelvin)) * _molar_mass_kg_mol[i] / _density_kg_m3[i]
@@ -681,7 +708,8 @@ func _condensed_weighted(values: PackedFloat64Array) -> float:
 ## Liquid volume of one miscibility group (0 aqueous, 1 oil, 2 liquid metal).
 func get_group_volume_m3(group: int) -> float:
 	var total: float = 0.0
-	for i: int in species_count:
+	for _k9: int in _active_n:
+		var i: int = _active[_k9]
 		if _group[i] == group:
 			total += _species_phase_volume_m3(i, Phase.LIQUID)
 	return total
@@ -690,7 +718,8 @@ func get_group_volume_m3(group: int) -> float:
 func get_group_density_kg_m3(group: int) -> float:
 	var v_total: float = 0.0
 	var m_total: float = 0.0
-	for i: int in species_count:
+	for _k10: int in _active_n:
+		var i: int = _active[_k10]
 		if _group[i] == group:
 			var v: float = _species_phase_volume_m3(i, Phase.LIQUID)
 			v_total += v
@@ -707,7 +736,8 @@ func get_layer_color(group: int, solids_only: bool = false) -> Color:
 	var total_m3: float = 0.0
 	var weight_total: float = 0.0
 	var ph_t: float = -1.0
-	for i: int in species_count:
+	for _k11: int in _active_n:
+		var i: int = _active[_k11]
 		if moles[i] <= 0.0:
 			continue
 		var v: float
@@ -752,7 +782,8 @@ func get_ph() -> float:
 	var acid: float = 0.0
 	var base: float = 0.0
 	var total: float = 0.0
-	for i: int in species_count:
+	for _k12: int in _active_n:
+		var i: int = _active[_k12]
 		var n: float = moles[i] * (1.0 - _boil_fraction(i, temperature_kelvin))
 		acid += n * _acid_strength[i]
 		base += n * _base_strength[i]
@@ -779,7 +810,8 @@ func get_gel_index() -> float:
 func _liquid_weighted(values: PackedFloat64Array) -> float:
 	var total_m3: float = 0.0
 	var acc: float = 0.0
-	for i: int in species_count:
+	for _k13: int in _active_n:
+		var i: int = _active[_k13]
 		var v: float = _species_phase_volume_m3(i, Phase.LIQUID)
 		acc += values[i] * v
 		total_m3 += v
@@ -819,11 +851,52 @@ func _convert(index: int, amount: float, owner: int, t_kelvin: float, table: int
 		var p: int = idx[k]
 		var product_mass: float = mass_kg * frac[k]
 		moles[p] += product_mass / _molar_mass_kg_mol[p]
+		_mark(p)
 		delta_h += product_mass * specific_enthalpy_j_kg(p, t_kelvin)
 		if _odor[p] > 0.0:
 			odor_memory = minf(odor_memory + product_mass * _odor[p] * 400.0, 1.0)
 	enthalpy_joules += delta_h
 	return delta_h
+
+
+# --- Active species list ------------------------------------------------------
+
+func _mark(index: int) -> void:
+	if _is_active[index] == 0:
+		_is_active[index] = 1
+		_active[_active_n] = index
+		_active_n += 1
+
+
+## Drop species that have run out and restore ascending order (insertion sort:
+## the list is short and nearly sorted). Allocation-free.
+func _compact_active() -> void:
+	var n: int = 0
+	for k: int in _active_n:
+		var i: int = _active[k]
+		if moles[i] > 0.0:
+			_active[n] = i
+			n += 1
+		else:
+			_is_active[i] = 0
+	_active_n = n
+	for a: int in range(1, n):
+		var v: int = _active[a]
+		var b: int = a - 1
+		while b >= 0 and _active[b] > v:
+			_active[b + 1] = _active[b]
+			b -= 1
+		_active[b + 1] = v
+
+
+## Number of species currently present (for callers that iterate contents).
+func active_count() -> int:
+	return _active_n
+
+
+## Registry index of the k-th present species (0 <= k < active_count()).
+func active_index(k: int) -> int:
+	return _active[k]
 
 
 # --- Thermodynamic curve --------------------------------------------------------
@@ -837,7 +910,8 @@ func specific_enthalpy_j_kg(index: int, t_kelvin: float) -> float:
 ## Total enthalpy the current contents would have at temperature `t_kelvin`.
 func enthalpy_at(t_kelvin: float) -> float:
 	var total: float = 0.0
-	for i: int in species_count:
+	for _k14: int in _active_n:
+		var i: int = _active[_k14]
 		var n: float = moles[i]
 		if n > 0.0:
 			total += n * _molar_mass_kg_mol[i] * specific_enthalpy_j_kg(i, t_kelvin)
@@ -848,21 +922,24 @@ func enthalpy_at(t_kelvin: float) -> float:
 
 func get_total_moles() -> float:
 	var total: float = 0.0
-	for i: int in species_count:
+	for _k15: int in _active_n:
+		var i: int = _active[_k15]
 		total += moles[i]
 	return total
 
 
 func get_total_mass_kg() -> float:
 	var total: float = 0.0
-	for i: int in species_count:
+	for _k16: int in _active_n:
+		var i: int = _active[_k16]
 		total += moles[i] * _molar_mass_kg_mol[i]
 	return total
 
 
 func get_heat_capacity_j_k() -> float:
 	var total: float = 0.0
-	for i: int in species_count:
+	for _k17: int in _active_n:
+		var i: int = _active[_k17]
 		total += moles[i] * _molar_mass_kg_mol[i] * _specific_heat_j_kg_k[i]
 	return total
 
@@ -881,7 +958,8 @@ func get_solid_volume_m3() -> float:
 
 func get_gas_moles() -> float:
 	var total: float = 0.0
-	for i: int in species_count:
+	for _k18: int in _active_n:
+		var i: int = _active[_k18]
 		total += moles[i] * _boil_fraction(i, temperature_kelvin)
 	return total
 
@@ -900,7 +978,8 @@ func get_emission_hdr() -> Color:
 	var r: float = 0.0
 	var g: float = 0.0
 	var b: float = 0.0
-	for i: int in species_count:
+	for _k19: int in _active_n:
+		var i: int = _active[_k19]
 		var w: float = minf(moles[i] * _molar_mass_kg_mol[i] / mass_kg * 8.0, 1.0)
 		var c: Color = _emission[i]
 		r += c.r * w
@@ -912,7 +991,8 @@ func get_emission_hdr() -> Color:
 func get_liquid_turbidity() -> float:
 	var total_m3: float = 0.0
 	var acc: float = 0.0
-	for i: int in species_count:
+	for _k20: int in _active_n:
+		var i: int = _active[_k20]
 		var v: float = _species_phase_volume_m3(i, Phase.LIQUID)
 		acc += _turbidity[i] * v
 		total_m3 += v
@@ -923,7 +1003,8 @@ func get_liquid_turbidity() -> float:
 func get_liquid_viscosity_pas() -> float:
 	var total_m3: float = 0.0
 	var acc: float = 0.0
-	for i: int in species_count:
+	for _k21: int in _active_n:
+		var i: int = _active[_k21]
 		var v: float = _species_phase_volume_m3(i, Phase.LIQUID)
 		acc += _log_viscosity[i] * v
 		total_m3 += v
@@ -936,7 +1017,8 @@ func get_liquid_viscosity_pas() -> float:
 func get_liquid_density_kg_m3() -> float:
 	var total_m3: float = 0.0
 	var total_kg: float = 0.0
-	for i: int in species_count:
+	for _k22: int in _active_n:
+		var i: int = _active[_k22]
 		var v: float = _species_phase_volume_m3(i, Phase.LIQUID)
 		total_m3 += v
 		total_kg += v * _density_kg_m3[i]
@@ -949,7 +1031,8 @@ func get_gravity_coupling() -> float:
 	if mass_kg < MIN_MASS_KG:
 		return 1.0
 	var acc: float = 0.0
-	for i: int in species_count:
+	for _k23: int in _active_n:
+		var i: int = _active[_k23]
 		acc += moles[i] * _molar_mass_kg_mol[i] * _gravity_coupling[i]
 	return acc / mass_kg
 
@@ -962,7 +1045,8 @@ func get_vapor_pressure_kpa() -> float:
 	var t: float = clampf(temperature_kelvin, SimConstants.MIN_TEMP_KELVIN, SimConstants.MAX_TEMP_KELVIN)
 	var condensed_mol: float = 0.0
 	var acc_kpa: float = 0.0
-	for i: int in species_count:
+	for _k24: int in _active_n:
+		var i: int = _active[_k24]
 		if moles[i] <= 0.0:
 			continue
 		var n_cond: float = moles[i] * (1.0 - _boil_fraction(i, t))
@@ -979,7 +1063,8 @@ func get_vapor_pressure_kpa() -> float:
 func get_flash_point_kelvin() -> float:
 	var total: float = maxf(get_total_moles(), 1e-12)
 	var lowest: float = NAN
-	for i: int in species_count:
+	for _k25: int in _active_n:
+		var i: int = _active[_k25]
 		if moles[i] / total < 0.05 or _combustion_j_kg[i] >= 0.0:
 			continue
 		if is_nan(lowest) or _flash_kelvin[i] < lowest:
@@ -989,7 +1074,8 @@ func get_flash_point_kelvin() -> float:
 
 func get_total_thaums() -> float:
 	var total: float = 0.0
-	for i: int in species_count:
+	for _k26: int in _active_n:
+		var i: int = _active[_k26]
 		total += moles[i] * _thaums_per_mol[i]
 	return total
 
@@ -1034,7 +1120,8 @@ func _species_phase_volume_m3(index: int, phase: Phase) -> float:
 
 func _phase_volume_m3(phase: Phase) -> float:
 	var total: float = 0.0
-	for i: int in species_count:
+	for _k27: int in _active_n:
+		var i: int = _active[_k27]
 		total += _species_phase_volume_m3(i, phase)
 	return total
 
@@ -1048,7 +1135,8 @@ func _move_phase(dst: MixtureContainer, phase: Phase, fraction: float) -> float:
 	var t: float = temperature_kelvin
 	var moved_mass_kg: float = 0.0
 	var moved_enthalpy: float = 0.0
-	for i: int in species_count:
+	for _k28: int in _active_n:
+		var i: int = _active[_k28]
 		var amount: float = moles[i] * _phase_fraction(i, phase, t) * fraction
 		if amount <= 0.0:
 			continue
@@ -1058,6 +1146,7 @@ func _move_phase(dst: MixtureContainer, phase: Phase, fraction: float) -> float:
 		moved_enthalpy += mass_kg * _phase_specific_enthalpy_j_kg(i, phase, t)
 		if dst != null:
 			dst.moles[i] += amount
+			dst._mark(i)
 	if moved_mass_kg <= 0.0:
 		return 0.0
 	enthalpy_joules -= moved_enthalpy
@@ -1071,6 +1160,7 @@ func _move_phase(dst: MixtureContainer, phase: Phase, fraction: float) -> float:
 
 ## Invert the strictly rising h(T) curve by bisection (fixed iteration count).
 func _solve_temperature() -> void:
+	_compact_active()
 	if get_total_mass_kg() < MIN_MASS_KG:
 		return
 	if is_nan(enthalpy_joules) or is_inf(enthalpy_joules):
