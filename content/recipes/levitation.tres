@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://world_3d/grimoire_system/recipe_data.gd" id="1_recipe"]
+
+[resource]
+script = ExtResource("1_recipe")
+recipe_id = &"levitation"
+title = "Draught of Levitation"
+category = 1
+formula = "m·g·κ < 0   (κ = gravity coupling)"
+description = "Enough moonwater and the potion weighs less than nothing."
+riddle = ""
+ingredients = PackedStringArray("Moonwater")
+method_steps = PackedStringArray("Keep moonwater dominant", "Cork and release")
+condition_traits = PackedStringArray("gravity_coupling")
+condition_min = PackedFloat32Array(-2)
+condition_max = PackedFloat32Array(0)

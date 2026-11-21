@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/silicate_dust.tres" id="c0"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"benitoite"
+display_name = "Benitoite"
+formula = "BaTiSi₃O₉"
+kind = 3
+rarity = 4
+hardness_mohs = 6.25
+density_kg_m3 = 3650
+typical_mass_kg = 0.012
+color = Color(0.2, 0.35, 0.95, 1)
+luster = 1
+shape = 1
+emission = Color(0, 0, 0, 1)
+value_coins = 320
+can_facet = true
+fun_fact = "California's state gem, glowing bright blue under UV light. Found in gem quality in just one place."
+crush_products = Array[Resource]([ExtResource("c0")])
+crush_fractions = PackedFloat32Array(1)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Silicate"
+crystal_system = "Hexagonal"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 0
+fracture = "conchoidal"
+diaphaneity = 0
+refractive_index = 1.8
+dispersion = 0.046
+phenomenon = 7
+colors_text = "sapphire blue"
+localities = "San Benito County (California)"
+uses = "rare collector gem"
+birthstone = ""

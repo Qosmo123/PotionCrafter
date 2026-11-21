@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://world_3d/grimoire_system/recipe_data.gd" id="1_recipe"]
+
+[resource]
+script = ExtResource("1_recipe")
+recipe_id = &"stinky_fools_gold"
+title = "Stinky Fool's Gold"
+category = 0
+formula = "FeS₂ + 2 H⁺ → Fe²⁺ + H₂S↑ + S   (PHEW!)"
+description = "Pyrite dust plus acid releases rotten-egg gas. Hold your nose!"
+riddle = ""
+ingredients = PackedStringArray("Fool's Gold Dust (crushed pyrite)", "Essence of Vinegar")
+method_steps = PackedStringArray("Crush a pyrite cluster", "Add vinegar", "Run!")
+condition_traits = PackedStringArray("odor")
+condition_min = PackedFloat32Array(0.45)
+condition_max = PackedFloat32Array(1e+09)

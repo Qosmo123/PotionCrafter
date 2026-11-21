@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+[ext_resource type="Resource" path="res://content/substances/dissolved_salts.tres" id="p0"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"salt_brine"
+display_name = "Sea Brine"
+chemical_formula = "NaCl(aq)"
+molar_mass_kg_mol = 0.025
+density_kg_m3 = 1070
+specific_heat_j_kg_k = 3900
+melting_point_kelvin = 263
+boiling_point_kelvin = 375
+latent_heat_fusion_j_kg = 300000
+latent_heat_vaporization_j_kg = 2.2e+06
+viscosity_pas = 0.0011
+pka_acidity = 7
+precipitant_charge = -1
+base_albedo_rgba = Color(0.9, 0.95, 0.97, 0.12)
+turbidity = 0.03
+flame_color = Color(1, 0.85, 0.2, 1)
+flame_strength = 0.9
+shelf = "Salts"
+cas_number = "7647-14-5"
+reaction_products = Array[Resource]([ExtResource("p0")])
+reaction_product_mass_fractions = PackedFloat32Array(1)

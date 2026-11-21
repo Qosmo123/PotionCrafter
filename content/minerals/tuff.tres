@@ -1,0 +1,42 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/obsidian_glitter.tres" id="c0"]
+[ext_resource type="Resource" path="res://content/substances/silicate_dust.tres" id="c1"]
+[ext_resource type="Resource" path="res://content/minerals/fire_opal.tres" id="i0"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"tuff"
+display_name = "Volcanic Tuff"
+formula = "compacted volcanic ash"
+kind = 0
+rarity = 0
+hardness_mohs = 3
+density_kg_m3 = 1800
+typical_mass_kg = 0.12
+color = Color(0.75, 0.7, 0.6, 1)
+luster = 0
+shape = 0
+emission = Color(0, 0, 0, 1)
+value_coins = 2
+can_facet = false
+fun_fact = "Soft enough that people in Cappadocia carved whole cities into tuff."
+crush_products = Array[Resource]([ExtResource("c0"), ExtResource("c1")])
+crush_fractions = PackedFloat32Array(0.4, 0.6)
+inclusions = Array[Resource]([ExtResource("i0")])
+inclusion_chances = PackedFloat32Array(0.05)
+mineral_class = "Igneous (pyroclastic)"
+crystal_system = "—"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 0
+fracture = "earthy"
+diaphaneity = 2
+refractive_index = 0
+dispersion = 0
+phenomenon = 0
+colors_text = "cream to pink"
+localities = "Italy, Cappadocia (Turkey)"
+uses = "building stone"
+birthstone = ""

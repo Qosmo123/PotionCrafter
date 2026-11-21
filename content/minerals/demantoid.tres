@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/garnet_sand.tres" id="c0"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"demantoid"
+display_name = "Demantoid Garnet"
+formula = "Ca₃Fe₂(SiO₄)₃"
+kind = 3
+rarity = 4
+hardness_mohs = 6.5
+density_kg_m3 = 3850
+typical_mass_kg = 0.012
+color = Color(0.4, 0.75, 0.15, 1)
+luster = 6
+shape = 8
+emission = Color(0, 0, 0, 1)
+value_coins = 280
+can_facet = true
+fun_fact = "Its fire (dispersion) is even stronger than diamond's. Many contain golden 'horsetail' inclusions."
+crush_products = Array[Resource]([ExtResource("c0")])
+crush_fractions = PackedFloat32Array(1)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Silicate (garnet)"
+crystal_system = "Cubic"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 0
+fracture = "conchoidal"
+diaphaneity = 0
+refractive_index = 1.89
+dispersion = 0.057
+phenomenon = 0
+colors_text = "emerald green"
+localities = "Russia (Urals), Namibia"
+uses = "rare collector gem"
+birthstone = ""

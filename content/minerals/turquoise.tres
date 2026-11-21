@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/turquoise_powder.tres" id="c0"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"turquoise"
+display_name = "Turquoise"
+formula = "CuAl₆(PO₄)₄(OH)₈·4H₂O"
+kind = 3
+rarity = 1
+hardness_mohs = 5.5
+density_kg_m3 = 2700
+typical_mass_kg = 0.012
+color = Color(0.25, 0.75, 0.75, 1)
+luster = 3
+shape = 0
+emission = Color(0, 0, 0, 1)
+value_coins = 35
+can_facet = true
+fun_fact = "One of the first gems ever mined: Egyptians mined turquoise over 5,000 years ago."
+crush_products = Array[Resource]([ExtResource("c0")])
+crush_fractions = PackedFloat32Array(1)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Phosphate"
+crystal_system = "Triclinic"
+streak_name = "pale blue-green"
+streak_color = Color(0.6, 0.85, 0.8, 1)
+cleavage = 0
+fracture = "conchoidal"
+diaphaneity = 2
+refractive_index = 1.62
+dispersion = 0
+phenomenon = 0
+colors_text = "sky blue to green, often with dark veins"
+localities = "Iran, Arizona, Nevada, China"
+uses = "jewellery, inlays"
+birthstone = "December"

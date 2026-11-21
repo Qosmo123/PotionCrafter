@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/silicate_dust.tres" id="c0"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"augite"
+display_name = "Augite"
+formula = "(Ca,Na)(Mg,Fe,Al)(Si,Al)₂O₆"
+kind = 2
+rarity = 0
+hardness_mohs = 5.75
+density_kg_m3 = 3400
+typical_mass_kg = 0.02
+color = Color(0.15, 0.2, 0.12, 1)
+luster = 1
+shape = 1
+emission = Color(0, 0, 0, 1)
+value_coins = 3
+can_facet = false
+fun_fact = "A dark crystal common in basalt lava and on the Moon."
+crush_products = Array[Resource]([ExtResource("c0")])
+crush_fractions = PackedFloat32Array(1)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Silicate (pyroxene)"
+crystal_system = "Monoclinic"
+streak_name = "greenish grey"
+streak_color = Color(0.5, 0.55, 0.5, 1)
+cleavage = 6
+fracture = "uneven"
+diaphaneity = 2
+refractive_index = 1.7
+dispersion = 0
+phenomenon = 0
+colors_text = "dark green to black"
+localities = "worldwide in basalt"
+uses = "specimens"
+birthstone = ""

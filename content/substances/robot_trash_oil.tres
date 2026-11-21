@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"robot_trash_oil"
+display_name = "Little Trash Robot Oil"
+chemical_formula = "Rust·C₁₈"
+molar_mass_kg_mol = 0.03
+density_kg_m3 = 880
+specific_heat_j_kg_k = 3800
+melting_point_kelvin = 260
+boiling_point_kelvin = 372
+latent_heat_fusion_j_kg = 300000
+latent_heat_vaporization_j_kg = 2e+06
+viscosity_pas = 0.08
+pka_acidity = 7
+turbidity = 0.3
+base_albedo_rgba = Color(0.5, 0.35, 0.1, 0.7)
+shelf = "Movie Magic"
+description = "Squeaky-clean oil for a lonely little robot who cubes trash. Floats on water. Beep-boop."
+miscibility_group = 1
+magnetic = 0.2

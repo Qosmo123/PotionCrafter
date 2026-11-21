@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/gypsum_powder.tres" id="c0"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"selenite"
+display_name = "Selenite (Gypsum)"
+formula = "CaSO₄·2H₂O"
+kind = 2
+rarity = 0
+hardness_mohs = 2
+density_kg_m3 = 2320
+typical_mass_kg = 0.02
+color = Color(0.95, 0.95, 0.92, 1)
+luster = 4
+shape = 10
+emission = Color(0, 0, 0, 1)
+value_coins = 6
+can_facet = false
+fun_fact = "The Cave of Crystals in Mexico holds selenite beams longer than a bus. Gypsum is so soft your fingernail scratches it."
+crush_products = Array[Resource]([ExtResource("c0")])
+crush_fractions = PackedFloat32Array(1)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Sulfate"
+crystal_system = "Monoclinic"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 2
+fracture = "splintery"
+diaphaneity = 1
+refractive_index = 1.52
+dispersion = 0
+phenomenon = 0
+colors_text = "colourless to white, satin"
+localities = "Mexico (Naica crystal cave), Morocco"
+uses = "plaster, drywall"
+birthstone = ""

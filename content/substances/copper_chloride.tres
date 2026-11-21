@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+[ext_resource type="Resource" path="res://content/substances/copper_precipitate.tres" id="p0"]
+[ext_resource type="Resource" path="res://content/substances/dissolved_salts.tres" id="p1"]
+[ext_resource type="Resource" path="res://content/substances/copper_ammine_complex.tres" id="x0"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"copper_chloride"
+display_name = "Copper(II) Chloride"
+chemical_formula = "CuCl₂"
+specific_heat_j_kg_k = 900
+melting_point_kelvin = 900
+boiling_point_kelvin = 2000
+latent_heat_fusion_j_kg = 150000
+latent_heat_vaporization_j_kg = 1e+06
+viscosity_pas = 0.01
+pka_acidity = 7
+turbidity = 1
+molar_mass_kg_mol = 0.134
+density_kg_m3 = 3390
+base_albedo_rgba = Color(0.2, 0.55, 0.45, 1)
+flame_color = Color(0.1, 0.9, 0.55, 1)
+flame_strength = 0.95
+precipitant_charge = 1
+complexable = 0.7
+toxicity = 0.5
+environmental_hazard = 0.8
+shelf = "Flame Salts"
+cas_number = "7447-39-4"
+description = "Green crystals that turn flames a vivid blue-green."
+reaction_products = Array[Resource]([ExtResource("p0"), ExtResource("p1")])
+reaction_product_mass_fractions = PackedFloat32Array(0.6, 0.4)
+complex_products = Array[Resource]([ExtResource("x0")])
+complex_fractions = PackedFloat32Array(1)

@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/calcite_powder.tres" id="c0"]
+[ext_resource type="Resource" path="res://content/minerals/iceland_spar.tres" id="i0"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"marble"
+display_name = "Marble"
+formula = "recrystallised CaCO₃"
+kind = 0
+rarity = 0
+hardness_mohs = 3.5
+density_kg_m3 = 2700
+typical_mass_kg = 0.12
+color = Color(0.95, 0.94, 0.92, 1)
+luster = 1
+shape = 0
+emission = Color(0, 0, 0, 1)
+value_coins = 4
+can_facet = false
+fun_fact = "Michelangelo carved David from Carrara marble. It is limestone transformed by heat and pressure."
+crush_products = Array[Resource]([ExtResource("c0")])
+crush_fractions = PackedFloat32Array(1)
+inclusions = Array[Resource]([ExtResource("i0")])
+inclusion_chances = PackedFloat32Array(0.2)
+mineral_class = "Metamorphic"
+crystal_system = "—"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 4
+fracture = "granular"
+diaphaneity = 1
+refractive_index = 0
+dispersion = 0
+phenomenon = 0
+colors_text = "white, veined grey"
+localities = "Carrara (Italy), Greece, Vermont"
+uses = "sculpture, temples"
+birthstone = ""

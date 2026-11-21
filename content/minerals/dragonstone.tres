@@ -1,0 +1,43 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/firepepper_powder.tres" id="c0"]
+[ext_resource type="Resource" path="res://content/substances/sulfur_powder.tres" id="c1"]
+[ext_resource type="Resource" path="res://content/minerals/ruby.tres" id="i0"]
+[ext_resource type="Resource" path="res://content/minerals/garnet.tres" id="i1"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"dragonstone"
+display_name = "Dragonstone"
+formula = "Fe₂O₃·S (Ign)"
+kind = 0
+rarity = 2
+hardness_mohs = 4
+density_kg_m3 = 3500
+typical_mass_kg = 0.12
+color = Color(0.55, 0.15, 0.08, 1)
+luster = 0
+shape = 0
+emission = Color(0.2, 0.03, 0, 1)
+value_coins = 16
+can_facet = false
+fun_fact = "Legend says dragonstone is warm to the touch because a dragon once slept on it. It does smell a bit like a dragon."
+crush_products = Array[Resource]([ExtResource("c0"), ExtResource("c1")])
+crush_fractions = PackedFloat32Array(0.6, 0.4)
+inclusions = Array[Resource]([ExtResource("i0"), ExtResource("i1")])
+inclusion_chances = PackedFloat32Array(0.25, 0.4)
+mineral_class = "Fantasy oxide-sulfide"
+crystal_system = "Trigonal (dragon-baked)"
+streak_name = "ember red"
+streak_color = Color(0.7, 0.2, 0.08, 1)
+cleavage = 0
+fracture = "uneven, smoky"
+diaphaneity = 2
+refractive_index = 0
+dispersion = 0
+phenomenon = 0
+colors_text = "smouldering red-brown"
+localities = "dragon lairs, volcano rims (unconfirmed)"
+uses = "fire potions, warming pockets on cold days"
+birthstone = ""

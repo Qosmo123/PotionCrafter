@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://world_3d/grimoire_system/recipe_data.gd" id="1_recipe"]
+
+[resource]
+script = ExtResource("1_recipe")
+recipe_id = &"bubble_philtre"
+title = "Bubble Philtre"
+category = 0
+formula = "RCOO⁻Na⁺ + C₃H₈O₃ → stabilised lamellae (γ ↓)"
+description = "Surfactant lowers surface tension; glycerin keeps the films alive."
+riddle = ""
+ingredients = PackedStringArray("Saponified Lather", "Sweet Oil of Glycerin")
+method_steps = PackedStringArray("Mix lather with glycerin", "Whisk vigorously")
+condition_traits = PackedStringArray("foaming", "foam_stability", "foam_m")
+condition_min = PackedFloat32Array(0.4, 0.08, 0.003)
+condition_max = PackedFloat32Array(1e+09, 1e+09, 1e+09)

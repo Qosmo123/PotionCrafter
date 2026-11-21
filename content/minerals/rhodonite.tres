@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/silicate_dust.tres" id="c0"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"rhodonite"
+display_name = "Rhodonite"
+formula = "MnSiO₃"
+kind = 3
+rarity = 1
+hardness_mohs = 6
+density_kg_m3 = 3600
+typical_mass_kg = 0.012
+color = Color(0.85, 0.35, 0.45, 1)
+luster = 1
+shape = 0
+emission = Color(0, 0, 0, 1)
+value_coins = 15
+can_facet = true
+fun_fact = "Pink stone laced with black manganese oxide veins."
+crush_products = Array[Resource]([ExtResource("c0")])
+crush_fractions = PackedFloat32Array(1)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Silicate"
+crystal_system = "Triclinic"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 6
+fracture = "conchoidal"
+diaphaneity = 2
+refractive_index = 1.73
+dispersion = 0
+phenomenon = 0
+colors_text = "pink with black veins"
+localities = "Russia, Australia, Peru"
+uses = "carvings"
+birthstone = ""

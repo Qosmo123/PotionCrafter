@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"bog_gum"
+display_name = "Troll Snot"
+chemical_formula = "(C₆H₁₀O₅)ₙ·bog"
+molar_mass_kg_mol = 0.05
+density_kg_m3 = 1080
+specific_heat_j_kg_k = 3500
+melting_point_kelvin = 250
+boiling_point_kelvin = 375
+latent_heat_fusion_j_kg = 250000
+latent_heat_vaporization_j_kg = 2e+06
+viscosity_pas = 1.5
+pka_acidity = 7
+crosslink_sites = 0.8
+odor = 0.25
+base_albedo_rgba = Color(0.45, 0.75, 0.15, 0.85)
+turbidity = 0.6

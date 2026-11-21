@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/rhodochrosite_powder.tres" id="c0"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"rhodochrosite"
+display_name = "Rhodochrosite"
+formula = "MnCO₃"
+kind = 3
+rarity = 2
+hardness_mohs = 3.75
+density_kg_m3 = 3690
+typical_mass_kg = 0.012
+color = Color(0.95, 0.4, 0.5, 1)
+luster = 1
+shape = 11
+emission = Color(0, 0, 0, 1)
+value_coins = 55
+can_facet = true
+fun_fact = "Argentina's national gemstone, formed in old Inca silver mines."
+crush_products = Array[Resource]([ExtResource("c0")])
+crush_fractions = PackedFloat32Array(1)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Carbonate"
+crystal_system = "Trigonal"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 4
+fracture = "uneven"
+diaphaneity = 1
+refractive_index = 1.8
+dispersion = 0
+phenomenon = 0
+colors_text = "raspberry pink, banded"
+localities = "Argentina, Colorado, Peru"
+uses = "collector gem, carvings"
+birthstone = ""

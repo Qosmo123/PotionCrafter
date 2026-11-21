@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/corundum_grit.tres" id="c0"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"padparadscha"
+display_name = "Padparadscha Sapphire"
+formula = "Al₂O₃ (Cr, Fe)"
+kind = 3
+rarity = 4
+hardness_mohs = 9
+density_kg_m3 = 4000
+typical_mass_kg = 0.012
+color = Color(1, 0.55, 0.45, 1)
+luster = 1
+shape = 1
+emission = Color(0, 0, 0, 1)
+value_coins = 350
+can_facet = true
+fun_fact = "Its name means 'lotus blossom' in Sinhalese. Pinkish-orange like a tropical sunset, it is one of the rarest sapphires."
+crush_products = Array[Resource]([ExtResource("c0")])
+crush_fractions = PackedFloat32Array(1)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Oxide"
+crystal_system = "Trigonal"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 0
+fracture = "conchoidal"
+diaphaneity = 0
+refractive_index = 1.77
+dispersion = 0.018
+phenomenon = 0
+colors_text = "sunset pink-orange"
+localities = "Sri Lanka, Madagascar"
+uses = "rare collector gem"
+birthstone = ""

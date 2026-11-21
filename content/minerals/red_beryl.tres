@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/beryl_powder.tres" id="c0"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"red_beryl"
+display_name = "Red Beryl (Bixbite)"
+formula = "Be₃Al₂Si₆O₁₈ (Mn³⁺)"
+kind = 3
+rarity = 4
+hardness_mohs = 7.75
+density_kg_m3 = 2660
+typical_mass_kg = 0.012
+color = Color(0.8, 0.1, 0.3, 1)
+luster = 1
+shape = 1
+emission = Color(0, 0, 0, 1)
+value_coins = 450
+can_facet = true
+fun_fact = "Far rarer than diamond: almost all gem red beryl comes from a single mine in Utah."
+crush_products = Array[Resource]([ExtResource("c0")])
+crush_fractions = PackedFloat32Array(1)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Silicate (beryl)"
+crystal_system = "Hexagonal"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 1
+fracture = "conchoidal"
+diaphaneity = 0
+refractive_index = 1.57
+dispersion = 0.014
+phenomenon = 0
+colors_text = "raspberry red"
+localities = "Wah Wah Mountains (Utah, USA)"
+uses = "extremely rare collector gem"
+birthstone = ""

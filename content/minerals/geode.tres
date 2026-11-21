@@ -1,0 +1,44 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/quartz_sand_fine.tres" id="c0"]
+[ext_resource type="Resource" path="res://content/substances/fluorite_powder.tres" id="c1"]
+[ext_resource type="Resource" path="res://content/minerals/amethyst.tres" id="i0"]
+[ext_resource type="Resource" path="res://content/minerals/crystal_quartz.tres" id="i1"]
+[ext_resource type="Resource" path="res://content/minerals/fluorite_octahedron.tres" id="i2"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"geode"
+display_name = "Geode"
+formula = "SiO₂ shell"
+kind = 0
+rarity = 1
+hardness_mohs = 6
+density_kg_m3 = 2400
+typical_mass_kg = 0.15
+color = Color(0.55, 0.5, 0.45, 1)
+luster = 0
+shape = 3
+emission = Color(0, 0, 0, 1)
+value_coins = 10
+can_facet = false
+fun_fact = "Geodes look like boring rocks outside, but crack one open and it can be full of sparkling crystals."
+crush_products = Array[Resource]([ExtResource("c0"), ExtResource("c1")])
+crush_fractions = PackedFloat32Array(0.8, 0.2)
+inclusions = Array[Resource]([ExtResource("i0"), ExtResource("i1"), ExtResource("i2")])
+inclusion_chances = PackedFloat32Array(0.85, 0.6, 0.25)
+mineral_class = "Sedimentary nodule"
+crystal_system = "—"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 0
+fracture = "conchoidal"
+diaphaneity = 2
+refractive_index = 0
+dispersion = 0
+phenomenon = 0
+colors_text = "grey crust, crystal heart"
+localities = "Brazil, Mexico, Iowa"
+uses = "displays"
+birthstone = ""

@@ -1,0 +1,35 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+[ext_resource type="Resource" path="res://content/substances/dissolved_salts.tres" id="p0"]
+[ext_resource type="Resource" path="res://content/substances/water.tres" id="p1"]
+[ext_resource type="Resource" path="res://content/substances/carbon_foam.tres" id="r0"]
+[ext_resource type="Resource" path="res://content/substances/sulfur_dioxide.tres" id="r1"]
+[ext_resource type="Resource" path="res://content/substances/water.tres" id="r2"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"sulfuric_acid"
+display_name = "Oil of Vitriol"
+chemical_formula = "H₂SO₄"
+specific_heat_j_kg_k = 3800
+melting_point_kelvin = 283
+boiling_point_kelvin = 610
+latent_heat_fusion_j_kg = 300000
+latent_heat_vaporization_j_kg = 2.1e+06
+viscosity_pas = 0.0267
+pka_acidity = -3
+turbidity = 0.05
+molar_mass_kg_mol = 0.098
+density_kg_m3 = 1830
+base_albedo_rgba = Color(0.97, 0.96, 0.9, 0.15)
+oxidizer_strength = 0.45
+redox_enthalpy_j_mol = -250000
+toxicity = 0.7
+shelf = "Acids"
+cas_number = "7664-93-9"
+description = "Thick, dense, fiercely dehydrating acid. Pulls water out of sugar to grow a smoking black carbon snake."
+reaction_products = Array[Resource]([ExtResource("p0"), ExtResource("p1")])
+reaction_product_mass_fractions = PackedFloat32Array(0.7, 0.3)
+redox_products = Array[Resource]([ExtResource("r0"), ExtResource("r1"), ExtResource("r2")])
+redox_fractions = PackedFloat32Array(0.5, 0.2, 0.3)

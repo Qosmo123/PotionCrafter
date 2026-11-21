@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://world_3d/grimoire_system/recipe_data.gd" id="1_recipe"]
+
+[resource]
+script = ExtResource("1_recipe")
+recipe_id = &"witch_brew"
+title = "Witch's Bubbling Brew"
+category = 3
+formula = "Wart + H⁺ → CO₂ + cackling"
+description = "Bubbles, burps and grumbles the moment it meets anything sour. Hubble bubble!"
+riddle = ""
+ingredients = PackedStringArray("Witch's Wart Juice", "Lemon Salt or Vinegar")
+method_steps = PackedStringArray("Pour wart juice", "Add something sour")
+condition_traits = PackedStringArray("fraction:witch_wart_juice", "gas_rate")
+condition_min = PackedFloat32Array(0.01, 0.001)
+condition_max = PackedFloat32Array(1, 1e+09)

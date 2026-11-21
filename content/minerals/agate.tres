@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/quartz_sand_fine.tres" id="c0"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"agate"
+display_name = "Banded Agate"
+formula = "SiO₂ (chalcedony)"
+kind = 3
+rarity = 0
+hardness_mohs = 7
+density_kg_m3 = 2600
+typical_mass_kg = 0.012
+color = Color(0.7, 0.55, 0.45, 1)
+luster = 3
+shape = 3
+emission = Color(0, 0, 0, 1)
+value_coins = 12
+can_facet = true
+fun_fact = "Each band grew one layer at a time inside a gas bubble in old lava."
+crush_products = Array[Resource]([ExtResource("c0")])
+crush_fractions = PackedFloat32Array(1)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Silicate (quartz)"
+crystal_system = "Trigonal"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 0
+fracture = "conchoidal"
+diaphaneity = 1
+refractive_index = 1.54
+dispersion = 0
+phenomenon = 0
+colors_text = "concentric bands of every colour"
+localities = "Brazil, Mexico, Lake Superior"
+uses = "bookends, carvings"
+birthstone = ""

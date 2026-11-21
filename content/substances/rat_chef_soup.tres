@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+[ext_resource type="Resource" path="res://content/substances/water.tres" id="p0"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"rat_chef_soup"
+display_name = "Little Rat Chef's Soup"
+chemical_formula = "Ratatouille(aq)"
+molar_mass_kg_mol = 0.03
+density_kg_m3 = 1040
+specific_heat_j_kg_k = 3800
+melting_point_kelvin = 260
+boiling_point_kelvin = 372
+latent_heat_fusion_j_kg = 300000
+latent_heat_vaporization_j_kg = 2e+06
+viscosity_pas = 0.002
+pka_acidity = 7
+turbidity = 0.3
+base_albedo_rgba = Color(0.85, 0.35, 0.15, 0.85)
+shelf = "Movie Magic"
+description = "Anyone can cook! Smells amazing. Warms gently and has a hint of herbs."
+odor = 0.3
+vitality_resonance = 0.4
+decomposition_rate_per_s = 0.005
+decomposition_enthalpy_j_mol = -30000
+reaction_products = Array[Resource]([ExtResource("p0")])
+reaction_product_mass_fractions = PackedFloat32Array(1)

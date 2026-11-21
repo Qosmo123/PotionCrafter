@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+[ext_resource type="Resource" path="res://content/substances/rotten_egg_gas.tres" id="p0"]
+[ext_resource type="Resource" path="res://content/substances/copper_sulfate.tres" id="p1"]
+[ext_resource type="Resource" path="res://content/substances/dissolved_salts.tres" id="p2"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"chalcopyrite_powder"
+display_name = "Chalcopyrite Dust"
+chemical_formula = "CuFeS₂"
+specific_heat_j_kg_k = 800
+melting_point_kelvin = 1500
+boiling_point_kelvin = 3000
+latent_heat_fusion_j_kg = 200000
+latent_heat_vaporization_j_kg = 1e+06
+viscosity_pas = 0.01
+pka_acidity = 9.5
+turbidity = 1
+molar_mass_kg_mol = 0.183
+density_kg_m3 = 4200
+base_albedo_rgba = Color(0.25, 0.3, 0.15, 1)
+description = "Greenish-black copper-iron sulfide dust."
+glitter = 0.3
+reaction_products = Array[Resource]([ExtResource("p0"), ExtResource("p1"), ExtResource("p2")])
+reaction_product_mass_fractions = PackedFloat32Array(0.2, 0.3, 0.5)

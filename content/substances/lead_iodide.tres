@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"lead_iodide"
+display_name = "Golden Rain"
+chemical_formula = "PbI₂"
+specific_heat_j_kg_k = 900
+melting_point_kelvin = 675
+boiling_point_kelvin = 2000
+latent_heat_fusion_j_kg = 150000
+latent_heat_vaporization_j_kg = 1e+06
+viscosity_pas = 0.01
+pka_acidity = 7
+turbidity = 1
+molar_mass_kg_mol = 0.461
+density_kg_m3 = 6160
+base_albedo_rgba = Color(1, 0.82, 0.1, 1)
+glitter = 0.85
+toxicity = 0.8
+health_hazard = 0.8
+environmental_hazard = 0.9
+description = "Glittering hexagonal gold flakes of lead iodide."

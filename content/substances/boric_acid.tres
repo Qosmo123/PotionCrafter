@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+[ext_resource type="Resource" path="res://content/substances/dissolved_salts.tres" id="p0"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"boric_acid"
+display_name = "Boric Acid"
+chemical_formula = "H₃BO₃"
+specific_heat_j_kg_k = 900
+melting_point_kelvin = 444
+boiling_point_kelvin = 2000
+latent_heat_fusion_j_kg = 150000
+latent_heat_vaporization_j_kg = 1e+06
+viscosity_pas = 0.01
+pka_acidity = 6
+turbidity = 1
+molar_mass_kg_mol = 0.0618
+density_kg_m3 = 1435
+base_albedo_rgba = Color(0.98, 0.98, 0.98, 1)
+flame_color = Color(0.35, 1, 0.3, 1)
+flame_strength = 0.8
+toxicity = 0.3
+health_hazard = 0.4
+shelf = "Flame Salts"
+cas_number = "10043-35-3"
+description = "A very weak acid. Dissolved in spirit and lit, it burns with an eerie bright green flame."
+reaction_products = Array[Resource]([ExtResource("p0")])
+reaction_product_mass_fractions = PackedFloat32Array(1)

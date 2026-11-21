@@ -1,0 +1,42 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/silicate_dust.tres" id="c0"]
+[ext_resource type="Resource" path="res://content/substances/mica_flakes.tres" id="c1"]
+[ext_resource type="Resource" path="res://content/minerals/fool_gold_cube.tres" id="i0"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"slate"
+display_name = "Slate"
+formula = "clay minerals + mica"
+kind = 0
+rarity = 0
+hardness_mohs = 3.5
+density_kg_m3 = 2800
+typical_mass_kg = 0.12
+color = Color(0.3, 0.32, 0.36, 1)
+luster = 0
+shape = 9
+emission = Color(0, 0, 0, 1)
+value_coins = 2
+can_facet = false
+fun_fact = "Slate splits into flat sheets, which is why it makes great roof tiles and old school blackboards."
+crush_products = Array[Resource]([ExtResource("c0"), ExtResource("c1")])
+crush_fractions = PackedFloat32Array(0.7, 0.3)
+inclusions = Array[Resource]([ExtResource("i0")])
+inclusion_chances = PackedFloat32Array(0.2)
+mineral_class = "Metamorphic"
+crystal_system = "—"
+streak_name = "grey"
+streak_color = Color(0.5, 0.5, 0.5, 1)
+cleavage = 2
+fracture = "splits into sheets"
+diaphaneity = 2
+refractive_index = 0
+dispersion = 0
+phenomenon = 0
+colors_text = "dark blue-grey"
+localities = "Wales, Vermont, Spain"
+uses = "roof tiles, chalkboards"
+birthstone = ""

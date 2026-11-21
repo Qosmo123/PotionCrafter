@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+[ext_resource type="Resource" path="res://content/substances/spent_essence.tres" id="p0"]
+[ext_resource type="Resource" path="res://content/substances/water.tres" id="p1"]
+[ext_resource type="Resource" path="res://content/substances/dissolved_salts.tres" id="p2"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"emberberry_juice"
+display_name = "Emberberry Juice"
+chemical_formula = "Ign⁺·C₆H₁₂O₆(aq)"
+molar_mass_kg_mol = 0.03
+density_kg_m3 = 1080
+specific_heat_j_kg_k = 3600
+melting_point_kelvin = 265
+boiling_point_kelvin = 368
+latent_heat_fusion_j_kg = 280000
+latent_heat_vaporization_j_kg = 1.9e+06
+viscosity_pas = 0.003
+pka_acidity = 7
+flammability = 0.5
+polarity_charge = 0.6
+thaumic_density_thaums_mol = 30
+base_albedo_rgba = Color(0.95, 0.3, 0.12, 0.7)
+turbidity = 0.4
+emissive_aura_hdr = Color(1.6, 0.45, 0.1, 1)
+reaction_products = Array[Resource]([ExtResource("p0"), ExtResource("p1"), ExtResource("p2")])
+reaction_product_mass_fractions = PackedFloat32Array(0.3, 0.5, 0.2)

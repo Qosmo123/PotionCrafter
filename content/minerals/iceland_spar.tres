@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/calcite_powder.tres" id="c0"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"iceland_spar"
+display_name = "Calcite (Iceland Spar)"
+formula = "CaCO₃"
+kind = 2
+rarity = 1
+hardness_mohs = 3
+density_kg_m3 = 2710
+typical_mass_kg = 0.02
+color = Color(0.97, 0.97, 0.95, 1)
+luster = 1
+shape = 11
+emission = Color(0, 0, 0, 1)
+value_coins = 15
+can_facet = false
+fun_fact = "Look through clear calcite and you see double! It splits light into two rays. It also fizzes in acid and breaks into perfect rhombs."
+crush_products = Array[Resource]([ExtResource("c0")])
+crush_fractions = PackedFloat32Array(1)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Carbonate"
+crystal_system = "Trigonal"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 4
+fracture = "conchoidal"
+diaphaneity = 0
+refractive_index = 1.66
+dispersion = 0.017
+phenomenon = 8
+colors_text = "colourless, white, honey"
+localities = "Iceland, Mexico, worldwide"
+uses = "optics, cement, chalk"
+birthstone = ""

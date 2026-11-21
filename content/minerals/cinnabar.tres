@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/cinnabar_powder.tres" id="c0"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"cinnabar"
+display_name = "Cinnabar"
+formula = "HgS"
+kind = 2
+rarity = 2
+hardness_mohs = 2.25
+density_kg_m3 = 8100
+typical_mass_kg = 0.02
+color = Color(0.8, 0.1, 0.1, 1)
+luster = 6
+shape = 1
+emission = Color(0, 0, 0, 1)
+value_coins = 35
+can_facet = false
+fun_fact = "Beautiful but poisonous: it is the main ore of mercury and was ground into the red paint vermilion."
+crush_products = Array[Resource]([ExtResource("c0")])
+crush_fractions = PackedFloat32Array(1)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Sulfide"
+crystal_system = "Trigonal"
+streak_name = "scarlet"
+streak_color = Color(0.85, 0.15, 0.1, 1)
+cleavage = 6
+fracture = "uneven"
+diaphaneity = 1
+refractive_index = 2.9
+dispersion = 0.4
+phenomenon = 0
+colors_text = "bright scarlet"
+localities = "Spain (Almadén), China, California"
+uses = "mercury ore, vermilion pigment"
+birthstone = ""

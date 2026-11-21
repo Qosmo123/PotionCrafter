@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"duskberry_juice"
+display_name = "Duskberry Juice"
+chemical_formula = "C₁₅H₁₁O₆⁺(aq)"
+molar_mass_kg_mol = 0.03
+density_kg_m3 = 1040
+specific_heat_j_kg_k = 3900
+melting_point_kelvin = 268
+boiling_point_kelvin = 374
+latent_heat_fusion_j_kg = 300000
+latent_heat_vaporization_j_kg = 2.1e+06
+viscosity_pas = 0.002
+pka_acidity = 7
+indicator_strength = 1
+base_albedo_rgba = Color(0.45, 0.15, 0.6, 0.75)
+turbidity = 0.5
+indicator_acid_color = Color(0.95, 0.12, 0.3, 0.8)
+indicator_base_color = Color(0.1, 0.75, 0.55, 0.8)

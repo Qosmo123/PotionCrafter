@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"starch"
+display_name = "Potato Starch"
+chemical_formula = "(C₆H₁₀O₅)ₙ"
+specific_heat_j_kg_k = 900
+melting_point_kelvin = 520
+boiling_point_kelvin = 2000
+latent_heat_fusion_j_kg = 150000
+latent_heat_vaporization_j_kg = 1e+06
+viscosity_pas = 0.01
+pka_acidity = 7
+turbidity = 1
+molar_mass_kg_mol = 0.162
+density_kg_m3 = 1500
+base_albedo_rgba = Color(0.97, 0.96, 0.92, 1)
+ligand_strength = 0.8
+shelf = "Organics"
+cas_number = "9005-25-8"
+description = "Wraps around iodine to form a deep blue-black complex."

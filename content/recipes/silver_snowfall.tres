@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://world_3d/grimoire_system/recipe_data.gd" id="1_recipe"]
+
+[resource]
+script = ExtResource("1_recipe")
+recipe_id = &"silver_snowfall"
+title = "Silver Snowfall"
+category = 0
+formula = "Ag⁺ + Cl⁻ → AgCl↓ (white)"
+description = "Curds of luna cornea drift down and settle like snow."
+riddle = ""
+ingredients = PackedStringArray("Lunar Caustic", "Sea Brine")
+method_steps = PackedStringArray("Pour brine into lunar caustic", "Watch it cloud, then settle")
+condition_traits = PackedStringArray("fraction:silver_precipitate")
+condition_min = PackedFloat32Array(0.01)
+condition_max = PackedFloat32Array(1)

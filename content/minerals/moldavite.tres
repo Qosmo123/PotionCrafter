@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/obsidian_glitter.tres" id="c0"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"moldavite"
+display_name = "Moldavite"
+formula = "SiO₂ (impact glass)"
+kind = 3
+rarity = 3
+hardness_mohs = 5.5
+density_kg_m3 = 2360
+typical_mass_kg = 0.012
+color = Color(0.35, 0.6, 0.2, 1)
+luster = 1
+shape = 0
+emission = Color(0, 0, 0, 1)
+value_coins = 90
+can_facet = true
+fun_fact = "Made 15 million years ago when a meteorite hit Germany and splashed molten glass across Bohemia."
+crush_products = Array[Resource]([ExtResource("c0")])
+crush_fractions = PackedFloat32Array(1)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Tektite glass"
+crystal_system = "Amorphous"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 0
+fracture = "conchoidal"
+diaphaneity = 0
+refractive_index = 1.49
+dispersion = 0
+phenomenon = 0
+colors_text = "bottle green"
+localities = "Czech Republic"
+uses = "jewellery"
+birthstone = ""

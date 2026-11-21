@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://world_3d/grimoire_system/recipe_data.gd" id="1_recipe"]
+
+[resource]
+script = ExtResource("1_recipe")
+recipe_id = &"carbon_snake"
+title = "The Carbon Snake"
+category = 0
+formula = "C₁₂H₂₂O₁₁ —(H₂SO₄)→ 12 C + 11 H₂O"
+description = "Sulfuric acid rips the water out of sugar; black carbon foam rises like a snake."
+riddle = ""
+ingredients = PackedStringArray("Table Sugar", "Oil of Vitriol")
+method_steps = PackedStringArray("Pile sugar in a beaker", "Pour sulfuric acid over it", "Stand back")
+condition_traits = PackedStringArray("fraction:carbon_foam")
+condition_min = PackedFloat32Array(0.005)
+condition_max = PackedFloat32Array(1)

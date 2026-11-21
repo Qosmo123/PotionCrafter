@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://world_3d/grimoire_system/recipe_data.gd" id="1_recipe"]
+
+[resource]
+script = ExtResource("1_recipe")
+recipe_id = &"starch_test"
+title = "The Blue-Black Starch Test"
+category = 0
+formula = "starch + I₂ → blue-black complex"
+description = "Iodine slips inside coiled starch molecules and turns jet blue-black."
+riddle = ""
+ingredients = PackedStringArray("Potato Starch", "Tincture of Iodine", "Water")
+method_steps = PackedStringArray("Stir starch into water", "Add a drop of iodine")
+condition_traits = PackedStringArray("fraction:starch_iodine_complex")
+condition_min = PackedFloat32Array(0.001)
+condition_max = PackedFloat32Array(1)

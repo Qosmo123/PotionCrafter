@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/beryl_powder.tres" id="c0"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"morganite"
+display_name = "Morganite"
+formula = "Be₃Al₂Si₆O₁₈ (Mn)"
+kind = 3
+rarity = 2
+hardness_mohs = 7.75
+density_kg_m3 = 2800
+typical_mass_kg = 0.012
+color = Color(1, 0.75, 0.75, 1)
+luster = 1
+shape = 1
+emission = Color(0, 0, 0, 1)
+value_coins = 50
+can_facet = true
+fun_fact = "Pink beryl coloured by manganese, named after the banker J.P. Morgan."
+crush_products = Array[Resource]([ExtResource("c0")])
+crush_fractions = PackedFloat32Array(1)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Silicate (beryl)"
+crystal_system = "Hexagonal"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 1
+fracture = "conchoidal"
+diaphaneity = 0
+refractive_index = 1.59
+dispersion = 0.014
+phenomenon = 0
+colors_text = "peach to pink"
+localities = "Madagascar, Brazil, Afghanistan"
+uses = "jewellery"
+birthstone = ""

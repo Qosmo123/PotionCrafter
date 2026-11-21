@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="VesselProfile" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://world_3d/vessels/vessel_profile.gd" id="1_script"]
+[ext_resource type="ArrayMesh" path="res://world_3d/vessels/meshes/round_flask_glass.obj" id="2_glass"]
+[ext_resource type="ArrayMesh" path="res://world_3d/vessels/meshes/round_flask_liquid.obj" id="3_liquid"]
+
+[resource]
+script = ExtResource("1_script")
+vessel_name = "round_flask"
+glass_mesh = ExtResource("2_glass")
+liquid_mesh = ExtResource("3_liquid")
+inner_profile = PackedVector2Array(0.000000, -0.078725, 0.004738, -0.078480, 0.009425, -0.077749, 0.014012, -0.076539, 0.018450, -0.074863, 0.022692, -0.072739, 0.026692, -0.070189, 0.030409, -0.067240, 0.033802, -0.063925, 0.036835, -0.060278, 0.039477, -0.056337, 0.041699, -0.052146, 0.043478, -0.047748, 0.044794, -0.043190, 0.045633, -0.038521, 0.045988, -0.033790, 0.045853, -0.029048, 0.045230, -0.024345, 0.044127, -0.019732, 0.042554, -0.015256, 0.040528, -0.010966, 0.038072, -0.006908, 0.035210, -0.003124, 0.031975, 0.000345, 0.028399, 0.003462, 0.024521, 0.006195, 0.020382, 0.008513, 0.016026, 0.010393, 0.011500, 0.011814, 0.011500, 0.023814, 0.011500, 0.071275, 0.012420, 0.079275)
+outer_radius_meters = 0.048187
+height_meters = 0.161850
+glass_mass_kg = 0.160052
+modelled_capacity_m3 = 0.000420422

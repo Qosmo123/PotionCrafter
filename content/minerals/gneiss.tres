@@ -1,0 +1,44 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/quartz_sand_fine.tres" id="c0"]
+[ext_resource type="Resource" path="res://content/substances/feldspar_powder.tres" id="c1"]
+[ext_resource type="Resource" path="res://content/substances/mica_flakes.tres" id="c2"]
+[ext_resource type="Resource" path="res://content/minerals/pyrope.tres" id="i0"]
+[ext_resource type="Resource" path="res://content/minerals/kyanite_gem.tres" id="i1"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"gneiss"
+display_name = "Gneiss"
+formula = "banded quartz + feldspar + mica"
+kind = 0
+rarity = 0
+hardness_mohs = 6.5
+density_kg_m3 = 2700
+typical_mass_kg = 0.12
+color = Color(0.55, 0.52, 0.5, 1)
+luster = 0
+shape = 0
+emission = Color(0, 0, 0, 1)
+value_coins = 3
+can_facet = false
+fun_fact = "Some gneiss in Canada is over 4 billion years old."
+crush_products = Array[Resource]([ExtResource("c0"), ExtResource("c1"), ExtResource("c2")])
+crush_fractions = PackedFloat32Array(0.35, 0.45, 0.2)
+inclusions = Array[Resource]([ExtResource("i0"), ExtResource("i1")])
+inclusion_chances = PackedFloat32Array(0.15, 0.1)
+mineral_class = "Metamorphic"
+crystal_system = "—"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 0
+fracture = "uneven"
+diaphaneity = 2
+refractive_index = 0
+dispersion = 0
+phenomenon = 0
+colors_text = "black and white bands"
+localities = "Canada (Acasta), Scotland"
+uses = "building stone"
+birthstone = ""

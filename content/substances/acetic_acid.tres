@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+[ext_resource type="Resource" path="res://content/substances/dissolved_salts.tres" id="p0"]
+[ext_resource type="Resource" path="res://content/substances/water.tres" id="p1"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"acetic_acid"
+display_name = "Essence of Vinegar"
+chemical_formula = "CH₃COOH"
+molar_mass_kg_mol = 0.06005
+density_kg_m3 = 1049
+specific_heat_j_kg_k = 2050
+melting_point_kelvin = 289.8
+boiling_point_kelvin = 391
+latent_heat_fusion_j_kg = 192000
+latent_heat_vaporization_j_kg = 395000
+viscosity_pas = 0.00122
+pka_acidity = 4.76
+base_albedo_rgba = Color(0.97, 0.95, 0.85, 0.12)
+turbidity = 0.02
+shelf = "Acids"
+cas_number = "64-19-7"
+toxicity = 0.2
+reaction_products = Array[Resource]([ExtResource("p0"), ExtResource("p1")])
+reaction_product_mass_fractions = PackedFloat32Array(0.7, 0.3)

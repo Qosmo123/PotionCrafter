@@ -1,0 +1,46 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/silicate_dust.tres" id="c0"]
+[ext_resource type="Resource" path="res://content/substances/feldspar_powder.tres" id="c1"]
+[ext_resource type="Resource" path="res://content/substances/olivine_sand.tres" id="c2"]
+[ext_resource type="Resource" path="res://content/substances/magnetite_sand.tres" id="c3"]
+[ext_resource type="Resource" path="res://content/minerals/olivine.tres" id="i0"]
+[ext_resource type="Resource" path="res://content/minerals/augite.tres" id="i1"]
+[ext_resource type="Resource" path="res://content/minerals/peridot.tres" id="i2"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"basalt"
+display_name = "Basalt"
+formula = "plagioclase + pyroxene + olivine"
+kind = 0
+rarity = 0
+hardness_mohs = 6
+density_kg_m3 = 3000
+typical_mass_kg = 0.12
+color = Color(0.2, 0.2, 0.2, 1)
+luster = 0
+shape = 0
+emission = Color(0, 0, 0, 1)
+value_coins = 2
+can_facet = false
+fun_fact = "Most of the ocean floor is basalt, and the dark patches on the Moon are basalt lava plains."
+crush_products = Array[Resource]([ExtResource("c0"), ExtResource("c1"), ExtResource("c2"), ExtResource("c3")])
+crush_fractions = PackedFloat32Array(0.5, 0.25, 0.15, 0.1)
+inclusions = Array[Resource]([ExtResource("i0"), ExtResource("i1"), ExtResource("i2")])
+inclusion_chances = PackedFloat32Array(0.35, 0.3, 0.08)
+mineral_class = "Igneous (volcanic)"
+crystal_system = "—"
+streak_name = "grey"
+streak_color = Color(0.4, 0.4, 0.4, 1)
+cleavage = 0
+fracture = "uneven"
+diaphaneity = 2
+refractive_index = 0
+dispersion = 0
+phenomenon = 0
+colors_text = "dark grey to black"
+localities = "Hawaii, Iceland, the ocean floor, the Moon"
+uses = "road stone"
+birthstone = ""

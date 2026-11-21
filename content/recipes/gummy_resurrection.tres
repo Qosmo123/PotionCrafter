@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://world_3d/grimoire_system/recipe_data.gd" id="1_recipe"]
+
+[resource]
+script = ExtResource("1_recipe")
+recipe_id = &"gummy_resurrection"
+title = "Gummy Bear Resurrection"
+category = 3
+formula = "Puddle + B(OH)₄⁻ → BEAR (sort of)"
+description = "Melted gummy bears set back into jelly. They come back... different."
+riddle = ""
+ingredients = PackedStringArray("Melted Gummy Bears", "Borax Lye")
+method_steps = PackedStringArray("Add borax to the puddle")
+condition_traits = PackedStringArray("fraction:gummy_bear_goo", "gel")
+condition_min = PackedFloat32Array(0.01, 0.3)
+condition_max = PackedFloat32Array(1, 1e+09)

@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+[ext_resource type="Resource" path="res://content/substances/silica_gel.tres" id="p0"]
+[ext_resource type="Resource" path="res://content/substances/dissolved_salts.tres" id="p1"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"sodium_silicate"
+display_name = "Water Glass"
+chemical_formula = "Na₂SiO₃(aq)"
+specific_heat_j_kg_k = 3800
+melting_point_kelvin = 260
+boiling_point_kelvin = 375
+latent_heat_fusion_j_kg = 300000
+latent_heat_vaporization_j_kg = 2.1e+06
+viscosity_pas = 0.1
+pka_acidity = 11.5
+turbidity = 0.05
+molar_mass_kg_mol = 0.122
+density_kg_m3 = 1390
+base_albedo_rgba = Color(0.95, 0.97, 0.95, 0.2)
+precipitant_charge = -1
+shelf = "Salts"
+cas_number = "1344-09-8"
+description = "Syrupy silicate. Drop in coloured metal salts and a 'chemical garden' grows."
+reaction_products = Array[Resource]([ExtResource("p0"), ExtResource("p1")])
+reaction_product_mass_fractions = PackedFloat32Array(0.6, 0.4)

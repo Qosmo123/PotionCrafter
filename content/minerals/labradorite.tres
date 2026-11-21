@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/feldspar_powder.tres" id="c0"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"labradorite"
+display_name = "Labradorite"
+formula = "(Ca,Na)(Al,Si)₄O₈"
+kind = 3
+rarity = 1
+hardness_mohs = 6.25
+density_kg_m3 = 2700
+typical_mass_kg = 0.012
+color = Color(0.35, 0.4, 0.42, 1)
+luster = 1
+shape = 9
+emission = Color(0, 0, 0, 1)
+value_coins = 25
+can_facet = true
+fun_fact = "Its colour flash (labradorescence) comes from light bouncing between microscopic layers inside the crystal."
+crush_products = Array[Resource]([ExtResource("c0")])
+crush_fractions = PackedFloat32Array(1)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Silicate (feldspar)"
+crystal_system = "Triclinic"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 2
+fracture = "uneven"
+diaphaneity = 1
+refractive_index = 1.56
+dispersion = 0.012
+phenomenon = 6
+colors_text = "grey with flashes of blue, green and gold"
+localities = "Labrador (Canada), Finland, Madagascar"
+uses = "carvings, cabochons"
+birthstone = ""

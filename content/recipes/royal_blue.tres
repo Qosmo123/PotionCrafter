@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://world_3d/grimoire_system/recipe_data.gd" id="1_recipe"]
+
+[resource]
+script = ExtResource("1_recipe")
+recipe_id = &"royal_blue"
+title = "Royal Blue Copper"
+category = 0
+formula = "Cu²⁺ + 4 NH₃ → [Cu(NH₃)₄]²⁺"
+description = "Ammonia wraps around copper ions and makes the deepest blue in chemistry."
+riddle = ""
+ingredients = PackedStringArray("Blue Vitriol", "Spirit of Hartshorn (ammonia)")
+method_steps = PackedStringArray("Add ammonia drop by drop", "First a pale cloud, then deep blue")
+condition_traits = PackedStringArray("fraction:copper_ammine_complex")
+condition_min = PackedFloat32Array(0.003)
+condition_max = PackedFloat32Array(1)

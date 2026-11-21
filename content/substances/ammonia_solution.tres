@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+[ext_resource type="Resource" path="res://content/substances/dissolved_salts.tres" id="p0"]
+[ext_resource type="Resource" path="res://content/substances/water.tres" id="p1"]
+[ext_resource type="Resource" path="res://content/substances/chloramine_gas.tres" id="r0"]
+[ext_resource type="Resource" path="res://content/substances/water.tres" id="r1"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"ammonia_solution"
+display_name = "Spirit of Hartshorn"
+chemical_formula = "NH₃(aq)"
+specific_heat_j_kg_k = 3800
+melting_point_kelvin = 260
+boiling_point_kelvin = 310
+latent_heat_fusion_j_kg = 300000
+latent_heat_vaporization_j_kg = 2.1e+06
+viscosity_pas = 0.0012
+pka_acidity = 9.25
+turbidity = 0.05
+molar_mass_kg_mol = 0.017
+density_kg_m3 = 900
+base_albedo_rgba = Color(0.95, 0.97, 1, 0.1)
+ligand_strength = 0.9
+reducer_strength = 0.4
+odor = 0.7
+toxicity = 0.4
+environmental_hazard = 0.5
+shelf = "Bases"
+cas_number = "1336-21-6"
+description = "Pungent household base. Turns copper solutions a stunning royal blue. NEVER mix with bleach!"
+reaction_products = Array[Resource]([ExtResource("p0"), ExtResource("p1")])
+reaction_product_mass_fractions = PackedFloat32Array(0.6, 0.4)
+redox_products = Array[Resource]([ExtResource("r0"), ExtResource("r1")])
+redox_fractions = PackedFloat32Array(0.6, 0.4)

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://world_3d/grimoire_system/recipe_data.gd" id="1_recipe"]
+
+[resource]
+script = ExtResource("1_recipe")
+recipe_id = &"golden_rain"
+title = "Golden Rain"
+category = 0
+formula = "Pb(NO₃)₂ + 2 KI → PbI₂↓ + 2 KNO₃"
+description = "Glittering hexagonal flakes of golden lead iodide drift down. (Lead is toxic!)"
+riddle = ""
+ingredients = PackedStringArray("Lead Nitrate", "Catalyst of Iodine (potassium iodide)", "Water")
+method_steps = PackedStringArray("Dissolve both salts", "Mix them")
+condition_traits = PackedStringArray("fraction:lead_iodide")
+condition_min = PackedFloat32Array(0.002)
+condition_max = PackedFloat32Array(1)

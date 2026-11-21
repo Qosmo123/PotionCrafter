@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+[ext_resource type="Resource" path="res://content/substances/carbon_dioxide.tres" id="p0"]
+[ext_resource type="Resource" path="res://content/substances/water.tres" id="p1"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"salamander_oil"
+display_name = "Salamander Oil"
+chemical_formula = "C₁₈H₃₄O₂"
+molar_mass_kg_mol = 0.2825
+density_kg_m3 = 910
+specific_heat_j_kg_k = 1970
+melting_point_kelvin = 260
+boiling_point_kelvin = 570
+latent_heat_fusion_j_kg = 140000
+latent_heat_vaporization_j_kg = 300000
+viscosity_pas = 0.06
+pka_acidity = 7
+flammability = 0.6
+combustion_enthalpy_j_kg = -3.7e+07
+miscibility_group = 1
+base_albedo_rgba = Color(0.98, 0.72, 0.15, 0.55)
+turbidity = 0.08
+ior = 1.47
+surface_tension_n_m = 0.032
+reaction_products = Array[Resource]([ExtResource("p0"), ExtResource("p1")])
+reaction_product_mass_fractions = PackedFloat32Array(0.6, 0.4)

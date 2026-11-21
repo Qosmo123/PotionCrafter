@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/quartz_sand_coarse.tres" id="c0"]
+[ext_resource type="Resource" path="res://content/substances/quartz_sand_medium.tres" id="c1"]
+[ext_resource type="Resource" path="res://content/substances/quartz_sand_fine.tres" id="c2"]
+[ext_resource type="Resource" path="res://content/substances/magnetite_sand.tres" id="c3"]
+[ext_resource type="Resource" path="res://content/minerals/gold_nugget.tres" id="i0"]
+[ext_resource type="Resource" path="res://content/minerals/garnet.tres" id="i1"]
+[ext_resource type="Resource" path="res://content/minerals/crystal_quartz.tres" id="i2"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"river_sand"
+display_name = "River Sand Bag"
+formula = "SiO₂ mix"
+kind = 1
+rarity = 0
+hardness_mohs = 7
+density_kg_m3 = 1600
+typical_mass_kg = 0.25
+color = Color(0.7, 0.62, 0.48, 1)
+luster = 0
+shape = 4
+emission = Color(0, 0, 0, 1)
+value_coins = 2
+can_facet = false
+fun_fact = "River sand is ground-down mountains carried downstream. Prospectors still pan rivers for gold!"
+crush_products = Array[Resource]([ExtResource("c0"), ExtResource("c1"), ExtResource("c2"), ExtResource("c3")])
+crush_fractions = PackedFloat32Array(0.3, 0.4, 0.25, 0.05)
+inclusions = Array[Resource]([ExtResource("i0"), ExtResource("i1"), ExtResource("i2")])
+inclusion_chances = PackedFloat32Array(0.12, 0.25, 0.3)

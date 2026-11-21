@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://world_3d/grimoire_system/recipe_data.gd" id="1_recipe"]
+
+[resource]
+script = ExtResource("1_recipe")
+recipe_id = &"rainbow_unicorn_galaxy"
+title = "Rainbow Unicorn Galaxy"
+category = 2
+formula = "rainbow ∧ glitter ∧ glow ∧ float"
+description = "Every colour, every sparkle, glowing and floating. The ultimate potion."
+riddle = "Every colour, every sparkle, floating in the dark."
+ingredients = PackedStringArray("Rainbow, glitter, glow and float ingredients")
+method_steps = PackedStringArray("Combine all four magic traits")
+condition_traits = PackedStringArray("rainbow", "glitter", "glow", "gravity_coupling")
+condition_min = PackedFloat32Array(0.4, 0.4, 0.4, -2)
+condition_max = PackedFloat32Array(1e+09, 1e+09, 1e+09, 0.5)

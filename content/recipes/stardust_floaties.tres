@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://world_3d/grimoire_system/recipe_data.gd" id="1_recipe"]
+
+[resource]
+script = ExtResource("1_recipe")
+recipe_id = &"stardust_floaties"
+title = "Stardust Floaties"
+category = 2
+formula = "κ < 0 ∧ glitter"
+description = "A potion so light and sparkly it wants to float away."
+riddle = "Glitter that falls up."
+ingredients = PackedStringArray("Stardust", "Moonwater")
+method_steps = PackedStringArray("Use plenty of stardust and moonwater")
+condition_traits = PackedStringArray("gravity_coupling", "glitter")
+condition_min = PackedFloat32Array(-2, 0.2)
+condition_max = PackedFloat32Array(0, 1e+09)

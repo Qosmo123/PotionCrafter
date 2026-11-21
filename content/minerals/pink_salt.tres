@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/halite_powder.tres" id="c0"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"pink_salt"
+display_name = "Pink Salt Crystal"
+formula = "NaCl (Fe)"
+kind = 2
+rarity = 0
+hardness_mohs = 2.5
+density_kg_m3 = 2160
+typical_mass_kg = 0.01
+color = Color(1, 0.7, 0.75, 1)
+luster = 1
+shape = 1
+emission = Color(0, 0, 0, 1)
+value_coins = 6
+can_facet = false
+fun_fact = "Salt crystals grow as perfect little cubes. Lick test not recommended in a real lab!"
+crush_products = Array[Resource]([ExtResource("c0")])
+crush_fractions = PackedFloat32Array(1)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Halide"
+crystal_system = "Cubic"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 3
+fracture = "conchoidal"
+diaphaneity = 0
+refractive_index = 1.54
+dispersion = 0
+phenomenon = 0
+colors_text = "pink to orange"
+localities = "Khewra mine (Pakistan)"
+uses = "cooking, lamps"
+birthstone = ""

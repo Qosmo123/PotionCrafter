@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://world_3d/grimoire_system/recipe_data.gd" id="1_recipe"]
+
+[resource]
+script = ExtResource("1_recipe")
+recipe_id = &"volcano_fizz"
+title = "Volcanic Effervescence"
+category = 0
+formula = "CH₃COOH + NaHCO₃ → CH₃COONa + H₂O + CO₂↑   (ΔH > 0, cools)"
+description = "Acid meets carbonate: carbon dioxide boils out and the flask chills."
+riddle = ""
+ingredients = PackedStringArray("Essence of Vinegar", "Salt of Soda")
+method_steps = PackedStringArray("Pour vinegar into a beaker", "Add soda", "Stir to speed the fizz")
+condition_traits = PackedStringArray("gas_rate")
+condition_min = PackedFloat32Array(0.003)
+condition_max = PackedFloat32Array(1e+09)

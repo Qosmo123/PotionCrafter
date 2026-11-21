@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"cornstarch"
+display_name = "Cornflour Slurry"
+chemical_formula = "(C₆H₁₀O₅)ₙ·H₂O"
+specific_heat_j_kg_k = 2400
+latent_heat_fusion_j_kg = 100000
+latent_heat_vaporization_j_kg = 700000
+viscosity_pas = 0.3
+pka_acidity = 7
+turbidity = 0.9
+melting_point_kelvin = 250
+boiling_point_kelvin = 380
+molar_mass_kg_mol = 0.162
+density_kg_m3 = 1500
+base_albedo_rgba = Color(0.97, 0.96, 0.9, 0.95)
+shear_thickening = 1
+shelf = "Organics"
+cas_number = "9005-25-8"
+description = "Oobleck! Runny when you go slow, rock-hard when you punch or stir it fast."

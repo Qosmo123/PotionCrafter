@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/calcite_powder.tres" id="c0"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"aragonite"
+display_name = "Aragonite"
+formula = "CaCO₃"
+kind = 2
+rarity = 0
+hardness_mohs = 3.75
+density_kg_m3 = 2950
+typical_mass_kg = 0.02
+color = Color(0.85, 0.65, 0.45, 1)
+luster = 1
+shape = 2
+emission = Color(0, 0, 0, 1)
+value_coins = 6
+can_facet = false
+fun_fact = "Same chemistry as calcite but a different crystal shape. Pearls and seashells are mostly aragonite."
+crush_products = Array[Resource]([ExtResource("c0")])
+crush_fractions = PackedFloat32Array(1)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Carbonate"
+crystal_system = "Orthorhombic"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 1
+fracture = "subconchoidal"
+diaphaneity = 1
+refractive_index = 1.68
+dispersion = 0
+phenomenon = 7
+colors_text = "white, orange, brown sputniks"
+localities = "Spain (Aragón), Morocco"
+uses = "specimens"
+birthstone = ""

@@ -1,0 +1,43 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/silicate_dust.tres" id="c0"]
+[ext_resource type="Resource" path="res://content/substances/coal_dust.tres" id="c1"]
+[ext_resource type="Resource" path="res://content/minerals/trilobite.tres" id="i0"]
+[ext_resource type="Resource" path="res://content/minerals/ammonite_fossil.tres" id="i1"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"shale"
+display_name = "Shale"
+formula = "compacted mud"
+kind = 0
+rarity = 0
+hardness_mohs = 3
+density_kg_m3 = 2400
+typical_mass_kg = 0.12
+color = Color(0.35, 0.33, 0.3, 1)
+luster = 0
+shape = 9
+emission = Color(0, 0, 0, 1)
+value_coins = 2
+can_facet = false
+fun_fact = "Shale is ancient mud. It often hides fossils between its thin layers."
+crush_products = Array[Resource]([ExtResource("c0"), ExtResource("c1")])
+crush_fractions = PackedFloat32Array(0.9, 0.1)
+inclusions = Array[Resource]([ExtResource("i0"), ExtResource("i1")])
+inclusion_chances = PackedFloat32Array(0.2, 0.15)
+mineral_class = "Sedimentary"
+crystal_system = "—"
+streak_name = "grey"
+streak_color = Color(0.5, 0.5, 0.5, 1)
+cleavage = 2
+fracture = "flaky"
+diaphaneity = 2
+refractive_index = 0
+dispersion = 0
+phenomenon = 0
+colors_text = "grey to black layers"
+localities = "worldwide"
+uses = "bricks, cement"
+birthstone = ""

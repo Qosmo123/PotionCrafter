@@ -1,0 +1,42 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/coal_dust.tres" id="c0"]
+[ext_resource type="Resource" path="res://content/minerals/jet.tres" id="i0"]
+[ext_resource type="Resource" path="res://content/minerals/fern_fossil.tres" id="i1"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"coal"
+display_name = "Coal"
+formula = "C + H + S (fossil plants)"
+kind = 0
+rarity = 0
+hardness_mohs = 2
+density_kg_m3 = 1350
+typical_mass_kg = 0.12
+color = Color(0.07, 0.07, 0.07, 1)
+luster = 2
+shape = 0
+emission = Color(0, 0, 0, 1)
+value_coins = 2
+can_facet = false
+fun_fact = "Coal is squashed swamp plants from 300 million years ago. Fern fossils hide in it."
+crush_products = Array[Resource]([ExtResource("c0")])
+crush_fractions = PackedFloat32Array(1)
+inclusions = Array[Resource]([ExtResource("i0"), ExtResource("i1")])
+inclusion_chances = PackedFloat32Array(0.1, 0.2)
+mineral_class = "Organic sedimentary"
+crystal_system = "—"
+streak_name = "black"
+streak_color = Color(0.1, 0.1, 0.1, 1)
+cleavage = 0
+fracture = "conchoidal"
+diaphaneity = 2
+refractive_index = 0
+dispersion = 0
+phenomenon = 0
+colors_text = "black, shiny"
+localities = "worldwide"
+uses = "fuel"
+birthstone = ""

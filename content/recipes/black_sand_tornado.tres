@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://world_3d/grimoire_system/recipe_data.gd" id="1_recipe"]
+
+[resource]
+script = ExtResource("1_recipe")
+recipe_id = &"black_sand_tornado"
+title = "Black Sand Tornado"
+category = 0
+formula = "Fe₃O₄ + rotating magnet → vortex"
+description = "Iron sand locks onto the magnetic stirrer and whips the liquid into a tornado."
+riddle = ""
+ingredients = PackedStringArray("Black Iron Sand (sifted)", "Water", "Magnetic stirrer")
+method_steps = PackedStringArray("Sift black iron sand from volcanic or river sand", "Add it to water", "Spin it on the magnetic stirrer (M)")
+condition_traits = PackedStringArray("magnetic", "swirl")
+condition_min = PackedFloat32Array(0.05, 10)
+condition_max = PackedFloat32Array(1e+09, 1e+09)

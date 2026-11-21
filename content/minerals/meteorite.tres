@@ -1,0 +1,44 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/stardust.tres" id="c0"]
+[ext_resource type="Resource" path="res://content/substances/magnetite_sand.tres" id="c1"]
+[ext_resource type="Resource" path="res://content/minerals/meteoric_iron.tres" id="i0"]
+[ext_resource type="Resource" path="res://content/minerals/star_sapphire.tres" id="i1"]
+[ext_resource type="Resource" path="res://content/minerals/diamond.tres" id="i2"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"meteorite"
+display_name = "Meteorite"
+formula = "Fe–Ni + silicates"
+kind = 0
+rarity = 3
+hardness_mohs = 5
+density_kg_m3 = 5500
+typical_mass_kg = 0.14
+color = Color(0.3, 0.28, 0.27, 1)
+luster = 2
+shape = 0
+emission = Color(0, 0, 0, 1)
+value_coins = 40
+can_facet = false
+fun_fact = "Meteorites are pieces of asteroids. Some are older than the Earth itself, about 4.6 billion years!"
+crush_products = Array[Resource]([ExtResource("c0"), ExtResource("c1")])
+crush_fractions = PackedFloat32Array(0.4, 0.6)
+inclusions = Array[Resource]([ExtResource("i0"), ExtResource("i1"), ExtResource("i2")])
+inclusion_chances = PackedFloat32Array(0.6, 0.08, 0.03)
+mineral_class = "Meteorite (chondrite)"
+crystal_system = "—"
+streak_name = "grey"
+streak_color = Color(0.5, 0.5, 0.5, 1)
+cleavage = 0
+fracture = "uneven"
+diaphaneity = 2
+refractive_index = 0
+dispersion = 0
+phenomenon = 0
+colors_text = "black fusion crust"
+localities = "Antarctica, Sahara"
+uses = "science, collecting"
+birthstone = ""

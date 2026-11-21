@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+[ext_resource type="Resource" path="res://content/substances/carbon_dioxide.tres" id="p0"]
+[ext_resource type="Resource" path="res://content/substances/water.tres" id="p1"]
+[ext_resource type="Resource" path="res://content/substances/dissolved_salts.tres" id="p2"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"rhodochrosite_powder"
+display_name = "Rhodochrosite Powder"
+chemical_formula = "MnCO₃"
+specific_heat_j_kg_k = 800
+melting_point_kelvin = 1500
+boiling_point_kelvin = 3000
+latent_heat_fusion_j_kg = 200000
+latent_heat_vaporization_j_kg = 1e+06
+viscosity_pas = 0.01
+pka_acidity = 10
+turbidity = 1
+molar_mass_kg_mol = 0.115
+density_kg_m3 = 3690
+base_albedo_rgba = Color(0.95, 0.65, 0.7, 1)
+description = "Rosy pink manganese carbonate that fizzes in warm acid."
+proton_transfer_enthalpy_j_mol = 12000
+reaction_products = Array[Resource]([ExtResource("p0"), ExtResource("p1"), ExtResource("p2")])
+reaction_product_mass_fractions = PackedFloat32Array(0.4, 0.15, 0.45)

@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+[ext_resource type="Resource" path="res://content/substances/carbon_dioxide.tres" id="p0"]
+[ext_resource type="Resource" path="res://content/substances/water.tres" id="p1"]
+[ext_resource type="Resource" path="res://content/substances/dissolved_salts.tres" id="p2"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"baking_soda"
+display_name = "Salt of Soda"
+chemical_formula = "NaHCO₃"
+molar_mass_kg_mol = 0.08401
+density_kg_m3 = 2200
+specific_heat_j_kg_k = 1000
+melting_point_kelvin = 450
+boiling_point_kelvin = 900
+latent_heat_fusion_j_kg = 100000
+latent_heat_vaporization_j_kg = 1e+06
+viscosity_pas = 0.01
+pka_acidity = 10.3
+proton_transfer_enthalpy_j_mol = 28000
+base_albedo_rgba = Color(0.97, 0.97, 0.97, 1)
+turbidity = 1
+shelf = "Bases"
+cas_number = "144-55-8"
+reaction_products = Array[Resource]([ExtResource("p0"), ExtResource("p1"), ExtResource("p2")])
+reaction_product_mass_fractions = PackedFloat32Array(0.524, 0.214, 0.262)

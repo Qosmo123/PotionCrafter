@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/quartz_sand_fine.tres" id="c0"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"petrified_wood"
+display_name = "Petrified Wood"
+formula = "SiO₂ replacing wood"
+kind = 4
+rarity = 2
+hardness_mohs = 7
+density_kg_m3 = 2600
+typical_mass_kg = 0.02
+color = Color(0.6, 0.45, 0.35, 1)
+luster = 3
+shape = 0
+emission = Color(0, 0, 0, 1)
+value_coins = 55
+can_facet = true
+fun_fact = "Minerals slowly replaced the wood cell by cell until the tree turned to colourful stone."
+crush_products = Array[Resource]([ExtResource("c0")])
+crush_fractions = PackedFloat32Array(1)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Fossil"
+crystal_system = "—"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 0
+fracture = "conchoidal"
+diaphaneity = 2
+refractive_index = 1.54
+dispersion = 0
+phenomenon = 0
+colors_text = "rainbow-banded wood grain"
+localities = "Arizona (Petrified Forest), Madagascar"
+uses = "collecting, tabletops"
+birthstone = ""

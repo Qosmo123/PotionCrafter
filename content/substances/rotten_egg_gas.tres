@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"rotten_egg_gas"
+display_name = "Stink Vapour"
+chemical_formula = "H₂S"
+molar_mass_kg_mol = 0.034
+density_kg_m3 = 950
+specific_heat_j_kg_k = 1000
+melting_point_kelvin = 187
+boiling_point_kelvin = 213
+latent_heat_fusion_j_kg = 70000
+latent_heat_vaporization_j_kg = 550000
+viscosity_pas = 0.0002
+pka_acidity = 7
+odor = 1
+base_albedo_rgba = Color(0.8, 0.9, 0.6, 0.05)
+turbidity = 0

@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/feldspar_powder.tres" id="c0"]
+[ext_resource type="Resource" path="res://content/substances/copper_metal.tres" id="c1"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"sunstone"
+display_name = "Sunstone"
+formula = "(Ca,Na)(Al,Si)₄O₈ + Cu"
+kind = 3
+rarity = 2
+hardness_mohs = 6.25
+density_kg_m3 = 2650
+typical_mass_kg = 0.012
+color = Color(1, 0.55, 0.3, 1)
+luster = 1
+shape = 0
+emission = Color(0, 0, 0, 1)
+value_coins = 40
+can_facet = true
+fun_fact = "Tiny copper platelets inside make it glitter as if full of sunshine."
+crush_products = Array[Resource]([ExtResource("c0"), ExtResource("c1")])
+crush_fractions = PackedFloat32Array(0.9, 0.1)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Silicate (feldspar)"
+crystal_system = "Triclinic"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 2
+fracture = "uneven"
+diaphaneity = 1
+refractive_index = 1.55
+dispersion = 0.012
+phenomenon = 9
+colors_text = "orange with glittering copper flakes"
+localities = "Oregon (USA), Norway, India"
+uses = "cabochons"
+birthstone = ""

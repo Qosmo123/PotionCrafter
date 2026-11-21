@@ -1,6 +1,8 @@
-extends Node
+class_name SimConstants
+extends RefCounted
 ## Global simulation constants, physics layer bitmasks, and safety clamps.
-## Autoloaded as `SimConstants`.
+## Pure static class: reference as `SimConstants.X` from anywhere (no autoload needed,
+## so it also works in headless `--script` tools and tests).
 
 # --- Fixed tick -------------------------------------------------------------
 const TICK_SECONDS: float = 1.0 / 60.0

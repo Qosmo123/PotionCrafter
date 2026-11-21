@@ -1,0 +1,46 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/quartz_sand_fine.tres" id="c0"]
+[ext_resource type="Resource" path="res://content/substances/feldspar_powder.tres" id="c1"]
+[ext_resource type="Resource" path="res://content/substances/mica_flakes.tres" id="c2"]
+[ext_resource type="Resource" path="res://content/minerals/orthoclase.tres" id="i0"]
+[ext_resource type="Resource" path="res://content/minerals/muscovite.tres" id="i1"]
+[ext_resource type="Resource" path="res://content/minerals/schorl.tres" id="i2"]
+[ext_resource type="Resource" path="res://content/minerals/smoky_quartz.tres" id="i3"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"granite"
+display_name = "Granite"
+formula = "quartz + feldspar + mica"
+kind = 0
+rarity = 0
+hardness_mohs = 6.5
+density_kg_m3 = 2700
+typical_mass_kg = 0.12
+color = Color(0.75, 0.68, 0.66, 1)
+luster = 0
+shape = 0
+emission = Color(0, 0, 0, 1)
+value_coins = 3
+can_facet = false
+fun_fact = "Granite is cooled magma made of interlocking quartz, feldspar and mica you can see with your eyes."
+crush_products = Array[Resource]([ExtResource("c0"), ExtResource("c1"), ExtResource("c2")])
+crush_fractions = PackedFloat32Array(0.3, 0.55, 0.15)
+inclusions = Array[Resource]([ExtResource("i0"), ExtResource("i1"), ExtResource("i2"), ExtResource("i3")])
+inclusion_chances = PackedFloat32Array(0.4, 0.3, 0.15, 0.08)
+mineral_class = "Igneous (plutonic)"
+crystal_system = "—"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 0
+fracture = "uneven"
+diaphaneity = 2
+refractive_index = 0
+dispersion = 0
+phenomenon = 0
+colors_text = "speckled pink, white and black"
+localities = "worldwide continental crust"
+uses = "countertops, monuments"
+birthstone = ""

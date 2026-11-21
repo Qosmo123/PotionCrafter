@@ -1,0 +1,9 @@
+[gd_resource type="ShaderMaterial" load_steps=3 format=3]
+
+[ext_resource type="Shader" path="res://visuals_3d/shaders/glass_mobile.gdshader" id="1_shader"]
+[ext_resource type="Material" path="res://content/materials_3d/glass_inner.tres" id="2_inner"]
+
+[resource]
+render_priority = 1
+next_pass = ExtResource("2_inner")
+shader = ExtResource("1_shader")

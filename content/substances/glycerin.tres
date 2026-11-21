@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+[ext_resource type="Resource" path="res://content/substances/carbon_dioxide.tres" id="r0"]
+[ext_resource type="Resource" path="res://content/substances/water.tres" id="r1"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"glycerin"
+display_name = "Sweet Oil of Glycerin"
+chemical_formula = "C₃H₈O₃"
+molar_mass_kg_mol = 0.09209
+density_kg_m3 = 1261
+specific_heat_j_kg_k = 2430
+melting_point_kelvin = 291
+boiling_point_kelvin = 563
+latent_heat_fusion_j_kg = 200000
+latent_heat_vaporization_j_kg = 974000
+viscosity_pas = 1.41
+pka_acidity = 14.15
+foam_stability = 0.9
+base_albedo_rgba = Color(0.97, 0.97, 0.95, 0.12)
+turbidity = 0.02
+ior = 1.47
+flammability = 0.4
+flash_point_kelvin = 450
+combustion_enthalpy_j_kg = -1.8e+07
+reducer_strength = 0.6
+shelf = "Organics"
+cas_number = "56-81-5"
+redox_products = Array[Resource]([ExtResource("r0"), ExtResource("r1")])
+redox_fractions = PackedFloat32Array(0.4, 0.6)

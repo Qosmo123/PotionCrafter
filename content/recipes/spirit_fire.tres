@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://world_3d/grimoire_system/recipe_data.gd" id="1_recipe"]
+
+[resource]
+script = ExtResource("1_recipe")
+recipe_id = &"spirit_fire"
+title = "Spirit Fire"
+category = 0
+formula = "C₂H₅OH + 3 O₂ → 2 CO₂ + 3 H₂O   ΔH = −1367 kJ/mol"
+description = "Strong spirit, a flame and open air."
+riddle = ""
+ingredients = PackedStringArray("Spirit of Wine", "The candle or a hot plate")
+method_steps = PackedStringArray("Hold an open flask of spirit to the candle")
+condition_traits = PackedStringArray("burning", "fraction:ethanol")
+condition_min = PackedFloat32Array(0.5, 0.2)
+condition_max = PackedFloat32Array(1, 1)

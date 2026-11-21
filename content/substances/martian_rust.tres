@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"martian_rust"
+display_name = "Martian Red Dust"
+chemical_formula = "Fe₂O₃·Mars"
+molar_mass_kg_mol = 0.03
+density_kg_m3 = 1040
+specific_heat_j_kg_k = 3800
+melting_point_kelvin = 1500
+boiling_point_kelvin = 372
+latent_heat_fusion_j_kg = 300000
+latent_heat_vaporization_j_kg = 2e+06
+viscosity_pas = 0.002
+pka_acidity = 7
+turbidity = 1
+base_albedo_rgba = Color(0.75, 0.3, 0.12, 1)
+shelf = "Space"
+description = "Rusty red soil from the Red Planet. Makes potions blush."
+glitter = 0.2

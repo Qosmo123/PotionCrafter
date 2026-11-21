@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/quartz_sand_fine.tres" id="c0"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"tigers_eye"
+display_name = "Tiger's Eye"
+formula = "SiO₂ (crocidolite pseudomorph)"
+kind = 3
+rarity = 0
+hardness_mohs = 7
+density_kg_m3 = 2650
+typical_mass_kg = 0.012
+color = Color(0.65, 0.45, 0.15, 1)
+luster = 7
+shape = 0
+emission = Color(0, 0, 0, 1)
+value_coins = 12
+can_facet = true
+fun_fact = "Quartz replaced fibres of blue asbestos, keeping their silky shimmer that rolls like a tiger's eye."
+crush_products = Array[Resource]([ExtResource("c0")])
+crush_fractions = PackedFloat32Array(1)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Silicate (quartz)"
+crystal_system = "Trigonal"
+streak_name = "yellow-brown"
+streak_color = Color(0.75, 0.6, 0.3, 1)
+cleavage = 0
+fracture = "uneven"
+diaphaneity = 2
+refractive_index = 1.54
+dispersion = 0
+phenomenon = 2
+colors_text = "golden brown bands"
+localities = "South Africa, Australia"
+uses = "beads, cabochons"
+birthstone = ""

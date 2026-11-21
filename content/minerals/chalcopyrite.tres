@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/chalcopyrite_powder.tres" id="c0"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"chalcopyrite"
+display_name = "Chalcopyrite"
+formula = "CuFeS₂"
+kind = 2
+rarity = 0
+hardness_mohs = 3.75
+density_kg_m3 = 4200
+typical_mass_kg = 0.02
+color = Color(0.8, 0.7, 0.3, 1)
+luster = 2
+shape = 2
+emission = Color(0, 0, 0, 1)
+value_coins = 10
+can_facet = false
+fun_fact = "The world's most important copper ore. Tarnish paints it in rainbow 'peacock' colours."
+crush_products = Array[Resource]([ExtResource("c0")])
+crush_fractions = PackedFloat32Array(1)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Sulfide"
+crystal_system = "Tetragonal"
+streak_name = "greenish black"
+streak_color = Color(0.25, 0.3, 0.15, 1)
+cleavage = 1
+fracture = "uneven"
+diaphaneity = 2
+refractive_index = 0
+dispersion = 0
+phenomenon = 6
+colors_text = "brassy yellow, tarnishes iridescent"
+localities = "worldwide"
+uses = "main copper ore"
+birthstone = ""

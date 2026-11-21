@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/galena_powder.tres" id="c0"]
+[ext_resource type="Resource" path="res://content/substances/metal_oxide_dust.tres" id="c1"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"vanadinite"
+display_name = "Vanadinite"
+formula = "Pb₅(VO₄)₃Cl"
+kind = 2
+rarity = 2
+hardness_mohs = 3.5
+density_kg_m3 = 6900
+typical_mass_kg = 0.02
+color = Color(0.85, 0.2, 0.08, 1)
+luster = 8
+shape = 1
+emission = Color(0, 0, 0, 1)
+value_coins = 40
+can_facet = false
+fun_fact = "Grows as perfect little tomato-red hexagonal barrels."
+crush_products = Array[Resource]([ExtResource("c0"), ExtResource("c1")])
+crush_fractions = PackedFloat32Array(0.6, 0.4)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Vanadate"
+crystal_system = "Hexagonal"
+streak_name = "pale yellow"
+streak_color = Color(0.9, 0.85, 0.6, 1)
+cleavage = 0
+fracture = "conchoidal"
+diaphaneity = 1
+refractive_index = 2.35
+dispersion = 0
+phenomenon = 0
+colors_text = "tomato red"
+localities = "Morocco (Mibladen), Arizona"
+uses = "vanadium ore"
+birthstone = ""

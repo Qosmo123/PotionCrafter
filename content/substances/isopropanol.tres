@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+[ext_resource type="Resource" path="res://content/substances/carbon_dioxide.tres" id="p0"]
+[ext_resource type="Resource" path="res://content/substances/water.tres" id="p1"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"isopropanol"
+display_name = "Rubbing Alcohol"
+chemical_formula = "C₃H₈O"
+specific_heat_j_kg_k = 2400
+latent_heat_fusion_j_kg = 100000
+latent_heat_vaporization_j_kg = 700000
+viscosity_pas = 0.0008
+pka_acidity = 15
+turbidity = 0.02
+melting_point_kelvin = 184
+boiling_point_kelvin = 355
+molar_mass_kg_mol = 0.06
+density_kg_m3 = 786
+base_albedo_rgba = Color(0.95, 0.97, 1, 0.1)
+flammability = 0.8
+flash_point_kelvin = 285
+combustion_enthalpy_j_kg = -3.3e+07
+toxicity = 0.3
+odor = 0.3
+shelf = "Solvents"
+cas_number = "67-63-0"
+description = "Disinfectant alcohol. Burns with a sooty yellow flame."
+reaction_products = Array[Resource]([ExtResource("p0"), ExtResource("p1")])
+reaction_product_mass_fractions = PackedFloat32Array(0.6, 0.4)

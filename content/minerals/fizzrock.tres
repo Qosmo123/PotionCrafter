@@ -1,0 +1,42 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/calcite_powder.tres" id="c0"]
+[ext_resource type="Resource" path="res://content/minerals/ammonite_fossil.tres" id="i0"]
+[ext_resource type="Resource" path="res://content/minerals/seashell.tres" id="i1"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"fizzrock"
+display_name = "Fizzrock (Limestone)"
+formula = "CaCO₃"
+kind = 0
+rarity = 0
+hardness_mohs = 3
+density_kg_m3 = 2700
+typical_mass_kg = 0.12
+color = Color(0.85, 0.82, 0.74, 1)
+luster = 0
+shape = 0
+emission = Color(0, 0, 0, 1)
+value_coins = 3
+can_facet = false
+fun_fact = "Limestone is made from billions of tiny sea shells. Drip vinegar on it and it fizzes!"
+crush_products = Array[Resource]([ExtResource("c0")])
+crush_fractions = PackedFloat32Array(1)
+inclusions = Array[Resource]([ExtResource("i0"), ExtResource("i1")])
+inclusion_chances = PackedFloat32Array(0.25, 0.4)
+mineral_class = "Sedimentary (limestone)"
+crystal_system = "—"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 4
+fracture = "uneven"
+diaphaneity = 2
+refractive_index = 0
+dispersion = 0
+phenomenon = 0
+colors_text = "cream to grey"
+localities = "worldwide"
+uses = "cement, building stone"
+birthstone = ""

@@ -1,0 +1,171 @@
+class_name DemoDirector
+extends Node
+## Stages showcase scenarios from launch arguments (inert in normal play).
+## Render a still from the real game launch (see tools/render_still.sh):
+##   godot --path . --resolution 1280x720 -- shot=_renders/out.png demo2
+## Arguments after "--": shot=<png>, pour, demo, demo2, satchel, recipes.
+
+const SHOT_FRAME: int = 100
+
+var _frames: int = 0
+var _args: PackedStringArray = PackedStringArray()
+
+
+func _ready() -> void:
+	_args = OS.get_cmdline_user_args()
+	set_process(not _args.is_empty())
+
+
+func _process(_delta: float) -> void:
+	_frames += 1
+	var bench: Node = get_parent()
+	if _frames == 2 and _args.has("pour"):
+		var moon: Vessel3D = bench.get_node("Vessels/FlaskMoonwater") as Vessel3D
+		var beaker: Vessel3D = bench.get_node("Vessels/Beaker") as Vessel3D
+		moon.freeze_mode = RigidBody3D.FREEZE_MODE_KINEMATIC
+		moon.freeze = true
+		var tilt: Basis = Basis(Vector3(0.0, 0.0, 1.0), deg_to_rad(105.0))
+		moon.global_transform = Transform3D(tilt, beaker.global_position + Vector3(0.0, 0.12, 0.0) - tilt.y * 0.07)
+	if _frames == 3 and _args.has("satchel"):
+		var panel: CanvasLayer = bench.get_node("InventoryPanel") as CanvasLayer
+		panel.call(&"toggle")
+		var tabs: TabContainer = panel.find_children("*", "TabContainer", true, false)[0] as TabContainer
+		tabs.current_tab = 7 if _args.has("recipes") else (4 if _args.has("rocks") else (5 if _args.has("chem") else (6 if _args.has("fun") else 0)))
+		panel.call(&"refresh")
+	if _frames == SHOT_FRAME - 8 and _args.has("book"):
+		var book: GrimoireBookUI = bench.get_node("GrimoireBookUI") as GrimoireBookUI
+		book.open(1 if _args.has("formulas") else 0)
+		for i: int in book._entries.size():
+			var e: Dictionary = book._entries[i]
+			if (e.get("kind") == "recipe" and e.get("known", false)) or (_args.has("formulas") and e.get("kind") == "substance" and (e["substance"] as SubstanceData).thaumic_density_thaums_mol > 20.0):
+				book._select(i)
+				break
+	if _frames == SHOT_FRAME - 8 and _args.has("help"):
+		(bench.get_node("HudOverlay") as HudOverlay).toggle_help()
+	if _frames == SHOT_FRAME - 8 and (_args.has("sds") or _args.has("sds_acid")) and SafetySheetUI.instance != null:
+		var m: MixtureContainer = MixtureContainer.new()
+		if _args.has("sds_acid"):
+			m.add_substance(_reg(&"water"), 3.0, 293.15)
+			m.add_substance(_reg(&"hydrochloric_acid"), 1.0, 293.15)
+		else:
+			m.add_substance(_reg(&"water"), 2.0, 293.15)
+			m.add_substance(_reg(&"ghost_sneeze"), 0.6, 293.15)
+			m.add_substance(_reg(&"glow_worm_goo"), 0.4, 293.15)
+			m.add_substance(_reg(&"dragon_snot"), 0.3, 293.15)
+		SafetySheetUI.instance.open_for_mixture(m)
+	if _args.has("science") and _frames == 2:
+		var cam3: LabCamera3D = get_parent().get_node("Camera3D") as LabCamera3D
+		cam3.go_to_station(2)
+		# Put samples on each instrument's pad.
+		var pairs: Array = [["SampleHoney", "Viscometer"], ["SampleSoap", "AirMeter"], ["SampleAcetone", "VolatilityTester"], ["SampleGlycerin", "Hydrometer"]]
+		for pair: Array in pairs:
+			var v: Vessel3D = get_parent().get_node("ScienceBench/" + String(pair[0])) as Vessel3D
+			var inst: Node3D = get_parent().get_node("ScienceBench/" + String(pair[1])) as Node3D
+			v.global_position = inst.global_transform * Vector3(0.0, 0.085, 0.06)
+		var soap: Vessel3D = get_parent().get_node("ScienceBench/SampleSoap") as Vessel3D
+		soap.foam_height_meters = 0.03
+	if _args.has("lab"):
+		_lab(bench)
+	if _frames == SHOT_FRAME - 8 and _args.has("collection"):
+		var book: GrimoireBookUI = bench.get_node("GrimoireBookUI") as GrimoireBookUI
+		book.open(2)
+		for i: int in book._entries.size():
+			var e: Dictionary = book._entries[i]
+			if e.get("kind") == "mineral" and e.get("found", false) and (e["mineral"] as MineralData).kind == MineralData.Kind.GEM:
+				book._select(i)
+				break
+	if _args.has("demo"):
+		_demo(bench)
+	if _args.has("demo2"):
+		_demo2(bench)
+	for arg: String in _args:
+		if arg.begins_with("shot=") and _frames == SHOT_FRAME:
+			var image: Image = get_viewport().get_texture().get_image()
+			var err: int = image.save_png(arg.substr(5)) if image != null else ERR_CANT_CREATE
+			printerr("shot ", arg.substr(5), " err=", err)
+			get_tree().quit()
+
+
+static func _reg(id: StringName) -> int:
+	return SubstanceRegistry.index_of_id(id)
+
+
+## Fizzing indicator reaction, whisked bubble philtre, arcane flare, chalk sigils.
+func _demo(bench: Node) -> void:
+	var beaker: Vessel3D = bench.get_node("Vessels/Beaker") as Vessel3D
+	var bubble: Vessel3D = bench.get_node("Vessels/BubbleBase") as Vessel3D
+	var moon: Vessel3D = bench.get_node("Vessels/FlaskMoonwater") as Vessel3D
+	if _frames == 2:
+		beaker.mixture.add_substance(_reg(&"water"), 10.0, 293.15)
+		beaker.mixture.add_substance(_reg(&"duskberry_juice"), 0.4, 293.15)
+		beaker.mixture.add_substance(_reg(&"acetic_acid"), 1.0, 293.15)
+		beaker.mixture.add_substance(_reg(&"baking_soda"), 0.6, 293.15)
+		moon.mixture.add_substance(_reg(&"emberberry_juice"), 0.6, 293.15)
+		var chalk: ChalkDrawing3D = bench.get_node("Chalk") as ChalkDrawing3D
+		chalk.draw_world_stroke(ChalkDrawing3D.polygon_points(Vector2(-0.2, 0.12), 0.075, 3))
+		chalk.draw_world_stroke(ChalkDrawing3D.polygon_points(Vector2(0.62, 0.12), 0.08, 6))
+		chalk.draw_world_stroke(ChalkDrawing3D.polygon_points(Vector2(-0.42, 0.1), 0.06, 5))
+	bubble.add_agitation(0.5)
+	beaker.add_agitation(0.2)
+
+
+## Elephant's toothpaste, spirit fire, three-layer strata, verditer cloud, transmutation.
+func _demo2(bench: Node) -> void:
+	var beaker: Vessel3D = bench.get_node("Vessels/Beaker") as Vessel3D
+	var spirits: Vessel3D = bench.get_node("Vessels/FlaskSpirits") as Vessel3D
+	var strata: Vessel3D = bench.get_node("Vessels/ReagentVinegar") as Vessel3D
+	var cloud: Vessel3D = bench.get_node("Vessels/ReagentBorax") as Vessel3D
+	var moon: Vessel3D = bench.get_node("Vessels/FlaskMoonwater") as Vessel3D
+	if _frames == 2:
+		beaker.mixture.add_substance(_reg(&"water"), 6.0, 293.15)
+		beaker.mixture.add_substance(_reg(&"hydrogen_peroxide"), 3.0, 293.15)
+		beaker.mixture.add_substance(_reg(&"soap_solution"), 2.0, 293.15)
+		beaker.mixture.add_substance(_reg(&"potassium_iodide"), 0.4, 293.15)
+		spirits.mixture.add_substance(_reg(&"ethanol"), 8.0, 293.15)
+		strata.mixture.clear()
+		strata.mixture.add_substance(_reg(&"water"), 4.0, 293.15)
+		strata.mixture.add_substance(_reg(&"quicksilver"), 0.5, 293.15)
+		strata.mixture.add_substance(_reg(&"salamander_oil"), 0.12, 293.15)
+		cloud.mixture.add_substance(_reg(&"copper_sulfate"), 0.8, 293.15)
+		cloud.mixture.add_substance(_reg(&"caustic_lye"), 0.8, 293.15)
+		moon.mixture.add_substance(_reg(&"quicksilver"), 0.6, 293.15)
+		moon.mixture.add_heat(60000.0)
+	spirits.ignition_source = true
+	moon.external_heat_watts += 400.0
+
+
+## Mineral Lab showcase: faceted gems on display, a stone on the running
+## polisher, a rock in the crusher and a few logged finds.
+func _lab(bench: Node) -> void:
+	if _frames == 2:
+		var cam: LabCamera3D = bench.get_node("Camera3D") as LabCamera3D
+		cam.go_to_station(1)
+		if _args.has("zoom"):
+			cam.set("_zoom_target", 0.42)
+		var cuts: Array = [["ruby", RockMeshes.Cut.HEART], ["star_sapphire", RockMeshes.Cut.CABOCHON], ["amethyst", RockMeshes.Cut.CUSHION],
+			["diamond", RockMeshes.Cut.ROUND], ["peridot", RockMeshes.Cut.TRILLION], ["emerald", RockMeshes.Cut.EMERALD], ["garnet", RockMeshes.Cut.PRINCESS],
+			["aquamarine", RockMeshes.Cut.OVAL], ["tanzanite", RockMeshes.Cut.PEAR], ["citrine", RockMeshes.Cut.MARQUISE], ["black_opal", RockMeshes.Cut.CABOCHON],
+			["paraiba", RockMeshes.Cut.ASSCHER], ["imperial_topaz", RockMeshes.Cut.RADIANT], ["tigers_eye", RockMeshes.Cut.CABOCHON]]
+		for i: int in cuts.size():
+			var m: MineralData = Rock3D.get_mineral(cuts[i][0])
+			var row: int = i / 7
+			var gem: Rock3D = Rock3D.spawn(bench, m, (Vector3(2.79 + 0.068 * float(i % 7), 0.99 - 0.075 * float(row), 0.32) if _args.has("zoom") else Vector3(2.62 + 0.075 * float(i % 7), 0.83, 0.42 - 0.07 * float(row))), m.typical_mass_kg * 2.5)
+			gem.set_polish(1.0)
+			if _args.has("zoom"):
+				gem.freeze = true
+				gem.rotation = Vector3(0.95, 0.3 * float(i % 3), 0.0)
+			gem.apply_cut(cuts[i][1], 0.9)
+			if GrimoireJournal.instance != null:
+				GrimoireJournal.instance.record_find(m, gem)
+		for id: String in ["ammonite_fossil", "gold_nugget", "fool_gold_cube", "moonstone"]:
+			var find: MineralData = Rock3D.get_mineral(id)
+			Rock3D.spawn(bench, find, Vector3(3.2 + randf_range(-0.04, 0.04), 0.9, 0.22), find.typical_mass_kg)
+			if GrimoireJournal.instance != null:
+				GrimoireJournal.instance.record_find(find)
+		var crusher: RockCrusher3D = bench.get_node("MineralLab/RockCrusher") as RockCrusher3D
+		Rock3D.spawn(bench, Rock3D.get_mineral("malachite_ore"), crusher.global_transform * Vector3(0.0, 0.3, 0.0), 0.08)
+		var polisher: LapidaryWheel3D = bench.get_node("MineralLab/Polisher") as LapidaryWheel3D
+		polisher.toggle()
+		var stone: Rock3D = Rock3D.spawn(bench, Rock3D.get_mineral("fluorite_octahedron"), polisher.global_transform * Vector3(0.0, polisher.wheel_height_meters + 0.02, 0.0), 0.02)
+		stone.freeze_mode = RigidBody3D.FREEZE_MODE_KINEMATIC
+		stone.freeze = true

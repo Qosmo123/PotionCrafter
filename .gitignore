@@ -13,3 +13,6 @@ builds/
 Thumbs.db
 *.blend1
 .vscode/
+
+# Local renders
+_renders/

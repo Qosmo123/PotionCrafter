@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+[ext_resource type="Resource" path="res://content/substances/water.tres" id="p0"]
+[ext_resource type="Resource" path="res://content/substances/carbon_dioxide.tres" id="p1"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"kraken_bubbles"
+display_name = "Kraken Burp Bubbles"
+chemical_formula = "Gulp·CO₂"
+molar_mass_kg_mol = 0.03
+density_kg_m3 = 1040
+specific_heat_j_kg_k = 3800
+melting_point_kelvin = 260
+boiling_point_kelvin = 372
+latent_heat_fusion_j_kg = 300000
+latent_heat_vaporization_j_kg = 2e+06
+viscosity_pas = 0.002
+pka_acidity = 7
+turbidity = 0.3
+base_albedo_rgba = Color(0.3, 0.6, 0.55, 0.4)
+shelf = "Under the Sea"
+description = "A giant sea monster's burp, bottled. Releases wobbly bubbles when shaken. Excuse it!"
+decomposition_rate_per_s = 0.01
+foaming = 0.7
+foam_stability = 0.5
+odor = 0.3
+reaction_products = Array[Resource]([ExtResource("p0"), ExtResource("p1")])
+reaction_product_mass_fractions = PackedFloat32Array(0.95, 0.05)

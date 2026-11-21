@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+[ext_resource type="Resource" path="res://content/substances/dissolved_salts.tres" id="p0"]
+[ext_resource type="Resource" path="res://content/substances/water.tres" id="p1"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"borax_solution"
+display_name = "Borax Lye"
+chemical_formula = "Na₂B₄O₇(aq)"
+molar_mass_kg_mol = 0.02
+density_kg_m3 = 1030
+specific_heat_j_kg_k = 4000
+melting_point_kelvin = 271
+boiling_point_kelvin = 374
+latent_heat_fusion_j_kg = 330000
+latent_heat_vaporization_j_kg = 2.2e+06
+viscosity_pas = 0.0011
+pka_acidity = 9.2
+crosslinker_strength = 0.95
+base_albedo_rgba = Color(0.9, 0.95, 1, 0.15)
+turbidity = 0.05
+shelf = "Salts"
+cas_number = "1303-96-4"
+health_hazard = 0.3
+reaction_products = Array[Resource]([ExtResource("p0"), ExtResource("p1")])
+reaction_product_mass_fractions = PackedFloat32Array(0.6, 0.4)

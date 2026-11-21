@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/obsidian_glitter.tres" id="c0"]
+[ext_resource type="Resource" path="res://content/substances/stardust.tres" id="c1"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"tektite"
+display_name = "Tektite"
+formula = "SiO₂ (impact glass)"
+kind = 2
+rarity = 2
+hardness_mohs = 5.5
+density_kg_m3 = 2400
+typical_mass_kg = 0.006
+color = Color(0.15, 0.2, 0.1, 1)
+luster = 1
+shape = 0
+emission = Color(0, 0, 0, 1)
+value_coins = 40
+can_facet = false
+fun_fact = "When a meteorite smashes into Earth, melted rock splashes into the sky and rains down as glassy tektites."
+crush_products = Array[Resource]([ExtResource("c0"), ExtResource("c1")])
+crush_fractions = PackedFloat32Array(0.7, 0.3)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Tektite glass"
+crystal_system = "Amorphous"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 0
+fracture = "conchoidal"
+diaphaneity = 1
+refractive_index = 1.5
+dispersion = 0
+phenomenon = 0
+colors_text = "black, dark green"
+localities = "Thailand, Australia, Czech Republic"
+uses = "collecting"
+birthstone = ""

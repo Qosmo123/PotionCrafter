@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/quartz_sand_fine.tres" id="c0"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"black_opal"
+display_name = "Black Opal"
+formula = "SiO₂·nH₂O"
+kind = 3
+rarity = 4
+hardness_mohs = 6
+density_kg_m3 = 2100
+typical_mass_kg = 0.012
+color = Color(0.08, 0.1, 0.15, 1)
+luster = 3
+shape = 0
+emission = Color(0, 0, 0, 1)
+value_coins = 420
+can_facet = true
+fun_fact = "The rarest opal: its dark body makes the colours blaze like a galaxy."
+crush_products = Array[Resource]([ExtResource("c0")])
+crush_fractions = PackedFloat32Array(1)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Mineraloid"
+crystal_system = "Amorphous"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 0
+fracture = "conchoidal"
+diaphaneity = 1
+refractive_index = 1.45
+dispersion = 0
+phenomenon = 3
+colors_text = "dark body with brilliant rainbow fire"
+localities = "Lightning Ridge (Australia)"
+uses = "jewellery"
+birthstone = ""

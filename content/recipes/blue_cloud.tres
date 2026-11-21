@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://world_3d/grimoire_system/recipe_data.gd" id="1_recipe"]
+
+[resource]
+script = ExtResource("1_recipe")
+recipe_id = &"blue_cloud"
+title = "Verditer Cloud"
+category = 0
+formula = "Cu²⁺ + 2 OH⁻ → Cu(OH)₂↓ (sky blue)"
+description = "Blue vitriol meets caustic lye in a billowing pale-blue cloud."
+riddle = ""
+ingredients = PackedStringArray("Blue Vitriol", "Caustic Lye")
+method_steps = PackedStringArray("Add lye drop by drop to blue vitriol")
+condition_traits = PackedStringArray("fraction:copper_precipitate")
+condition_min = PackedFloat32Array(0.01)
+condition_max = PackedFloat32Array(1)

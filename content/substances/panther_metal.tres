@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"panther_metal"
+display_name = "Panther-Kingdom Metal Dust"
+chemical_formula = "Vb·Purr"
+molar_mass_kg_mol = 0.03
+density_kg_m3 = 8000
+specific_heat_j_kg_k = 3800
+melting_point_kelvin = 3000
+boiling_point_kelvin = 372
+latent_heat_fusion_j_kg = 300000
+latent_heat_vaporization_j_kg = 2e+06
+viscosity_pas = 0.002
+pka_acidity = 7
+turbidity = 0.3
+base_albedo_rgba = Color(0.55, 0.45, 0.7, 1)
+shelf = "Hero Lab"
+description = "Absorbs vibrations and glows faint purple. The rarest metal in any jungle kingdom."
+emissive_aura_hdr = Color(0.4, 0.2, 0.8, 1)
+magnetic = 0.6
+glitter = 0.8

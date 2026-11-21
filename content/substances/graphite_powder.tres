@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+[ext_resource type="Resource" path="res://content/substances/carbon_dioxide.tres" id="p0"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"graphite_powder"
+display_name = "Graphite Powder"
+chemical_formula = "C (graphite)"
+specific_heat_j_kg_k = 800
+melting_point_kelvin = 1500
+boiling_point_kelvin = 3000
+latent_heat_fusion_j_kg = 200000
+latent_heat_vaporization_j_kg = 1e+06
+viscosity_pas = 0.01
+pka_acidity = 7
+turbidity = 1
+molar_mass_kg_mol = 0.012
+density_kg_m3 = 2230
+base_albedo_rgba = Color(0.15, 0.15, 0.16, 1)
+description = "Pencil 'lead'. Slippery, black and conducts electricity."
+electric_charge = 0.3
+flammability = 0.1
+combustion_enthalpy_j_kg = -3.28e+07
+reaction_products = Array[Resource]([ExtResource("p0")])
+reaction_product_mass_fractions = PackedFloat32Array(1)

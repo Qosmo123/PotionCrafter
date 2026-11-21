@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/garnet_sand.tres" id="c0"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"garnet"
+display_name = "Garnet"
+formula = "Fe₃Al₂(SiO₄)₃"
+kind = 3
+rarity = 1
+hardness_mohs = 7.5
+density_kg_m3 = 4100
+typical_mass_kg = 0.006
+color = Color(0.55, 0.05, 0.1, 1)
+luster = 1
+shape = 1
+emission = Color(0, 0, 0, 1)
+value_coins = 30
+can_facet = true
+fun_fact = "Garnet sand is so hard that people use it to blast and cut steel with super-fast water jets."
+crush_products = Array[Resource]([ExtResource("c0")])
+crush_fractions = PackedFloat32Array(1)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Silicate (garnet)"
+crystal_system = "Cubic"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 0
+fracture = "conchoidal"
+diaphaneity = 0
+refractive_index = 1.79
+dispersion = 0.024
+phenomenon = 0
+colors_text = "deep red"
+localities = "India, USA, Australia"
+uses = "jewellery, abrasive sandpaper, waterjets"
+birthstone = "January"

@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/celestine_powder.tres" id="c0"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"celestine"
+display_name = "Celestine"
+formula = "SrSO₄"
+kind = 2
+rarity = 1
+hardness_mohs = 3.25
+density_kg_m3 = 3960
+typical_mass_kg = 0.02
+color = Color(0.7, 0.85, 1, 1)
+luster = 1
+shape = 3
+emission = Color(0, 0, 0, 1)
+value_coins = 20
+can_facet = false
+fun_fact = "Its name means 'heavenly'. Strontium from celestine makes fireworks red."
+crush_products = Array[Resource]([ExtResource("c0")])
+crush_fractions = PackedFloat32Array(1)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Sulfate"
+crystal_system = "Orthorhombic"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 2
+fracture = "uneven"
+diaphaneity = 0
+refractive_index = 1.62
+dispersion = 0
+phenomenon = 0
+colors_text = "sky blue"
+localities = "Madagascar (geodes), Ohio"
+uses = "red fireworks"
+birthstone = ""

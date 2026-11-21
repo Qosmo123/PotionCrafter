@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/obsidian_glitter.tres" id="c0"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"peridot"
+display_name = "Peridot"
+formula = "(Mg,Fe)₂SiO₄"
+kind = 3
+rarity = 2
+hardness_mohs = 6.5
+density_kg_m3 = 3300
+typical_mass_kg = 0.006
+color = Color(0.55, 0.8, 0.15, 1)
+luster = 1
+shape = 1
+emission = Color(0, 0, 0, 1)
+value_coins = 55
+can_facet = true
+fun_fact = "Peridot comes from deep inside the Earth and is carried up by volcanoes. It has been found in meteorites too!"
+crush_products = Array[Resource]([ExtResource("c0")])
+crush_fractions = PackedFloat32Array(1)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Silicate (olivine)"
+crystal_system = "Orthorhombic"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 1
+fracture = "conchoidal"
+diaphaneity = 0
+refractive_index = 1.67
+dispersion = 0.02
+phenomenon = 8
+colors_text = "lime to olive green"
+localities = "Arizona (San Carlos), Pakistan, Myanmar"
+uses = "jewellery"
+birthstone = "August"

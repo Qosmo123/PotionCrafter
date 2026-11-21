@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://world_3d/grimoire_system/recipe_data.gd" id="1_recipe"]
+
+[resource]
+script = ExtResource("1_recipe")
+recipe_id = &"robot_lava_lamp"
+title = "Trash-Robot Lava Lamp"
+category = 3
+formula = "oil | water"
+description = "Robot oil floats in its own layer. A lonely robot's favourite night light."
+riddle = ""
+ingredients = PackedStringArray("Little Trash Robot Oil", "Water")
+method_steps = PackedStringArray("Pour robot oil onto water")
+condition_traits = PackedStringArray("fraction:robot_trash_oil", "layers")
+condition_min = PackedFloat32Array(0.005, 2)
+condition_max = PackedFloat32Array(1, 3)

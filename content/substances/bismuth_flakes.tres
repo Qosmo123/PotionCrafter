@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"bismuth_flakes"
+display_name = "Bismuth Flakes"
+chemical_formula = "Bi"
+specific_heat_j_kg_k = 800
+melting_point_kelvin = 544
+boiling_point_kelvin = 3000
+latent_heat_fusion_j_kg = 200000
+latent_heat_vaporization_j_kg = 1e+06
+viscosity_pas = 0.01
+pka_acidity = 7
+turbidity = 1
+molar_mass_kg_mol = 0.209
+density_kg_m3 = 9780
+base_albedo_rgba = Color(0.75, 0.7, 0.8, 1)
+description = "Iridescent rainbow flakes of bismuth metal."
+glitter = 0.8
+rainbow = 0.5

@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"carbon_dioxide"
+display_name = "Fixed Air"
+chemical_formula = "CO₂"
+molar_mass_kg_mol = 0.04401
+density_kg_m3 = 1100
+specific_heat_j_kg_k = 840
+melting_point_kelvin = 194
+boiling_point_kelvin = 195
+latent_heat_fusion_j_kg = 196000
+latent_heat_vaporization_j_kg = 380000
+viscosity_pas = 0.0001
+pka_acidity = 7
+base_albedo_rgba = Color(0.95, 0.95, 0.95, 0.05)
+turbidity = 0
+shelf = "Cryogens"
+cas_number = "124-38-9"

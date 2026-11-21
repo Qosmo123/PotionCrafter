@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://world_3d/grimoire_system/recipe_data.gd" id="1_recipe"]
+
+[resource]
+script = ExtResource("1_recipe")
+recipe_id = &"smash_overload"
+title = "Smash Juice Overload"
+category = 3
+formula = "γ-SMASH + Δ"
+description = "Gets hotter and glowier the angrier it gets. Please stop stirring it, it's getting upset."
+riddle = ""
+ingredients = PackedStringArray("Big Green Rage Juice", "A stirring rod")
+method_steps = PackedStringArray("Stir until hot and glowing")
+condition_traits = PackedStringArray("fraction:gamma_smash_juice", "temperature_c", "glow")
+condition_min = PackedFloat32Array(0.01, 45, 0.5)
+condition_max = PackedFloat32Array(1, 1e+09, 1e+09)

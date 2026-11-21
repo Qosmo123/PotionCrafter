@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/obsidian_glitter.tres" id="c0"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"snowflake_obsidian"
+display_name = "Snowflake Obsidian"
+formula = "SiO₂ glass + cristobalite"
+kind = 3
+rarity = 0
+hardness_mohs = 5.5
+density_kg_m3 = 2400
+typical_mass_kg = 0.012
+color = Color(0.1, 0.1, 0.1, 1)
+luster = 1
+shape = 0
+emission = Color(0, 0, 0, 1)
+value_coins = 8
+can_facet = true
+fun_fact = "The snowflakes are tiny crystals that began growing inside the glass."
+crush_products = Array[Resource]([ExtResource("c0")])
+crush_fractions = PackedFloat32Array(1)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Volcanic glass"
+crystal_system = "Amorphous"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 0
+fracture = "conchoidal"
+diaphaneity = 2
+refractive_index = 1.49
+dispersion = 0
+phenomenon = 0
+colors_text = "black with white 'snowflakes'"
+localities = "Utah, Mexico"
+uses = "beads, carvings"
+birthstone = ""

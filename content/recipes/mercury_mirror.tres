@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://world_3d/grimoire_system/recipe_data.gd" id="1_recipe"]
+
+[resource]
+script = ExtResource("1_recipe")
+recipe_id = &"mercury_mirror"
+title = "Mercury Mirror"
+category = 2
+formula = "Hg | H₂O | oil"
+description = "Three liquids stacked by weight: metal, water and oil."
+riddle = "Silver beneath water beneath gold, none of them touching."
+ingredients = PackedStringArray("Quicksilver", "Water", "Salamander Oil")
+method_steps = PackedStringArray("Layer all three and let them rest")
+condition_traits = PackedStringArray("layers", "emulsion")
+condition_min = PackedFloat32Array(3, 0)
+condition_max = PackedFloat32Array(3, 0.3)

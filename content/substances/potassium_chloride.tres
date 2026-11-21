@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"potassium_chloride"
+display_name = "Potassium Chloride"
+chemical_formula = "KCl"
+specific_heat_j_kg_k = 900
+melting_point_kelvin = 900
+boiling_point_kelvin = 2000
+latent_heat_fusion_j_kg = 150000
+latent_heat_vaporization_j_kg = 1e+06
+viscosity_pas = 0.01
+pka_acidity = 7
+turbidity = 1
+molar_mass_kg_mol = 0.0746
+density_kg_m3 = 1980
+base_albedo_rgba = Color(0.98, 0.98, 0.98, 1)
+flame_color = Color(0.72, 0.5, 1, 1)
+flame_strength = 0.8
+shelf = "Flame Salts"
+cas_number = "7447-40-7"
+description = "Salt substitute that colours flames lilac."

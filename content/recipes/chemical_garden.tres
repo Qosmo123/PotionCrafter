@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://world_3d/grimoire_system/recipe_data.gd" id="1_recipe"]
+
+[resource]
+script = ExtResource("1_recipe")
+recipe_id = &"chemical_garden"
+title = "Chemical Garden"
+category = 0
+formula = "M²⁺ + SiO₃²⁻ → MSiO₃↓ (membrane 'plants')"
+description = "Metal salts in water glass grow glassy 'plants' as precipitate membranes burst upward."
+riddle = ""
+ingredients = PackedStringArray("Water Glass", "Copper Chloride or Blue Vitriol")
+method_steps = PackedStringArray("Fill with water glass", "Drop in metal salt crystals")
+condition_traits = PackedStringArray("fraction:silica_gel")
+condition_min = PackedFloat32Array(0.002)
+condition_max = PackedFloat32Array(1)

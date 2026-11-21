@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"poison_apple_juice"
+display_name = "Poison Apple Juice (Pretend!)"
+chemical_formula = "Snooze·C₆H₁₂O₆"
+molar_mass_kg_mol = 0.03
+density_kg_m3 = 1040
+specific_heat_j_kg_k = 3800
+melting_point_kelvin = 260
+boiling_point_kelvin = 372
+latent_heat_fusion_j_kg = 300000
+latent_heat_vaporization_j_kg = 2e+06
+viscosity_pas = 0.002
+pka_acidity = 7
+turbidity = 0.3
+base_albedo_rgba = Color(0.75, 0.05, 0.1, 0.85)
+shelf = "Fairy Tale"
+description = "A wicked queen's sleepy-time drink. Makes potions dreamy and slow. Only pretend poisonous."
+emissive_aura_hdr = Color(0.4, 0, 0.1, 1)
+chronal_dilation = 0.6
+spookiness = 0.4

@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/diamond_dust.tres" id="c0"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"diamond"
+display_name = "Diamond"
+formula = "C"
+kind = 3
+rarity = 4
+hardness_mohs = 10
+density_kg_m3 = 3520
+typical_mass_kg = 0.012
+color = Color(0.97, 0.98, 1, 1)
+luster = 6
+shape = 8
+emission = Color(0, 0, 0, 1)
+value_coins = 500
+can_facet = true
+fun_fact = "The hardest natural material, yet a sharp blow along its octahedral cleavage can split it. Many glow blue under UV light."
+crush_products = Array[Resource]([ExtResource("c0")])
+crush_fractions = PackedFloat32Array(1)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Native element"
+crystal_system = "Cubic"
+streak_name = "colourless"
+streak_color = Color(0.97, 0.97, 0.97, 1)
+cleavage = 5
+fracture = "conchoidal"
+diaphaneity = 0
+refractive_index = 2.42
+dispersion = 0.044
+phenomenon = 7
+colors_text = "colourless, yellow, brown, rarely pink, blue, green"
+localities = "South Africa, Botswana, Russia, Canada, Australia"
+uses = "jewellery, cutting tools, drill bits"
+birthstone = "April"

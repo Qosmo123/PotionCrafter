@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="VesselProfile" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://world_3d/vessels/vessel_profile.gd" id="1_script"]
+[ext_resource type="ArrayMesh" path="res://world_3d/vessels/meshes/erlenmeyer_glass.obj" id="2_glass"]
+[ext_resource type="ArrayMesh" path="res://world_3d/vessels/meshes/erlenmeyer_liquid.obj" id="3_liquid"]
+
+[resource]
+script = ExtResource("1_script")
+vessel_name = "erlenmeyer"
+glass_mesh = ExtResource("2_glass")
+liquid_mesh = ExtResource("3_liquid")
+inner_profile = PackedVector2Array(0.000000, -0.068725, 0.037000, -0.068725, 0.038654, -0.068493, 0.040180, -0.067813, 0.041459, -0.066740, 0.042393, -0.065355, 0.042909, -0.063767, 0.017500, 0.023275, 0.013500, 0.033275, 0.013500, 0.063275, 0.014850, 0.069275)
+outer_radius_meters = 0.045027
+height_meters = 0.141850
+glass_mass_kg = 0.143600
+modelled_capacity_m3 = 0.000306695

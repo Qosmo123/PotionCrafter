@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/quartz_sand_coarse.tres" id="c0"]
+[ext_resource type="Resource" path="res://content/substances/quartz_sand_medium.tres" id="c1"]
+[ext_resource type="Resource" path="res://content/substances/iron_oxide.tres" id="c2"]
+[ext_resource type="Resource" path="res://content/substances/feldspar_powder.tres" id="c3"]
+[ext_resource type="Resource" path="res://content/minerals/jasper.tres" id="i0"]
+[ext_resource type="Resource" path="res://content/minerals/agate.tres" id="i1"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"conglomerate"
+display_name = "Conglomerate"
+formula = "rounded pebbles in cement"
+kind = 0
+rarity = 0
+hardness_mohs = 6
+density_kg_m3 = 2500
+typical_mass_kg = 0.12
+color = Color(0.6, 0.5, 0.42, 1)
+luster = 0
+shape = 0
+emission = Color(0, 0, 0, 1)
+value_coins = 2
+can_facet = false
+fun_fact = "Nature's concrete: old river pebbles cemented together."
+crush_products = Array[Resource]([ExtResource("c0"), ExtResource("c1"), ExtResource("c2"), ExtResource("c3")])
+crush_fractions = PackedFloat32Array(0.5, 0.3, 0.05, 0.15)
+inclusions = Array[Resource]([ExtResource("i0"), ExtResource("i1")])
+inclusion_chances = PackedFloat32Array(0.2, 0.1)
+mineral_class = "Sedimentary"
+crystal_system = "—"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 0
+fracture = "uneven"
+diaphaneity = 2
+refractive_index = 0
+dispersion = 0
+phenomenon = 0
+colors_text = "mixed pebbles"
+localities = "worldwide"
+uses = "decorative stone"
+birthstone = ""

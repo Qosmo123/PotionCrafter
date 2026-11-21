@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://world_3d/grimoire_system/recipe_data.gd" id="1_recipe"]
+
+[resource]
+script = ExtResource("1_recipe")
+recipe_id = &"shrunk_potion"
+title = "Honey, I Shrunk the Potion"
+category = 3
+formula = "Ant·ℏ → light as a feather"
+description = "Tiny, sparkly and so light it floats. Please do not lose it."
+riddle = ""
+ingredients = PackedStringArray("Teeny-Tiny Shrink Particles")
+method_steps = PackedStringArray("Stir shrink particles into water")
+condition_traits = PackedStringArray("fraction:shrinking_particles", "gravity_coupling")
+condition_min = PackedFloat32Array(0.01, -2)
+condition_max = PackedFloat32Array(1, 0.3)

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://world_3d/grimoire_system/recipe_data.gd" id="1_recipe"]
+
+[resource]
+script = ExtResource("1_recipe")
+recipe_id = &"mummy_tea"
+title = "Mummy's Slow-Mo Tea"
+category = 3
+formula = "Ancient dust + Δ"
+description = "A 3,000-year-old cuppa. Slows everything down so much you might nap mid-sip."
+riddle = ""
+ingredients = PackedStringArray("Mummy Dust", "Hot Water")
+method_steps = PackedStringArray("Heat water on the plate", "Sprinkle in mummy dust")
+condition_traits = PackedStringArray("fraction:mummy_dust", "temperature_c")
+condition_min = PackedFloat32Array(0.005, 50)
+condition_max = PackedFloat32Array(1, 1e+09)

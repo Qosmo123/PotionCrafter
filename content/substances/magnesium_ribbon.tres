@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+[ext_resource type="Resource" path="res://content/substances/hydrogen.tres" id="p0"]
+[ext_resource type="Resource" path="res://content/substances/dissolved_salts.tres" id="p1"]
+[ext_resource type="Resource" path="res://content/substances/magnesium_oxide.tres" id="r0"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"magnesium_ribbon"
+display_name = "Magnesium Ribbon"
+chemical_formula = "Mg"
+specific_heat_j_kg_k = 900
+melting_point_kelvin = 923
+boiling_point_kelvin = 1363
+latent_heat_fusion_j_kg = 150000
+latent_heat_vaporization_j_kg = 1e+06
+viscosity_pas = 0.01
+pka_acidity = 10
+turbidity = 1
+molar_mass_kg_mol = 0.0243
+density_kg_m3 = 1740
+base_albedo_rgba = Color(0.82, 0.83, 0.85, 1)
+reducer_strength = 0.8
+flammability = 0.8
+flash_point_kelvin = 280
+combustion_enthalpy_j_kg = -2.47e+07
+flame_color = Color(1, 1, 1, 1)
+flame_strength = 1
+shelf = "Metals"
+cas_number = "7439-95-4"
+description = "Burns with a blinding white light. Hot enough to light thermite."
+reaction_products = Array[Resource]([ExtResource("p0"), ExtResource("p1")])
+reaction_product_mass_fractions = PackedFloat32Array(0.08, 0.92)
+redox_products = Array[Resource]([ExtResource("r0")])
+redox_fractions = PackedFloat32Array(1)

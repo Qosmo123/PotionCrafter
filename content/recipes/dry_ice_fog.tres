@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://world_3d/grimoire_system/recipe_data.gd" id="1_recipe"]
+
+[resource]
+script = ExtResource("1_recipe")
+recipe_id = &"dry_ice_fog"
+title = "Witch's Cauldron Fog"
+category = 0
+formula = "CO₂(s) → CO₂(g)   −78 °C"
+description = "Dry ice boils off in warm water, pouring heavy white fog over the rim."
+riddle = ""
+ingredients = PackedStringArray("Dry Ice", "Warm Water")
+method_steps = PackedStringArray("Warm the water", "Drop in dry ice")
+condition_traits = PackedStringArray("gas_rate", "temperature_c", "fraction:carbon_dioxide")
+condition_min = PackedFloat32Array(0.003, -60, 0)
+condition_max = PackedFloat32Array(1e+09, 12, 1)

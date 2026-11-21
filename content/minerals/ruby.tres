@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/corundum_grit.tres" id="c0"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"ruby"
+display_name = "Ruby"
+formula = "Al₂O₃ (Cr)"
+kind = 3
+rarity = 3
+hardness_mohs = 9
+density_kg_m3 = 4000
+typical_mass_kg = 0.012
+color = Color(0.85, 0.04, 0.14, 1)
+luster = 1
+shape = 1
+emission = Color(0.15, 0, 0.02, 1)
+value_coins = 150
+can_facet = true
+fun_fact = "Ruby is red corundum. Chromium makes it red and makes it glow under UV, so the best rubies seem to burn from within."
+crush_products = Array[Resource]([ExtResource("c0")])
+crush_fractions = PackedFloat32Array(1)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Oxide"
+crystal_system = "Trigonal"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 0
+fracture = "conchoidal to uneven"
+diaphaneity = 0
+refractive_index = 1.77
+dispersion = 0.018
+phenomenon = 7
+colors_text = "pinkish to blood red"
+localities = "Myanmar, Thailand, Mozambique, Sri Lanka"
+uses = "jewellery, lasers, watch bearings"
+birthstone = "July"

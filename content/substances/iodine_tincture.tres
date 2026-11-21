@@ -1,0 +1,33 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+[ext_resource type="Resource" path="res://content/substances/dissolved_salts.tres" id="r0"]
+[ext_resource type="Resource" path="res://content/substances/starch_iodine_complex.tres" id="x0"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"iodine_tincture"
+display_name = "Tincture of Iodine"
+chemical_formula = "I₂ (in C₂H₅OH)"
+specific_heat_j_kg_k = 3800
+melting_point_kelvin = 260
+boiling_point_kelvin = 375
+latent_heat_fusion_j_kg = 300000
+latent_heat_vaporization_j_kg = 2.1e+06
+viscosity_pas = 0.0012
+pka_acidity = 7
+turbidity = 0.05
+molar_mass_kg_mol = 0.254
+density_kg_m3 = 950
+base_albedo_rgba = Color(0.55, 0.25, 0.05, 0.85)
+complexable = 0.9
+oxidizer_strength = 0.3
+redox_enthalpy_j_mol = -40000
+toxicity = 0.4
+shelf = "Oxidisers"
+cas_number = "7553-56-2"
+description = "Brown antiseptic. Touch starch and it turns instantly blue-black; thiosulfate makes it vanish."
+redox_products = Array[Resource]([ExtResource("r0")])
+redox_fractions = PackedFloat32Array(1)
+complex_products = Array[Resource]([ExtResource("x0")])
+complex_fractions = PackedFloat32Array(1)

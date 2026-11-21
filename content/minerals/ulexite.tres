@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/boracite_powder.tres" id="c0"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"ulexite"
+display_name = "Ulexite (TV Rock)"
+formula = "NaCaB₅O₆(OH)₆·5H₂O"
+kind = 2
+rarity = 1
+hardness_mohs = 2.5
+density_kg_m3 = 1950
+typical_mass_kg = 0.02
+color = Color(0.95, 0.95, 0.92, 1)
+luster = 7
+shape = 0
+emission = Color(0, 0, 0, 1)
+value_coins = 15
+can_facet = false
+fun_fact = "Its fibres work like fibre-optic cables: put it on a page and the words appear on top of the stone!"
+crush_products = Array[Resource]([ExtResource("c0")])
+crush_fractions = PackedFloat32Array(1)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Borate"
+crystal_system = "Triclinic"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 6
+fracture = "uneven"
+diaphaneity = 1
+refractive_index = 1.5
+dispersion = 0
+phenomenon = 0
+colors_text = "white, silky fibres"
+localities = "California, Turkey"
+uses = "boron source"
+birthstone = ""

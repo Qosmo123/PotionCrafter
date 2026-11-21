@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://world_3d/grimoire_system/recipe_data.gd" id="1_recipe"]
+
+[resource]
+script = ExtResource("1_recipe")
+recipe_id = &"thermite"
+title = "Thermite"
+category = 0
+formula = "Fe₂O₃ + 2 Al → 2 Fe(l) + Al₂O₃   ΔH = −851 kJ/mol"
+description = "So hot it melts iron. Needs burning magnesium to start."
+riddle = ""
+ingredients = PackedStringArray("Rust (Haematite Powder)", "Aluminium Powder", "Magnesium Ribbon", "A flame")
+method_steps = PackedStringArray("Mix rust and aluminium", "Add magnesium", "Light it with the candle or hot plate")
+condition_traits = PackedStringArray("fraction:molten_iron")
+condition_min = PackedFloat32Array(0.01)
+condition_max = PackedFloat32Array(1)

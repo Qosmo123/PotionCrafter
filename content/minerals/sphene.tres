@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/titania_powder.tres" id="c0"]
+[ext_resource type="Resource" path="res://content/substances/silicate_dust.tres" id="c1"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"sphene"
+display_name = "Sphene (Titanite)"
+formula = "CaTiSiO₅"
+kind = 3
+rarity = 3
+hardness_mohs = 5.25
+density_kg_m3 = 3520
+typical_mass_kg = 0.012
+color = Color(0.75, 0.8, 0.2, 1)
+luster = 6
+shape = 1
+emission = Color(0, 0, 0, 1)
+value_coins = 90
+can_facet = true
+fun_fact = "Its fire is stronger than diamond's, flashing rainbow colours from every facet."
+crush_products = Array[Resource]([ExtResource("c0"), ExtResource("c1")])
+crush_fractions = PackedFloat32Array(0.4, 0.6)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Silicate"
+crystal_system = "Monoclinic"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 1
+fracture = "conchoidal"
+diaphaneity = 0
+refractive_index = 1.95
+dispersion = 0.051
+phenomenon = 0
+colors_text = "chartreuse to golden"
+localities = "Madagascar, Pakistan, Brazil"
+uses = "collector gem"
+birthstone = ""

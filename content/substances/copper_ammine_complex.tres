@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"copper_ammine_complex"
+display_name = "Tetraamminecopper"
+chemical_formula = "[Cu(NH₃)₄]²⁺"
+specific_heat_j_kg_k = 3800
+melting_point_kelvin = 260
+boiling_point_kelvin = 375
+latent_heat_fusion_j_kg = 300000
+latent_heat_vaporization_j_kg = 2.1e+06
+viscosity_pas = 0.0012
+pka_acidity = 7
+turbidity = 0.05
+molar_mass_kg_mol = 0.13
+density_kg_m3 = 1100
+base_albedo_rgba = Color(0.05, 0.15, 0.95, 0.92)
+toxicity = 0.3
+description = "The deepest royal blue in chemistry."

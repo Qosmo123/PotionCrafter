@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+[ext_resource type="Resource" path="res://content/substances/aurum_potabile.tres" id="p0"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"quicksilver"
+display_name = "Quicksilver"
+chemical_formula = "Hg"
+molar_mass_kg_mol = 0.20059
+density_kg_m3 = 13534
+specific_heat_j_kg_k = 140
+melting_point_kelvin = 234.32
+boiling_point_kelvin = 629.88
+latent_heat_fusion_j_kg = 11400
+latent_heat_vaporization_j_kg = 295000
+viscosity_pas = 0.00153
+pka_acidity = 15
+redox_potential_volts = 0.85
+surface_tension_n_m = 0.485
+base_albedo_rgba = Color(0.78, 0.8, 0.83, 1)
+turbidity = 1
+ior = 1.6
+thaumic_density_thaums_mol = 4
+transmutation_valence = 0.6
+miscibility_group = 2
+shelf = "Metals"
+cas_number = "7439-97-6"
+toxicity = 0.9
+health_hazard = 0.9
+environmental_hazard = 0.9
+reaction_products = Array[Resource]([ExtResource("p0")])
+reaction_product_mass_fractions = PackedFloat32Array(1)

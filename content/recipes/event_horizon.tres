@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://world_3d/grimoire_system/recipe_data.gd" id="1_recipe"]
+
+[resource]
+script = ExtResource("1_recipe")
+recipe_id = &"event_horizon"
+title = "Event Horizon Sludge"
+category = 3
+formula = "∞ρ | everything else"
+description = "Black hole syrup sinks beneath everything in its own layer. Not even light escapes. Or socks."
+riddle = ""
+ingredients = PackedStringArray("Black Hole Syrup", "Water")
+method_steps = PackedStringArray("Pour black hole syrup into water", "Let it settle")
+condition_traits = PackedStringArray("fraction:black_hole_syrup", "layers")
+condition_min = PackedFloat32Array(0.005, 2)
+condition_max = PackedFloat32Array(1, 3)

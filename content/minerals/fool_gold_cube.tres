@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/pyrite_dust.tres" id="c0"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"fool_gold_cube"
+display_name = "Pyrite Cube"
+formula = "FeS₂"
+kind = 2
+rarity = 1
+hardness_mohs = 6.3
+density_kg_m3 = 5010
+typical_mass_kg = 0.015
+color = Color(0.85, 0.72, 0.35, 1)
+luster = 2
+shape = 1
+emission = Color(0, 0, 0, 1)
+value_coins = 12
+can_facet = false
+fun_fact = "Pyrite grows in perfect shiny cubes. Gold rush miners got so excited they called it Fool's Gold!"
+crush_products = Array[Resource]([ExtResource("c0")])
+crush_fractions = PackedFloat32Array(1)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Sulfide"
+crystal_system = "Cubic"
+streak_name = "greenish black"
+streak_color = Color(0.15, 0.17, 0.12, 1)
+cleavage = 1
+fracture = "conchoidal"
+diaphaneity = 2
+refractive_index = 0
+dispersion = 0
+phenomenon = 0
+colors_text = "brassy gold"
+localities = "Spain (Navajún), Peru"
+uses = "sulfuric acid, collecting"
+birthstone = ""

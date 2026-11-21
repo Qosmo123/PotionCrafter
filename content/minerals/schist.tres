@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/mica_flakes.tres" id="c0"]
+[ext_resource type="Resource" path="res://content/substances/quartz_sand_fine.tres" id="c1"]
+[ext_resource type="Resource" path="res://content/substances/garnet_sand.tres" id="c2"]
+[ext_resource type="Resource" path="res://content/minerals/garnet.tres" id="i0"]
+[ext_resource type="Resource" path="res://content/minerals/staurolite.tres" id="i1"]
+[ext_resource type="Resource" path="res://content/minerals/kyanite_gem.tres" id="i2"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"schist"
+display_name = "Mica Schist"
+formula = "mica + quartz + garnet"
+kind = 0
+rarity = 0
+hardness_mohs = 4
+density_kg_m3 = 2800
+typical_mass_kg = 0.12
+color = Color(0.6, 0.58, 0.55, 1)
+luster = 4
+shape = 9
+emission = Color(0, 0, 0, 1)
+value_coins = 3
+can_facet = false
+fun_fact = "Glittering schist often holds little red garnets like raisins in a cake."
+crush_products = Array[Resource]([ExtResource("c0"), ExtResource("c1"), ExtResource("c2")])
+crush_fractions = PackedFloat32Array(0.6, 0.3, 0.1)
+inclusions = Array[Resource]([ExtResource("i0"), ExtResource("i1"), ExtResource("i2")])
+inclusion_chances = PackedFloat32Array(0.5, 0.15, 0.1)
+mineral_class = "Metamorphic"
+crystal_system = "—"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 2
+fracture = "flaky"
+diaphaneity = 2
+refractive_index = 0
+dispersion = 0
+phenomenon = 9
+colors_text = "glittery silver-grey"
+localities = "Scotland, Austria, New York"
+uses = "decorative stone"
+birthstone = ""

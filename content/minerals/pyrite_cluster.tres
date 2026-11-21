@@ -1,0 +1,43 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/pyrite_dust.tres" id="c0"]
+[ext_resource type="Resource" path="res://content/substances/sulfur_powder.tres" id="c1"]
+[ext_resource type="Resource" path="res://content/minerals/fool_gold_cube.tres" id="i0"]
+[ext_resource type="Resource" path="res://content/minerals/gold_nugget.tres" id="i1"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"pyrite_cluster"
+display_name = "Pyrite Cluster"
+formula = "FeS₂"
+kind = 0
+rarity = 1
+hardness_mohs = 6.3
+density_kg_m3 = 5010
+typical_mass_kg = 0.13
+color = Color(0.75, 0.65, 0.35, 1)
+luster = 2
+shape = 2
+emission = Color(0, 0, 0, 1)
+value_coins = 10
+can_facet = false
+fun_fact = "Strike pyrite against steel and it makes sparks. Its name comes from the Greek word for fire."
+crush_products = Array[Resource]([ExtResource("c0"), ExtResource("c1")])
+crush_fractions = PackedFloat32Array(0.8, 0.2)
+inclusions = Array[Resource]([ExtResource("i0"), ExtResource("i1")])
+inclusion_chances = PackedFloat32Array(0.6, 0.08)
+mineral_class = "Sulfide"
+crystal_system = "Cubic"
+streak_name = "greenish black"
+streak_color = Color(0.15, 0.17, 0.12, 1)
+cleavage = 1
+fracture = "conchoidal"
+diaphaneity = 2
+refractive_index = 0
+dispersion = 0
+phenomenon = 0
+colors_text = "brassy gold"
+localities = "Peru, Spain"
+uses = "sulfuric acid"
+birthstone = ""

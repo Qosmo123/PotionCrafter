@@ -1,0 +1,44 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/quartz_sand_medium.tres" id="c0"]
+[ext_resource type="Resource" path="res://content/substances/iron_oxide.tres" id="c1"]
+[ext_resource type="Resource" path="res://content/substances/feldspar_powder.tres" id="c2"]
+[ext_resource type="Resource" path="res://content/minerals/crystal_quartz.tres" id="i0"]
+[ext_resource type="Resource" path="res://content/minerals/trilobite.tres" id="i1"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"sandstone"
+display_name = "Sandstone"
+formula = "cemented quartz sand"
+kind = 0
+rarity = 0
+hardness_mohs = 6
+density_kg_m3 = 2300
+typical_mass_kg = 0.12
+color = Color(0.82, 0.62, 0.45, 1)
+luster = 0
+shape = 0
+emission = Color(0, 0, 0, 1)
+value_coins = 2
+can_facet = false
+fun_fact = "Sandstone is ancient beaches and deserts glued into rock. Grind it and you get sand back!"
+crush_products = Array[Resource]([ExtResource("c0"), ExtResource("c1"), ExtResource("c2")])
+crush_fractions = PackedFloat32Array(0.8, 0.05, 0.15)
+inclusions = Array[Resource]([ExtResource("i0"), ExtResource("i1")])
+inclusion_chances = PackedFloat32Array(0.15, 0.05)
+mineral_class = "Sedimentary"
+crystal_system = "—"
+streak_name = "tan"
+streak_color = Color(0.8, 0.65, 0.5, 1)
+cleavage = 0
+fracture = "granular"
+diaphaneity = 2
+refractive_index = 0
+dispersion = 0
+phenomenon = 0
+colors_text = "tan, red, yellow"
+localities = "Utah, Arizona, worldwide"
+uses = "building stone"
+birthstone = ""

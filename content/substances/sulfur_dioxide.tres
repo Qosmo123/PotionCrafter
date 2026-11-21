@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"sulfur_dioxide"
+display_name = "Brimstone Fume"
+chemical_formula = "SO₂"
+molar_mass_kg_mol = 0.064
+density_kg_m3 = 1460
+specific_heat_j_kg_k = 620
+melting_point_kelvin = 200
+boiling_point_kelvin = 263
+latent_heat_fusion_j_kg = 115000
+latent_heat_vaporization_j_kg = 390000
+viscosity_pas = 0.0003
+pka_acidity = 7
+odor = 0.8
+base_albedo_rgba = Color(0.95, 0.95, 0.8, 0.05)
+turbidity = 0

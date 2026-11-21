@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"cotton_candy_cloud"
+display_name = "Cotton Candy Cloud"
+chemical_formula = "Fluff·C₁₂H₂₂O₁₁"
+molar_mass_kg_mol = 0.03
+density_kg_m3 = 1040
+specific_heat_j_kg_k = 3800
+melting_point_kelvin = 260
+boiling_point_kelvin = 372
+latent_heat_fusion_j_kg = 300000
+latent_heat_vaporization_j_kg = 2e+06
+viscosity_pas = 0.002
+pka_acidity = 7
+turbidity = 0.3
+base_albedo_rgba = Color(1, 0.75, 0.9, 0.4)
+shelf = "Candy Shop"
+description = "A pink cloud of spun sugar. Floats and foams like a dream."
+gravity_coupling = 0.1
+foaming = 0.6
+foam_stability = 0.6

@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+[ext_resource type="Resource" path="res://content/substances/honey_syrup.tres" id="r0"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"chocolate_river"
+display_name = "Chocolate River"
+chemical_formula = "Cacao(l)"
+molar_mass_kg_mol = 0.03
+density_kg_m3 = 1040
+specific_heat_j_kg_k = 3800
+melting_point_kelvin = 260
+boiling_point_kelvin = 372
+latent_heat_fusion_j_kg = 300000
+latent_heat_vaporization_j_kg = 2e+06
+viscosity_pas = 5
+pka_acidity = 7
+turbidity = 1
+base_albedo_rgba = Color(0.3, 0.15, 0.06, 0.98)
+shelf = "Candy Shop"
+description = "Straight from a famous chocolate factory river. Thick, rich and pours in slow ropes."
+reducer_strength = 0.2
+redox_products = Array[Resource]([ExtResource("r0")])
+redox_fractions = PackedFloat32Array(1)

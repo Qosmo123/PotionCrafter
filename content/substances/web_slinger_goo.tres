@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"web_slinger_goo"
+display_name = "Friendly Neighbourhood Web-Goo"
+chemical_formula = "Spdr(C₃H₄O₂)ₙ"
+molar_mass_kg_mol = 0.03
+density_kg_m3 = 1040
+specific_heat_j_kg_k = 3800
+melting_point_kelvin = 260
+boiling_point_kelvin = 372
+latent_heat_fusion_j_kg = 300000
+latent_heat_vaporization_j_kg = 2e+06
+viscosity_pas = 0.6
+pka_acidity = 7
+turbidity = 0.3
+base_albedo_rgba = Color(0.95, 0.95, 0.98, 0.7)
+shelf = "Hero Lab"
+description = "Shoots out sticky and sets super-strong. Thwip! Crosslinks itself into ultra-tough slime."
+crosslink_sites = 0.9
+crosslinker_strength = 0.6

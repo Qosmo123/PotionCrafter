@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/quartz_sand_fine.tres" id="c0"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"desert_rose"
+display_name = "Desert Rose"
+formula = "CaSO₄·2H₂O"
+kind = 2
+rarity = 2
+hardness_mohs = 2
+density_kg_m3 = 2300
+typical_mass_kg = 0.02
+color = Color(0.85, 0.65, 0.5, 1)
+luster = 0
+shape = 2
+emission = Color(0, 0, 0, 1)
+value_coins = 45
+can_facet = false
+fun_fact = "Desert roses grow when salty water evaporates in the sand, leaving crystal petals that look like a flower."
+crush_products = Array[Resource]([ExtResource("c0")])
+crush_fractions = PackedFloat32Array(1)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Sulfate"
+crystal_system = "Monoclinic"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 2
+fracture = "uneven"
+diaphaneity = 2
+refractive_index = 1.52
+dispersion = 0
+phenomenon = 0
+colors_text = "sandy tan rosettes"
+localities = "Sahara, Oklahoma"
+uses = "collecting"
+birthstone = ""

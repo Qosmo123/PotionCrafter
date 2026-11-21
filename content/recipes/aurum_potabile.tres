@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://world_3d/grimoire_system/recipe_data.gd" id="1_recipe"]
+
+[resource]
+script = ExtResource("1_recipe")
+recipe_id = &"aurum_potabile"
+title = "Aurum Potabile"
+category = 2
+formula = "Hg —(Æ, Δ)→ Au(Æ)ₙ"
+description = "Drinkable gold, transmuted from quicksilver in a hot thaumic bath."
+riddle = "The running metal, bathed in moonlight and fever, wakes as the king of metals."
+ingredients = PackedStringArray("Quicksilver", "Moonwater", "Heat")
+method_steps = PackedStringArray("Add quicksilver to moonwater", "Heat above 60 °C")
+condition_traits = PackedStringArray("fraction:aurum_potabile")
+condition_min = PackedFloat32Array(0.02)
+condition_max = PackedFloat32Array(1)

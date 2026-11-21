@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+[ext_resource type="Resource" path="res://content/substances/dissolved_salts.tres" id="p0"]
+[ext_resource type="Resource" path="res://content/substances/water.tres" id="p1"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"glowberry_juice"
+display_name = "Glowberry Juice"
+chemical_formula = "C₆H₈O₇·Lum(aq)"
+molar_mass_kg_mol = 0.03
+density_kg_m3 = 1050
+specific_heat_j_kg_k = 3900
+melting_point_kelvin = 268
+boiling_point_kelvin = 374
+latent_heat_fusion_j_kg = 300000
+latent_heat_vaporization_j_kg = 2.1e+06
+viscosity_pas = 0.002
+pka_acidity = 3.1
+vitality_resonance = 0.6
+thaumic_density_thaums_mol = 6
+base_albedo_rgba = Color(0.35, 0.95, 0.4, 0.6)
+turbidity = 0.3
+emissive_aura_hdr = Color(0.3, 1.4, 0.4, 1)
+reaction_products = Array[Resource]([ExtResource("p0"), ExtResource("p1")])
+reaction_product_mass_fractions = PackedFloat32Array(0.4, 0.6)

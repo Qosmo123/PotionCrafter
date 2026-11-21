@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"sodium_polyacrylate"
+display_name = "Super-Slurper Gel"
+chemical_formula = "(C₃H₃NaO₂)ₙ"
+specific_heat_j_kg_k = 2400
+latent_heat_fusion_j_kg = 100000
+latent_heat_vaporization_j_kg = 700000
+viscosity_pas = 0.0008
+pka_acidity = 7
+turbidity = 0.02
+melting_point_kelvin = 250
+boiling_point_kelvin = 380
+molar_mass_kg_mol = 0.094
+density_kg_m3 = 1100
+base_albedo_rgba = Color(0.95, 0.97, 1, 0.4)
+crosslink_sites = 0.9
+crosslinker_strength = 0.9
+shelf = "Organics"
+cas_number = "9003-04-7"
+description = "Nappy polymer that drinks hundreds of times its weight in water and turns to jelly."

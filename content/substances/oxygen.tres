@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"oxygen"
+display_name = "Vital Air"
+chemical_formula = "O₂"
+molar_mass_kg_mol = 0.032
+density_kg_m3 = 1141
+specific_heat_j_kg_k = 918
+melting_point_kelvin = 54.4
+boiling_point_kelvin = 90.2
+latent_heat_fusion_j_kg = 13900
+latent_heat_vaporization_j_kg = 213000
+viscosity_pas = 0.0002
+pka_acidity = 7
+base_albedo_rgba = Color(0.9, 0.95, 1, 0.03)
+turbidity = 0

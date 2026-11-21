@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"potassium_ferricyanide"
+display_name = "Red Prussiate"
+chemical_formula = "K₃[Fe(CN)₆]"
+specific_heat_j_kg_k = 900
+melting_point_kelvin = 573
+boiling_point_kelvin = 2000
+latent_heat_fusion_j_kg = 150000
+latent_heat_vaporization_j_kg = 1e+06
+viscosity_pas = 0.01
+pka_acidity = 7
+turbidity = 1
+molar_mass_kg_mol = 0.329
+density_kg_m3 = 1890
+base_albedo_rgba = Color(0.9, 0.35, 0.1, 1)
+catalyst_strength = 0.8
+toxicity = 0.3
+shelf = "Glow Chemistry"
+cas_number = "13746-66-2"
+description = "Bright red crystals that catalyse the luminol glow."

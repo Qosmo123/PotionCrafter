@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+[ext_resource type="Resource" path="res://content/substances/lead_iodide.tres" id="p0"]
+[ext_resource type="Resource" path="res://content/substances/dissolved_salts.tres" id="p1"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"lead_nitrate"
+display_name = "Lead Nitrate"
+chemical_formula = "Pb(NO₃)₂"
+specific_heat_j_kg_k = 900
+melting_point_kelvin = 743
+boiling_point_kelvin = 2000
+latent_heat_fusion_j_kg = 150000
+latent_heat_vaporization_j_kg = 1e+06
+viscosity_pas = 0.01
+pka_acidity = 7
+turbidity = 1
+molar_mass_kg_mol = 0.331
+density_kg_m3 = 4530
+base_albedo_rgba = Color(0.98, 0.98, 0.98, 1)
+precipitant_charge = 1
+toxicity = 0.9
+health_hazard = 0.9
+environmental_hazard = 0.9
+shelf = "Salts"
+cas_number = "10099-74-8"
+description = "Poisonous! With potassium iodide it rains sparkling golden lead iodide crystals."
+reaction_products = Array[Resource]([ExtResource("p0"), ExtResource("p1")])
+reaction_product_mass_fractions = PackedFloat32Array(0.7, 0.3)

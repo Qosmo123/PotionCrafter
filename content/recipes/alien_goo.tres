@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://world_3d/grimoire_system/recipe_data.gd" id="1_recipe"]
+
+[resource]
+script = ExtResource("1_recipe")
+recipe_id = &"alien_goo"
+title = "Alien Abduction Goo"
+category = 3
+formula = "Zorp + float + glow"
+description = "Glowing, floaty and slightly beepy. The bottle may try to leave the table."
+riddle = ""
+ingredients = PackedStringArray("Alien Goo", "Moonwater")
+method_steps = PackedStringArray("Mix alien goo with moonwater")
+condition_traits = PackedStringArray("fraction:alien_goo", "gravity_coupling", "glow")
+condition_min = PackedFloat32Array(0.01, -2, 0.3)
+condition_max = PackedFloat32Array(1, 0.6, 1e+09)

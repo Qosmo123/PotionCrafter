@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/silicate_dust.tres" id="c0"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"danburite"
+display_name = "Danburite"
+formula = "CaB₂Si₂O₈"
+kind = 3
+rarity = 2
+hardness_mohs = 7.25
+density_kg_m3 = 3000
+typical_mass_kg = 0.012
+color = Color(0.97, 0.95, 0.85, 1)
+luster = 1
+shape = 1
+emission = Color(0, 0, 0, 1)
+value_coins = 35
+can_facet = true
+fun_fact = "Named after Danbury, Connecticut. Glows sky blue under UV light."
+crush_products = Array[Resource]([ExtResource("c0")])
+crush_fractions = PackedFloat32Array(1)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Silicate"
+crystal_system = "Orthorhombic"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 1
+fracture = "conchoidal"
+diaphaneity = 0
+refractive_index = 1.63
+dispersion = 0.017
+phenomenon = 7
+colors_text = "colourless to pale yellow"
+localities = "Mexico, Madagascar, Tanzania"
+uses = "jewellery"
+birthstone = ""

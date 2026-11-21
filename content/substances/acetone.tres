@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+[ext_resource type="Resource" path="res://content/substances/carbon_dioxide.tres" id="p0"]
+[ext_resource type="Resource" path="res://content/substances/water.tres" id="p1"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"acetone"
+display_name = "Acetone"
+chemical_formula = "C₃H₆O"
+specific_heat_j_kg_k = 2400
+latent_heat_fusion_j_kg = 100000
+latent_heat_vaporization_j_kg = 700000
+viscosity_pas = 0.0008
+pka_acidity = 15
+turbidity = 0.02
+melting_point_kelvin = 178
+boiling_point_kelvin = 329
+molar_mass_kg_mol = 0.058
+density_kg_m3 = 784
+base_albedo_rgba = Color(0.95, 0.97, 1, 0.1)
+flammability = 0.9
+flash_point_kelvin = 253
+combustion_enthalpy_j_kg = -3.08e+07
+toxicity = 0.2
+odor = 0.4
+shelf = "Solvents"
+cas_number = "67-64-1"
+description = "Nail-polish remover. Evaporates in seconds and is extremely flammable."
+reaction_products = Array[Resource]([ExtResource("p0"), ExtResource("p1")])
+reaction_product_mass_fractions = PackedFloat32Array(0.6, 0.4)

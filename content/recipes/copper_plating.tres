@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://world_3d/grimoire_system/recipe_data.gd" id="1_recipe"]
+
+[resource]
+script = ExtResource("1_recipe")
+recipe_id = &"copper_plating"
+title = "The Copper-Plated Nail"
+category = 0
+formula = "Fe + CuSO₄ → FeSO₄ + Cu↓"
+description = "Iron swaps places with copper: the iron gets a shiny copper coat while the blue fades to green."
+riddle = ""
+ingredients = PackedStringArray("Iron Filings", "Copper Sulfate (Blue Vitriol)")
+method_steps = PackedStringArray("Dissolve blue vitriol in water", "Drop in iron filings", "Watch copper appear")
+condition_traits = PackedStringArray("fraction:copper_metal")
+condition_min = PackedFloat32Array(0.002)
+condition_max = PackedFloat32Array(1)

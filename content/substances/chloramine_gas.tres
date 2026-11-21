@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"chloramine_gas"
+display_name = "Chloramine"
+chemical_formula = "NH₂Cl"
+specific_heat_j_kg_k = 1000
+melting_point_kelvin = 207
+boiling_point_kelvin = 223
+latent_heat_fusion_j_kg = 50000
+latent_heat_vaporization_j_kg = 300000
+viscosity_pas = 0.0002
+pka_acidity = 7
+turbidity = 0
+molar_mass_kg_mol = 0.0515
+density_kg_m3 = 1000
+base_albedo_rgba = Color(0.9, 0.95, 0.8, 0.05)
+toxicity = 0.8
+odor = 0.8
+description = "Toxic, eye-stinging gas from bleach plus ammonia."

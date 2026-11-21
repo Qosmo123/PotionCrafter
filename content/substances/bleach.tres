@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+[ext_resource type="Resource" path="res://content/substances/chlorine_gas.tres" id="p0"]
+[ext_resource type="Resource" path="res://content/substances/dissolved_salts.tres" id="p1"]
+[ext_resource type="Resource" path="res://content/substances/water.tres" id="p2"]
+[ext_resource type="Resource" path="res://content/substances/dissolved_salts.tres" id="r0"]
+[ext_resource type="Resource" path="res://content/substances/water.tres" id="r1"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"bleach"
+display_name = "Sodium Hypochlorite (Bleach)"
+chemical_formula = "NaOCl(aq)"
+specific_heat_j_kg_k = 3800
+melting_point_kelvin = 260
+boiling_point_kelvin = 375
+latent_heat_fusion_j_kg = 300000
+latent_heat_vaporization_j_kg = 2.1e+06
+viscosity_pas = 0.0012
+pka_acidity = 9
+turbidity = 0.05
+molar_mass_kg_mol = 0.0744
+density_kg_m3 = 1110
+base_albedo_rgba = Color(0.95, 1, 0.85, 0.12)
+oxidizer_strength = 0.6
+redox_enthalpy_j_mol = -100000
+odor = 0.6
+toxicity = 0.5
+environmental_hazard = 0.7
+shelf = "Oxidisers"
+cas_number = "7681-52-9"
+description = "Household disinfectant. With acids it releases chlorine; with ammonia, toxic chloramine. Real-life rule: never mix!"
+reaction_products = Array[Resource]([ExtResource("p0"), ExtResource("p1"), ExtResource("p2")])
+reaction_product_mass_fractions = PackedFloat32Array(0.3, 0.5, 0.2)
+redox_products = Array[Resource]([ExtResource("r0"), ExtResource("r1")])
+redox_fractions = PackedFloat32Array(0.7, 0.3)

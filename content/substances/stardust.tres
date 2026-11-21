@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+[ext_resource type="Resource" path="res://content/substances/spent_essence.tres" id="p0"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"stardust"
+display_name = "Stardust"
+chemical_formula = "Fe–Ni·Æ"
+specific_heat_j_kg_k = 850
+latent_heat_fusion_j_kg = 200000
+latent_heat_vaporization_j_kg = 1e+06
+viscosity_pas = 0.01
+pka_acidity = 7
+turbidity = 1
+molar_mass_kg_mol = 0.056
+density_kg_m3 = 3000
+base_albedo_rgba = Color(0.85, 0.9, 1, 1)
+melting_point_kelvin = 1200
+boiling_point_kelvin = 2500
+glitter = 1
+thaumic_density_thaums_mol = 60
+gravity_coupling = -1.2
+polarity_charge = -0.2
+emissive_aura_hdr = Color(0.6, 0.7, 1.4, 1)
+magnetic = 0.4
+reaction_products = Array[Resource]([ExtResource("p0")])
+reaction_product_mass_fractions = PackedFloat32Array(1)

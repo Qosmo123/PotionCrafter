@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/silicate_dust.tres" id="c0"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"charoite"
+display_name = "Charoite"
+formula = "(K,Sr)₁₅₋₁₆(Ca,Na)₃₂Si₇₀(O,OH)₁₈₀(OH,F)₄·nH₂O"
+kind = 3
+rarity = 3
+hardness_mohs = 5.5
+density_kg_m3 = 2550
+typical_mass_kg = 0.012
+color = Color(0.55, 0.3, 0.7, 1)
+luster = 7
+shape = 0
+emission = Color(0, 0, 0, 1)
+value_coins = 60
+can_facet = true
+fun_fact = "Found in only one place in Siberia. Its swirls shimmer like silk."
+crush_products = Array[Resource]([ExtResource("c0")])
+crush_fractions = PackedFloat32Array(1)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Silicate"
+crystal_system = "Monoclinic"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 6
+fracture = "uneven"
+diaphaneity = 2
+refractive_index = 1.55
+dispersion = 0
+phenomenon = 2
+colors_text = "swirling lilac purple"
+localities = "Chara River (Siberia, Russia)"
+uses = "carvings"
+birthstone = ""

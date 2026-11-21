@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/corundum_grit.tres" id="c0"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"star_sapphire"
+display_name = "Star Sapphire"
+formula = "Al₂O₃ (Ti, Fe)"
+kind = 3
+rarity = 4
+hardness_mohs = 9
+density_kg_m3 = 4000
+typical_mass_kg = 0.012
+color = Color(0.2, 0.3, 0.75, 1)
+luster = 4
+shape = 1
+emission = Color(0, 0, 0, 1)
+value_coins = 300
+can_facet = true
+fun_fact = "Needle-thin rutile crystals inside reflect light into a six-pointed star that glides across the stone as you move it."
+crush_products = Array[Resource]([ExtResource("c0")])
+crush_fractions = PackedFloat32Array(1)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Oxide"
+crystal_system = "Trigonal"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 0
+fracture = "conchoidal"
+diaphaneity = 1
+refractive_index = 1.77
+dispersion = 0.018
+phenomenon = 1
+colors_text = "blue-grey with a white six-rayed star"
+localities = "Sri Lanka, Myanmar, Thailand"
+uses = "cabochon jewellery"
+birthstone = ""

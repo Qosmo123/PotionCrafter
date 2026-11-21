@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://world_3d/grimoire_system/recipe_data.gd" id="1_recipe"]
+
+[resource]
+script = ExtResource("1_recipe")
+recipe_id = &"cold_fire"
+title = "Cold Fire"
+category = 2
+formula = "flare ∧ T < 10 °C"
+description = "An arcane flare in an ice-cold potion. Physics is very confused."
+riddle = "A flame that freezes."
+ingredients = PackedStringArray("An arcane flare", "Something freezing")
+method_steps = PackedStringArray("Make a flare while the potion is ice cold")
+condition_traits = PackedStringArray("flash", "temperature_c")
+condition_min = PackedFloat32Array(0.05, -80)
+condition_max = PackedFloat32Array(1e+09, 10)

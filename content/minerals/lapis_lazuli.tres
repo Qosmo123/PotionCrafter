@@ -1,0 +1,42 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/ultramarine.tres" id="c0"]
+[ext_resource type="Resource" path="res://content/substances/calcite_powder.tres" id="c1"]
+[ext_resource type="Resource" path="res://content/substances/pyrite_dust.tres" id="c2"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"lapis_lazuli"
+display_name = "Lapis Lazuli"
+formula = "lazurite + calcite + pyrite"
+kind = 3
+rarity = 2
+hardness_mohs = 5.5
+density_kg_m3 = 2800
+typical_mass_kg = 0.012
+color = Color(0.1, 0.2, 0.7, 1)
+luster = 1
+shape = 0
+emission = Color(0, 0, 0, 1)
+value_coins = 50
+can_facet = true
+fun_fact = "Ground into ultramarine paint, it was worth more than gold to Renaissance artists. Its gold sparkles are pyrite."
+crush_products = Array[Resource]([ExtResource("c0"), ExtResource("c1"), ExtResource("c2")])
+crush_fractions = PackedFloat32Array(0.8, 0.15, 0.05)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Silicate rock"
+crystal_system = "Rock (mixed)"
+streak_name = "light blue"
+streak_color = Color(0.4, 0.5, 0.85, 1)
+cleavage = 0
+fracture = "uneven"
+diaphaneity = 2
+refractive_index = 1.5
+dispersion = 0
+phenomenon = 9
+colors_text = "deep blue with golden pyrite flecks"
+localities = "Afghanistan (Sar-e-Sang), Chile"
+uses = "ultramarine pigment, carvings"
+birthstone = ""

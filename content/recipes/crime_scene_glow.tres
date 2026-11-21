@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://world_3d/grimoire_system/recipe_data.gd" id="1_recipe"]
+
+[resource]
+script = ExtResource("1_recipe")
+recipe_id = &"crime_scene_glow"
+title = "Crime-Scene Glow"
+category = 0
+formula = "luminol + H₂O₂ —(Fe³⁺)→ 3-APA* → 3-APA + hν"
+description = "Chemiluminescence: light made by chemistry, with no heat at all."
+riddle = ""
+ingredients = PackedStringArray("Luminol", "Oxygenated Water", "Red Prussiate (catalyst)")
+method_steps = PackedStringArray("Dissolve luminol", "Add peroxide", "Add the catalyst and dim the lights")
+condition_traits = PackedStringArray("fraction:glowing_aminophthalate")
+condition_min = PackedFloat32Array(0.0005)
+condition_max = PackedFloat32Array(1)

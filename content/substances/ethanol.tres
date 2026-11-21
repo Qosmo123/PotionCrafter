@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+[ext_resource type="Resource" path="res://content/substances/carbon_dioxide.tres" id="p0"]
+[ext_resource type="Resource" path="res://content/substances/water.tres" id="p1"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"ethanol"
+display_name = "Spirit of Wine"
+chemical_formula = "C₂H₅OH"
+molar_mass_kg_mol = 0.04607
+density_kg_m3 = 789
+specific_heat_j_kg_k = 2440
+melting_point_kelvin = 159
+boiling_point_kelvin = 351.4
+latent_heat_fusion_j_kg = 108000
+latent_heat_vaporization_j_kg = 841000
+viscosity_pas = 0.0012
+pka_acidity = 15.9
+flammability = 0.9
+combustion_enthalpy_j_kg = -2.97e+07
+surface_tension_n_m = 0.022
+base_albedo_rgba = Color(0.96, 0.95, 0.88, 0.14)
+turbidity = 0.02
+ior = 1.361
+flame_color = Color(0.35, 0.5, 1, 1)
+flame_strength = 0.08
+shelf = "Solvents"
+cas_number = "64-17-5"
+reaction_products = Array[Resource]([ExtResource("p0"), ExtResource("p1")])
+reaction_product_mass_fractions = PackedFloat32Array(0.6, 0.4)

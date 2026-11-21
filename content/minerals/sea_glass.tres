@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/quartz_sand_fine.tres" id="c0"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"sea_glass"
+display_name = "Sea Glass"
+formula = "SiO₂ (frosted)"
+kind = 2
+rarity = 1
+hardness_mohs = 5.5
+density_kg_m3 = 2500
+typical_mass_kg = 0.005
+color = Color(0.4, 0.75, 0.65, 1)
+luster = 3
+shape = 0
+emission = Color(0, 0, 0, 1)
+value_coins = 15
+can_facet = false
+fun_fact = "Sea glass started life as a bottle. Waves and sand tumbled it for decades until it went smooth and frosty."
+crush_products = Array[Resource]([ExtResource("c0")])
+crush_fractions = PackedFloat32Array(1)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Man-made glass"
+crystal_system = "Amorphous"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 0
+fracture = "conchoidal"
+diaphaneity = 1
+refractive_index = 1.52
+dispersion = 0
+phenomenon = 0
+colors_text = "green, brown, white, rare cobalt blue"
+localities = "beaches worldwide"
+uses = "jewellery, collecting"
+birthstone = ""

@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/galena_powder.tres" id="c0"]
+[ext_resource type="Resource" path="res://content/substances/metal_oxide_dust.tres" id="c1"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"wulfenite"
+display_name = "Wulfenite"
+formula = "PbMoO₄"
+kind = 2
+rarity = 2
+hardness_mohs = 3
+density_kg_m3 = 6800
+typical_mass_kg = 0.02
+color = Color(1, 0.55, 0.1, 1)
+luster = 6
+shape = 9
+emission = Color(0, 0, 0, 1)
+value_coins = 45
+can_facet = false
+fun_fact = "Grows as square plates thin as playing cards, glowing orange like stained glass."
+crush_products = Array[Resource]([ExtResource("c0"), ExtResource("c1")])
+crush_fractions = PackedFloat32Array(0.5, 0.5)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Molybdate"
+crystal_system = "Tetragonal"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 1
+fracture = "subconchoidal"
+diaphaneity = 0
+refractive_index = 2.4
+dispersion = 0.2
+phenomenon = 0
+colors_text = "orange plates"
+localities = "Arizona (Red Cloud mine), Mexico"
+uses = "molybdenum ore"
+birthstone = ""

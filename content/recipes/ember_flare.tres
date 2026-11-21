@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://world_3d/grimoire_system/recipe_data.gd" id="1_recipe"]
+
+[resource]
+script = ExtResource("1_recipe")
+recipe_id = &"ember_flare"
+title = "Emberglass Flare"
+category = 1
+formula = "Ign⁺ + Lun⁻ → Æ + hν + Q"
+description = "Opposite polarities annihilate in light and heat."
+riddle = ""
+ingredients = PackedStringArray("Emberberry", "Moonwater or Frostberry")
+method_steps = PackedStringArray("Drop an emberberry into moonwater")
+condition_traits = PackedStringArray("flash")
+condition_min = PackedFloat32Array(0.1)
+condition_max = PackedFloat32Array(1e+09)

@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+[ext_resource type="Resource" path="res://content/substances/copper_ammine_complex.tres" id="x0"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"turquoise_powder"
+display_name = "Turquoise Powder"
+chemical_formula = "CuAl₆(PO₄)₄(OH)₈·4H₂O"
+specific_heat_j_kg_k = 800
+melting_point_kelvin = 1500
+boiling_point_kelvin = 3000
+latent_heat_fusion_j_kg = 200000
+latent_heat_vaporization_j_kg = 1e+06
+viscosity_pas = 0.01
+pka_acidity = 7
+turbidity = 1
+molar_mass_kg_mol = 0.813
+density_kg_m3 = 2700
+base_albedo_rgba = Color(0.4, 0.8, 0.75, 1)
+description = "Sky-blue copper phosphate powder."
+complexable = 0.5
+complex_products = Array[Resource]([ExtResource("x0")])
+complex_fractions = PackedFloat32Array(1)

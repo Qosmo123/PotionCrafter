@@ -1,0 +1,35 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+[ext_resource type="Resource" path="res://content/substances/dissolved_salts.tres" id="p0"]
+[ext_resource type="Resource" path="res://content/substances/water.tres" id="p1"]
+[ext_resource type="Resource" path="res://content/substances/nitrogen_dioxide.tres" id="r0"]
+[ext_resource type="Resource" path="res://content/substances/water.tres" id="r1"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"nitric_acid"
+display_name = "Aqua Fortis"
+chemical_formula = "HNO₃"
+specific_heat_j_kg_k = 3800
+melting_point_kelvin = 260
+boiling_point_kelvin = 356
+latent_heat_fusion_j_kg = 300000
+latent_heat_vaporization_j_kg = 2.1e+06
+viscosity_pas = 0.0012
+pka_acidity = -1.4
+turbidity = 0.05
+molar_mass_kg_mol = 0.063
+density_kg_m3 = 1510
+base_albedo_rgba = Color(0.98, 0.95, 0.8, 0.15)
+oxidizer_strength = 0.75
+redox_enthalpy_j_mol = -200000
+toxicity = 0.8
+odor = 0.5
+shelf = "Acids"
+cas_number = "7697-37-2"
+description = "Strong oxidising acid. Attacks copper and iron, releasing choking brown nitrogen dioxide."
+reaction_products = Array[Resource]([ExtResource("p0"), ExtResource("p1")])
+reaction_product_mass_fractions = PackedFloat32Array(0.7, 0.3)
+redox_products = Array[Resource]([ExtResource("r0"), ExtResource("r1")])
+redox_fractions = PackedFloat32Array(0.6, 0.4)

@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/corundum_grit.tres" id="c0"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"moissanite"
+display_name = "Moissanite"
+formula = "SiC"
+kind = 3
+rarity = 4
+hardness_mohs = 9.25
+density_kg_m3 = 3220
+typical_mass_kg = 0.012
+color = Color(0.97, 0.97, 0.94, 1)
+luster = 6
+shape = 1
+emission = Color(0, 0, 0, 1)
+value_coins = 200
+can_facet = true
+fun_fact = "First found by Henri Moissan inside a meteorite crater. It has more than twice diamond's fire."
+crush_products = Array[Resource]([ExtResource("c0")])
+crush_fractions = PackedFloat32Array(1)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Carbide"
+crystal_system = "Hexagonal"
+streak_name = "greenish-grey"
+streak_color = Color(0.7, 0.75, 0.7, 1)
+cleavage = 0
+fracture = "conchoidal"
+diaphaneity = 0
+refractive_index = 2.65
+dispersion = 0.104
+phenomenon = 0
+colors_text = "colourless"
+localities = "first found in the Canyon Diablo meteorite crater"
+uses = "jewellery, abrasives"
+birthstone = ""

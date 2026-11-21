@@ -1,0 +1,35 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+[ext_resource type="Resource" path="res://content/substances/water.tres" id="p0"]
+[ext_resource type="Resource" path="res://content/substances/oxygen.tres" id="p1"]
+[ext_resource type="Resource" path="res://content/substances/water.tres" id="r0"]
+[ext_resource type="Resource" path="res://content/substances/oxygen.tres" id="r1"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"hydrogen_peroxide"
+display_name = "Oxygenated Water"
+chemical_formula = "H₂O₂(aq)"
+molar_mass_kg_mol = 0.034
+density_kg_m3 = 1110
+specific_heat_j_kg_k = 2620
+melting_point_kelvin = 272.7
+boiling_point_kelvin = 423
+latent_heat_fusion_j_kg = 368000
+latent_heat_vaporization_j_kg = 1.517e+06
+viscosity_pas = 0.00125
+pka_acidity = 7
+decomposition_rate_per_s = 0.0004
+decomposition_enthalpy_j_mol = -98000
+base_albedo_rgba = Color(0.85, 0.95, 1, 0.12)
+turbidity = 0.02
+oxidizer_strength = 0.7
+redox_enthalpy_j_mol = -200000
+shelf = "Oxidisers"
+cas_number = "7722-84-1"
+toxicity = 0.4
+reaction_products = Array[Resource]([ExtResource("p0"), ExtResource("p1")])
+reaction_product_mass_fractions = PackedFloat32Array(0.53, 0.47)
+redox_products = Array[Resource]([ExtResource("r0"), ExtResource("r1")])
+redox_fractions = PackedFloat32Array(0.53, 0.47)

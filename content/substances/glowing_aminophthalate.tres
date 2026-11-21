@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+[ext_resource type="Resource" path="res://content/substances/spent_aminophthalate.tres" id="p0"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"glowing_aminophthalate"
+display_name = "Glowing Aminophthalate"
+chemical_formula = "3-APA*"
+specific_heat_j_kg_k = 3800
+melting_point_kelvin = 260
+boiling_point_kelvin = 375
+latent_heat_fusion_j_kg = 300000
+latent_heat_vaporization_j_kg = 2.1e+06
+viscosity_pas = 0.0012
+pka_acidity = 7
+turbidity = 0.05
+molar_mass_kg_mol = 0.18
+density_kg_m3 = 1050
+base_albedo_rgba = Color(0.5, 0.75, 1, 0.4)
+decomposition_rate_per_s = 0.2
+emissive_aura_hdr = Color(0.3, 0.65, 2.2, 1)
+description = "Excited molecules giving off blue light as they relax: chemiluminescence."
+reaction_products = Array[Resource]([ExtResource("p0")])
+reaction_product_mass_fractions = PackedFloat32Array(1)

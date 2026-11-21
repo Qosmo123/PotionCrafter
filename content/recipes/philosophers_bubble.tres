@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://world_3d/grimoire_system/recipe_data.gd" id="1_recipe"]
+
+[resource]
+script = ExtResource("1_recipe")
+recipe_id = &"philosophers_bubble"
+title = "Philosopher's Bubble"
+category = 2
+formula = "γ ↓ ∧ κ < ½ → buoyant lamellae"
+description = "Bubbles that fall upward."
+riddle = "Lather that has forgotten the ground."
+ingredients = PackedStringArray("Saponified Lather", "Sweet Oil of Glycerin", "Moonwater")
+method_steps = PackedStringArray("Whisk lather and glycerin into moonwater")
+condition_traits = PackedStringArray("foaming", "gravity_coupling")
+condition_min = PackedFloat32Array(0.25, -2)
+condition_max = PackedFloat32Array(1e+09, 0.5)

@@ -1,0 +1,42 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/luminite_dust.tres" id="c0"]
+[ext_resource type="Resource" path="res://content/substances/quartz_sand_fine.tres" id="c1"]
+[ext_resource type="Resource" path="res://content/minerals/moonstone.tres" id="i0"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"moonstone_ore"
+display_name = "Moonstone Ore"
+formula = "KAlSi₃O₈ (Æ)"
+kind = 0
+rarity = 2
+hardness_mohs = 6
+density_kg_m3 = 2560
+typical_mass_kg = 0.1
+color = Color(0.7, 0.75, 0.85, 1)
+luster = 4
+shape = 0
+emission = Color(0.05, 0.07, 0.15, 1)
+value_coins = 18
+can_facet = false
+fun_fact = "Moonstone ore glimmers faintly at night. Alchemists believed it soaked up moonlight."
+crush_products = Array[Resource]([ExtResource("c0"), ExtResource("c1")])
+crush_fractions = PackedFloat32Array(0.5, 0.5)
+inclusions = Array[Resource]([ExtResource("i0")])
+inclusion_chances = PackedFloat32Array(0.6)
+mineral_class = "Silicate (feldspar)"
+crystal_system = "Monoclinic"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 2
+fracture = "uneven"
+diaphaneity = 2
+refractive_index = 0
+dispersion = 0
+phenomenon = 4
+colors_text = "grey with blue shimmer"
+localities = "Sri Lanka, moonlit hillsides"
+uses = "moonstone cabochons"
+birthstone = ""

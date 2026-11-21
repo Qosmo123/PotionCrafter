@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+[ext_resource type="Resource" path="res://content/substances/glowing_aminophthalate.tres" id="r0"]
+[ext_resource type="Resource" path="res://content/substances/spent_essence.tres" id="r1"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"glow_worm_goo"
+display_name = "Glow-Worm Goo"
+chemical_formula = "Lucifer-in₂"
+molar_mass_kg_mol = 0.03
+density_kg_m3 = 1040
+specific_heat_j_kg_k = 3800
+melting_point_kelvin = 260
+boiling_point_kelvin = 372
+latent_heat_fusion_j_kg = 300000
+latent_heat_vaporization_j_kg = 2e+06
+viscosity_pas = 0.002
+pka_acidity = 7
+turbidity = 0.3
+base_albedo_rgba = Color(0.7, 1, 0.3, 0.6)
+shelf = "Slime Lab"
+description = "Squeezed (gently!) from friendly cave glow-worms. Glows brighter when you add peroxide."
+emissive_aura_hdr = Color(0.6, 1.4, 0.2, 1)
+reducer_strength = 0.6
+redox_products = Array[Resource]([ExtResource("r0"), ExtResource("r1")])
+redox_fractions = PackedFloat32Array(0.6, 0.4)

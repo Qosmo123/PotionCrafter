@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+[ext_resource type="Resource" path="res://content/substances/copper_precipitate.tres" id="p0"]
+[ext_resource type="Resource" path="res://content/substances/dissolved_salts.tres" id="p1"]
+[ext_resource type="Resource" path="res://content/substances/copper_metal.tres" id="r0"]
+[ext_resource type="Resource" path="res://content/substances/dissolved_salts.tres" id="r1"]
+[ext_resource type="Resource" path="res://content/substances/copper_ammine_complex.tres" id="x0"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"copper_sulfate"
+display_name = "Blue Vitriol"
+chemical_formula = "CuSO₄(aq)"
+molar_mass_kg_mol = 0.04
+density_kg_m3 = 1150
+specific_heat_j_kg_k = 3500
+melting_point_kelvin = 268
+boiling_point_kelvin = 376
+latent_heat_fusion_j_kg = 300000
+latent_heat_vaporization_j_kg = 2.1e+06
+viscosity_pas = 0.0012
+pka_acidity = 7
+precipitant_charge = 1
+base_albedo_rgba = Color(0.1, 0.45, 0.95, 0.7)
+turbidity = 0.1
+oxidizer_strength = 0.5
+redox_enthalpy_j_mol = -150000
+complexable = 0.8
+flame_color = Color(0.1, 0.8, 0.6, 1)
+flame_strength = 0.7
+toxicity = 0.4
+environmental_hazard = 0.8
+shelf = "Salts"
+cas_number = "7758-98-7"
+reaction_products = Array[Resource]([ExtResource("p0"), ExtResource("p1")])
+reaction_product_mass_fractions = PackedFloat32Array(0.6, 0.4)
+redox_products = Array[Resource]([ExtResource("r0"), ExtResource("r1")])
+redox_fractions = PackedFloat32Array(0.4, 0.6)
+complex_products = Array[Resource]([ExtResource("x0")])
+complex_fractions = PackedFloat32Array(1)

@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/boracite_powder.tres" id="c0"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"borax_crystal"
+display_name = "Borax Crystal"
+formula = "Na₂B₄O₁₀·10H₂O"
+kind = 2
+rarity = 0
+hardness_mohs = 2.25
+density_kg_m3 = 1730
+typical_mass_kg = 0.02
+color = Color(0.95, 0.95, 0.95, 1)
+luster = 1
+shape = 1
+emission = Color(0, 0, 0, 1)
+value_coins = 5
+can_facet = false
+fun_fact = "The 'magic' ingredient that turns glue into slime."
+crush_products = Array[Resource]([ExtResource("c0")])
+crush_fractions = PackedFloat32Array(1)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Borate"
+crystal_system = "Monoclinic"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 2
+fracture = "conchoidal"
+diaphaneity = 1
+refractive_index = 1.46
+dispersion = 0
+phenomenon = 0
+colors_text = "colourless to white"
+localities = "Death Valley (California), Turkey"
+uses = "slime activator, cleaning"
+birthstone = ""

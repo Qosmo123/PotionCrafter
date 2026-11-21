@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"liquid_nitrogen"
+display_name = "Liquid Nitrogen"
+chemical_formula = "N₂(l)"
+specific_heat_j_kg_k = 1040
+melting_point_kelvin = 63.2
+boiling_point_kelvin = 77.4
+latent_heat_fusion_j_kg = 25700
+latent_heat_vaporization_j_kg = 199000
+viscosity_pas = 0.0002
+pka_acidity = 7
+turbidity = 0
+molar_mass_kg_mol = 0.028
+density_kg_m3 = 1000
+base_albedo_rgba = Color(0.92, 0.95, 1, 0.08)
+shelf = "Cryogens"
+cas_number = "7727-37-9"
+description = "−196 °C. Boils off into rolling white fog and freezes anything it touches."

@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+[ext_resource type="Resource" path="res://content/substances/water.tres" id="p0"]
+[ext_resource type="Resource" path="res://content/substances/carbon_dioxide.tres" id="p1"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"carbonated_water"
+display_name = "Soda Water"
+chemical_formula = "H₂O·CO₂"
+specific_heat_j_kg_k = 3800
+melting_point_kelvin = 260
+boiling_point_kelvin = 375
+latent_heat_fusion_j_kg = 300000
+latent_heat_vaporization_j_kg = 2.1e+06
+viscosity_pas = 0.0012
+pka_acidity = 7
+turbidity = 0.05
+molar_mass_kg_mol = 0.0181
+density_kg_m3 = 1000
+base_albedo_rgba = Color(0.9, 0.95, 1, 0.1)
+decomposition_rate_per_s = 0.003
+foaming = 0.12
+shelf = "Solvents"
+cas_number = "7732-18-5"
+description = "Water with fizzy gas dissolved under pressure. Rough surfaces make it erupt."
+reaction_products = Array[Resource]([ExtResource("p0"), ExtResource("p1")])
+reaction_product_mass_fractions = PackedFloat32Array(0.99, 0.01)

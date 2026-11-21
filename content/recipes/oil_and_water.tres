@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://world_3d/grimoire_system/recipe_data.gd" id="1_recipe"]
+
+[resource]
+script = ExtResource("1_recipe")
+recipe_id = &"oil_and_water"
+title = "Oil upon Water"
+category = 0
+formula = "ρ(oil) < ρ(H₂O) → stratified layers"
+description = "Immiscible liquids separate by density into clean bands."
+riddle = ""
+ingredients = PackedStringArray("Water", "Salamander Oil")
+method_steps = PackedStringArray("Pour oil onto water", "Let it rest")
+condition_traits = PackedStringArray("layers", "emulsion")
+condition_min = PackedFloat32Array(2, 0)
+condition_max = PackedFloat32Array(3, 0.3)

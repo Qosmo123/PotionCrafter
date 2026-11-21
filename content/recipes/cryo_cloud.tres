@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://world_3d/grimoire_system/recipe_data.gd" id="1_recipe"]
+
+[resource]
+script = ExtResource("1_recipe")
+recipe_id = &"cryo_cloud"
+title = "Cryo Cloud"
+category = 0
+formula = "N₂(l) → N₂(g)   −196 °C"
+description = "Liquid nitrogen flash-boils into rolling clouds and freezes everything around it."
+riddle = ""
+ingredients = PackedStringArray("Liquid Nitrogen")
+method_steps = PackedStringArray("Pour liquid nitrogen into a beaker")
+condition_traits = PackedStringArray("temperature_c")
+condition_min = PackedFloat32Array(-273)
+condition_max = PackedFloat32Array(-50)

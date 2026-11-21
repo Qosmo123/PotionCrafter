@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/gold_flecks.tres" id="c0"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"gold_nugget"
+display_name = "Gold Nugget"
+formula = "Au"
+kind = 2
+rarity = 3
+hardness_mohs = 2.5
+density_kg_m3 = 19300
+typical_mass_kg = 0.006
+color = Color(1, 0.8, 0.3, 1)
+luster = 2
+shape = 6
+emission = Color(0, 0, 0, 1)
+value_coins = 120
+can_facet = false
+fun_fact = "Gold is so soft you can squash it flat with your fingers, and it never rusts. Pirates loved it!"
+crush_products = Array[Resource]([ExtResource("c0")])
+crush_fractions = PackedFloat32Array(1)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Native element"
+crystal_system = "Cubic"
+streak_name = "golden yellow"
+streak_color = Color(0.9, 0.75, 0.3, 1)
+cleavage = 0
+fracture = "hackly"
+diaphaneity = 2
+refractive_index = 0
+dispersion = 0
+phenomenon = 0
+colors_text = "golden yellow"
+localities = "Australia, Alaska, South Africa"
+uses = "jewellery, electronics, money"
+birthstone = ""

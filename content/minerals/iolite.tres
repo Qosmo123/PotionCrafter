@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/silicate_dust.tres" id="c0"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"iolite"
+display_name = "Iolite"
+formula = "Mg₂Al₄Si₅O₁₈"
+kind = 3
+rarity = 1
+hardness_mohs = 7
+density_kg_m3 = 2600
+typical_mass_kg = 0.012
+color = Color(0.35, 0.4, 0.75, 1)
+luster = 1
+shape = 1
+emission = Color(0, 0, 0, 1)
+value_coins = 25
+can_facet = true
+fun_fact = "Vikings may have used thin iolite slices as a 'sunstone' polarising filter to find the sun on cloudy days."
+crush_products = Array[Resource]([ExtResource("c0")])
+crush_fractions = PackedFloat32Array(1)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Silicate"
+crystal_system = "Orthorhombic"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 1
+fracture = "conchoidal"
+diaphaneity = 0
+refractive_index = 1.54
+dispersion = 0.017
+phenomenon = 0
+colors_text = "violet-blue that turns grey from the side"
+localities = "India, Sri Lanka, Madagascar"
+uses = "jewellery"
+birthstone = ""

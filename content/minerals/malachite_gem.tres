@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/malachite_powder.tres" id="c0"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"malachite_gem"
+display_name = "Polished Malachite"
+formula = "Cu₂CO₃(OH)₂"
+kind = 3
+rarity = 1
+hardness_mohs = 3.75
+density_kg_m3 = 4000
+typical_mass_kg = 0.012
+color = Color(0.05, 0.55, 0.3, 1)
+luster = 7
+shape = 0
+emission = Color(0, 0, 0, 1)
+value_coins = 25
+can_facet = true
+fun_fact = "Its swirling bands make every slice unique. It fizzes in acid because it is a carbonate."
+crush_products = Array[Resource]([ExtResource("c0")])
+crush_fractions = PackedFloat32Array(1)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Carbonate"
+crystal_system = "Monoclinic"
+streak_name = "light green"
+streak_color = Color(0.5, 0.8, 0.55, 1)
+cleavage = 2
+fracture = "splintery"
+diaphaneity = 2
+refractive_index = 1.85
+dispersion = 0
+phenomenon = 0
+colors_text = "banded light and dark green"
+localities = "DR Congo, Russia, Arizona"
+uses = "carvings, pigment"
+birthstone = ""

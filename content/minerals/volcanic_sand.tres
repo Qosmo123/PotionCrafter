@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/obsidian_glitter.tres" id="c0"]
+[ext_resource type="Resource" path="res://content/substances/magnetite_sand.tres" id="c1"]
+[ext_resource type="Resource" path="res://content/substances/quartz_sand_medium.tres" id="c2"]
+[ext_resource type="Resource" path="res://content/minerals/peridot.tres" id="i0"]
+[ext_resource type="Resource" path="res://content/minerals/fire_opal.tres" id="i1"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"volcanic_sand"
+display_name = "Volcanic Sand Bag"
+formula = "basalt + glass"
+kind = 1
+rarity = 1
+hardness_mohs = 6
+density_kg_m3 = 1700
+typical_mass_kg = 0.25
+color = Color(0.15, 0.14, 0.15, 1)
+luster = 0
+shape = 4
+emission = Color(0, 0, 0, 1)
+value_coins = 4
+can_facet = false
+fun_fact = "Black sand beaches form when hot lava hits the cold sea and shatters into tiny pieces."
+crush_products = Array[Resource]([ExtResource("c0"), ExtResource("c1"), ExtResource("c2")])
+crush_fractions = PackedFloat32Array(0.3, 0.4, 0.3)
+inclusions = Array[Resource]([ExtResource("i0"), ExtResource("i1")])
+inclusion_chances = PackedFloat32Array(0.3, 0.05)

@@ -1,10 +1,96 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=127 format=3]
+
+[ext_resource type="PackedScene" path="res://world_3d/vessels/vessel_3d.tscn" id="1_vessel"]
+[ext_resource type="Resource" path="res://content/substances/moonwater.tres" id="2_moon"]
+[ext_resource type="Resource" path="res://content/substances/honey_syrup.tres" id="3_honey"]
+[ext_resource type="Resource" path="res://content/substances/water.tres" id="4_water"]
+[ext_resource type="Resource" path="res://content/substances/ethanol.tres" id="5_ethanol"]
+[ext_resource type="Resource" path="res://content/substances/quicksilver.tres" id="6_quick"]
+[ext_resource type="Script" path="res://tactile_3d/grabber/tactile_grabber_3d.gd" id="7_grabber"]
+[ext_resource type="Script" path="res://world_3d/contraptions/hot_plate_3d.gd" id="8_plate"]
+[ext_resource type="Script" path="res://world_3d/grimoire_system/bench_readout.gd" id="9_readout"]
+[ext_resource type="Script" path="res://visuals_3d/scalability/graphics_profile.gd" id="10_gfx"]
+[ext_resource type="Shader" path="res://visuals_3d/shaders/wood_bench.gdshader" id="11_wood"]
+[ext_resource type="Shader" path="res://visuals_3d/shaders/stone_wall.gdshader" id="12_stone"]
+[ext_resource type="Resource" path="res://world_3d/vessels/profiles/round_flask.tres" id="13_pround"]
+[ext_resource type="Resource" path="res://world_3d/vessels/profiles/erlenmeyer.tres" id="14_perl"]
+[ext_resource type="Resource" path="res://world_3d/vessels/profiles/apothecary_bottle.tres" id="15_pbottle"]
+[ext_resource type="Resource" path="res://world_3d/vessels/profiles/vial.tres" id="16_pvial"]
+[ext_resource type="Resource" path="res://world_3d/vessels/profiles/beaker.tres" id="17_pbeaker"]
+[ext_resource type="Script" path="res://world_3d/contraptions/support_stand_3d.gd" id="18_stand"]
+[ext_resource type="Script" path="res://world_3d/props/shelf_dressing.gd" id="19_dress"]
+[ext_resource type="Script" path="res://world_3d/props/auto_box_collider.gd" id="20_abox"]
+[ext_resource type="PackedScene" path="res://world_3d/props/wall_shelf.gltf" id="21_shelf"]
+[ext_resource type="PackedScene" path="res://world_3d/props/icebox.gltf" id="22_icebox"]
+[ext_resource type="PackedScene" path="res://world_3d/props/sink_unit.gltf" id="23_sink"]
+[ext_resource type="PackedScene" path="res://world_3d/props/cabinet_low.gltf" id="24_cab"]
+[ext_resource type="PackedScene" path="res://world_3d/props/magic_potion_stand.gltf" id="25_magic"]
+[ext_resource type="PackedScene" path="res://world_3d/props/science_retort_stand.gltf" id="26_sci"]
+[ext_resource type="PackedScene" path="res://world_3d/props/mortar_pestle.gltf" id="27_mortar"]
+[ext_resource type="PackedScene" path="res://world_3d/props/tools_set.gltf" id="28_tools"]
+[ext_resource type="Script" path="res://world_3d/props/prop_visual.gd" id="29_pvis"]
+[ext_resource type="Script" path="res://tactile_3d/grabber/lab_camera_3d.gd" id="30_cam"]
+[ext_resource type="Script" path="res://tactile_3d/interactions/stir_tool_3d.gd" id="31_stir"]
+[ext_resource type="Script" path="res://world_3d/contraptions/magnetic_stirrer_3d.gd" id="32_mag"]
+[ext_resource type="PackedScene" path="res://world_3d/props/glass_rod.gltf" id="33_grod"]
+[ext_resource type="PackedScene" path="res://world_3d/props/silver_rod.gltf" id="34_srod"]
+[ext_resource type="PackedScene" path="res://world_3d/props/wooden_spoon.gltf" id="35_spoon"]
+[ext_resource type="PackedScene" path="res://world_3d/props/whisk.gltf" id="36_whisk"]
+[ext_resource type="PackedScene" path="res://world_3d/props/arcane_wand.gltf" id="37_wand"]
+[ext_resource type="PackedScene" path="res://world_3d/props/magnetic_stirrer.gltf" id="38_magm"]
+[ext_resource type="Script" path="res://world_3d/terrarium/berry_spawner.gd" id="39_berry"]
+[ext_resource type="Resource" path="res://content/substances/acetic_acid.tres" id="40_acetic"]
+[ext_resource type="Resource" path="res://content/substances/baking_soda.tres" id="41_soda"]
+[ext_resource type="Resource" path="res://content/substances/pva_glue.tres" id="42_pva"]
+[ext_resource type="Resource" path="res://content/substances/borax_solution.tres" id="43_borax"]
+[ext_resource type="Resource" path="res://content/substances/soap_solution.tres" id="44_soap"]
+[ext_resource type="Resource" path="res://content/substances/glycerin.tres" id="45_glyc"]
+[ext_resource type="Resource" path="res://content/substances/glowberry_juice.tres" id="46_glow"]
+[ext_resource type="Resource" path="res://content/substances/emberberry_juice.tres" id="47_ember"]
+[ext_resource type="Resource" path="res://content/substances/frostberry_juice.tres" id="48_frost"]
+[ext_resource type="Resource" path="res://content/substances/duskberry_juice.tres" id="49_dusk"]
+[ext_resource type="Script" path="res://tactile_3d/interactions/chalk_drawing_3d.gd" id="50_chalk"]
+[ext_resource type="Script" path="res://world_3d/grimoire_system/recipe_book.gd" id="51_book"]
+[ext_resource type="Script" path="res://world_3d/grimoire_system/inventory_store.gd" id="52_store"]
+[ext_resource type="Script" path="res://world_3d/grimoire_system/inventory_panel.gd" id="53_panel"]
+[ext_resource type="PackedScene" path="res://world_3d/props/tool_pegboard.gltf" id="54_peg"]
+[ext_resource type="PackedScene" path="res://world_3d/props/drawer_chest.gltf" id="55_drawers"]
+[ext_resource type="Script" path="res://visuals_3d/vfx/candle_flame.gd" id="56_candle"]
+[ext_resource type="Script" path="res://visuals_3d/vfx/ambient_dust.gd" id="57_dust"]
+[ext_resource type="Script" path="res://world_3d/contraptions/tool_crock_3d.gd" id="58_crock"]
+[ext_resource type="PackedScene" path="res://world_3d/props/tool_crock.gltf" id="59_crockm"]
+[ext_resource type="Script" path="res://tools/demo_director.gd" id="60_demo"]
+[ext_resource type="Script" path="res://world_3d/grimoire_system/grimoire_journal.gd" id="61_journal"]
+[ext_resource type="Script" path="res://world_3d/grimoire_system/grimoire_book_ui.gd" id="62_bookui"]
+[ext_resource type="Script" path="res://world_3d/grimoire_system/hud_overlay.gd" id="63_hud"]
+[ext_resource type="Script" path="res://world_3d/grimoire_system/grimoire_book_3d.gd" id="64_book3d"]
+[ext_resource type="PackedScene" path="res://world_3d/props/grimoire_book.gltf" id="65_bookm"]
+[ext_resource type="Script" path="res://world_3d/contraptions/rock_crusher_3d.gd" id="66_crusher"]
+[ext_resource type="Script" path="res://world_3d/contraptions/sand_sifter_3d.gd" id="67_sifter"]
+[ext_resource type="Script" path="res://world_3d/contraptions/lapidary_wheel_3d.gd" id="68_lap"]
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_crate_3d.gd" id="69_crate"]
+[ext_resource type="Script" path="res://world_3d/contraptions/streak_plate_3d.gd" id="90_streak"]
+[ext_resource type="Script" path="res://world_3d/contraptions/science_instrument_3d.gd" id="91_sci"]
+[ext_resource type="Script" path="res://world_3d/grimoire_system/safety_sheet_ui.gd" id="96_sds"]
+[ext_resource type="Resource" path="res://content/substances/honey_syrup.tres" id="92_honey"]
+[ext_resource type="Resource" path="res://content/substances/glycerin.tres" id="93_glyc"]
+[ext_resource type="Resource" path="res://content/substances/acetone.tres" id="94_acetone"]
+[ext_resource type="Resource" path="res://content/substances/soap_solution.tres" id="95_soap"]
+[ext_resource type="Script" path="res://tactile_3d/interactions/hammer_3d.gd" id="70_hammer"]
+[ext_resource type="PackedScene" path="res://world_3d/props/rock_crusher.gltf" id="71_crusherm"]
+[ext_resource type="PackedScene" path="res://world_3d/props/sand_sifter.gltf" id="72_sifterm"]
+[ext_resource type="PackedScene" path="res://world_3d/props/sifter_deck.gltf" id="73_deckm"]
+[ext_resource type="PackedScene" path="res://world_3d/props/lapidary_polisher.gltf" id="74_polm"]
+[ext_resource type="PackedScene" path="res://world_3d/props/faceting_machine.gltf" id="75_facm"]
+[ext_resource type="PackedScene" path="res://world_3d/props/stone_anvil.gltf" id="76_anvilm"]
+[ext_resource type="PackedScene" path="res://world_3d/props/rock_crate.gltf" id="77_cratem"]
 
 [sub_resource type="ProceduralSkyMaterial" id="SkyMat_1"]
-sky_top_color = Color(0.18, 0.15, 0.22, 1)
-sky_horizon_color = Color(0.42, 0.34, 0.28, 1)
-ground_bottom_color = Color(0.08, 0.06, 0.05, 1)
-ground_horizon_color = Color(0.42, 0.34, 0.28, 1)
+sky_top_color = Color(0.09, 0.08, 0.12, 1)
+sky_horizon_color = Color(0.3, 0.24, 0.2, 1)
+sky_energy_multiplier = 0.6
+ground_bottom_color = Color(0.05, 0.04, 0.035, 1)
+ground_horizon_color = Color(0.3, 0.24, 0.2, 1)
 
 [sub_resource type="Sky" id="Sky_1"]
 sky_material = SubResource("SkyMat_1")
@@ -13,21 +99,84 @@ sky_material = SubResource("SkyMat_1")
 background_mode = 2
 sky = SubResource("Sky_1")
 ambient_light_source = 3
-tonemap_mode = 2
+ambient_light_energy = 0.35
+reflected_light_source = 2
+tonemap_mode = 4
 glow_enabled = true
 
-[sub_resource type="StandardMaterial3D" id="WoodMat_1"]
-albedo_color = Color(0.36, 0.22, 0.12, 1)
-roughness = 0.75
+[sub_resource type="CameraAttributesPractical" id="CamAttr_1"]
+dof_blur_far_enabled = true
+dof_blur_far_distance = 2.6
+dof_blur_far_transition = 1.5
+dof_blur_amount = 0.06
+
+[sub_resource type="ShaderMaterial" id="WoodMat_1"]
+render_priority = 0
+shader = ExtResource("11_wood")
+
+[sub_resource type="ShaderMaterial" id="StoneMat_1"]
+render_priority = 0
+shader = ExtResource("12_stone")
+
+[sub_resource type="ShaderMaterial" id="FloorMat_1"]
+render_priority = 0
+shader = ExtResource("12_stone")
+shader_parameter/stone_light = Color(0.33, 0.3, 0.27, 1)
+shader_parameter/stone_dark = Color(0.13, 0.12, 0.11, 1)
+shader_parameter/block_size_meters = Vector2(0.6, 0.6)
 
 [sub_resource type="BoxMesh" id="BenchMesh_1"]
 material = SubResource("WoodMat_1")
-size = Vector3(2.4, 0.08, 1.2)
+size = Vector3(2.0, 0.08, 1.2)
 
 [sub_resource type="BoxShape3D" id="BenchShape_1"]
-size = Vector3(2.4, 0.08, 1.2)
+size = Vector3(2.0, 0.08, 1.2)
 
-[sub_resource type="CameraAttributesPractical" id="CamAttr_1"]
+[sub_resource type="PhysicsMaterial" id="BenchPhys_1"]
+friction = 0.8
+
+[sub_resource type="BoxMesh" id="LegMesh_1"]
+material = SubResource("WoodMat_1")
+size = Vector3(0.09, 0.72, 0.09)
+
+[sub_resource type="PlaneMesh" id="FloorMesh_1"]
+material = SubResource("FloorMat_1")
+size = Vector2(13, 7)
+
+[sub_resource type="BoxMesh" id="BackWallMesh_1"]
+material = SubResource("StoneMat_1")
+size = Vector3(13, 3.2, 0.25)
+
+[sub_resource type="BoxMesh" id="SideWallMesh_1"]
+material = SubResource("StoneMat_1")
+size = Vector3(0.25, 3.2, 7)
+
+[sub_resource type="StandardMaterial3D" id="WaxMat_1"]
+albedo_color = Color(0.93, 0.88, 0.76, 1)
+roughness = 0.55
+subsurf_scatter_enabled = true
+subsurf_scatter_strength = 0.6
+
+[sub_resource type="CylinderMesh" id="CandleMesh_1"]
+material = SubResource("WaxMat_1")
+top_radius = 0.022
+bottom_radius = 0.024
+height = 0.16
+
+[sub_resource type="StandardMaterial3D" id="FlameMat_1"]
+shading_mode = 0
+albedo_color = Color(1, 0.75, 0.35, 1)
+emission_enabled = true
+emission = Color(1, 0.6, 0.2, 1)
+emission_energy_multiplier = 6.0
+
+[sub_resource type="SphereMesh" id="FlameMesh_1"]
+material = SubResource("FlameMat_1")
+radius = 0.008
+height = 0.026
+
+[sub_resource type="BoxShape3D" id="FloorShape_1"]
+size = Vector3(13, 0.2, 7)
 
 [node name="MainBench" type="Node3D"]
 
@@ -35,20 +184,73 @@ size = Vector3(2.4, 0.08, 1.2)
 environment = SubResource("Env_1")
 camera_attributes = SubResource("CamAttr_1")
 
+[node name="GraphicsProfile" type="Node" parent="." node_paths=PackedStringArray("world_environment", "key_light")]
+script = ExtResource("10_gfx")
+world_environment = NodePath("../WorldEnvironment")
+key_light = NodePath("../KeyLight")
+
 [node name="KeyLight" type="DirectionalLight3D" parent="."]
-transform = Transform3D(0.866025, -0.25, 0.433013, 0, 0.866025, 0.5, -0.5, -0.433013, 0.75, 0, 3, 0)
-light_color = Color(1, 0.92, 0.8, 1)
+rotation_degrees = Vector3(-38, 52, 0)
+light_color = Color(1, 0.9, 0.78, 1)
+light_energy = 1.8
+light_volumetric_fog_energy = 1.6
 shadow_enabled = true
 
-[node name="Camera3D" type="Camera3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 0.819152, 0.573576, 0, -0.573576, 0.819152, 0, 1.6, 1.6)
+[node name="CandleLight" type="OmniLight3D" parent="."]
+position = Vector3(-0.82, 1.0, -0.45)
+light_color = Color(1, 0.62, 0.28, 1)
+light_energy = 1.3
+light_volumetric_fog_energy = 0.8
+shadow_enabled = true
+omni_range = 2.6
+
+[node name="FillLight" type="OmniLight3D" parent="."]
+position = Vector3(0.9, 1.9, 1.3)
+light_color = Color(0.6, 0.7, 1, 1)
+light_energy = 0.6
+omni_range = 4.5
+
+[node name="ReflectionProbe" type="ReflectionProbe" parent="."]
+position = Vector3(0, 1.1, 0)
+size = Vector3(3.2, 1.4, 2.2)
+box_projection = true
+interior = true
+
+[node name="Camera3D" type="Camera3D" parent="." node_paths=PackedStringArray("grabber", "inventory_store")]
+transform = Transform3D(1, 0, 0, 0, 0.990268, 0.139173, 0, -0.139173, 0.990268, 0.02, 1.02, 1.08)
 current = true
-fov = 50.0
+fov = 44.0
+script = ExtResource("30_cam")
+grabber = NodePath("../Grabber")
+inventory_store = NodePath("../InventoryStore")
+
+[node name="Room" type="Node3D" parent="."]
+
+[node name="Floor" type="StaticBody3D" parent="Room"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, 0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Room/Floor"]
+mesh = SubResource("FloorMesh_1")
+
+[node name="Collision" type="CollisionShape3D" parent="Room/Floor"]
+position = Vector3(0, -0.1, 0)
+shape = SubResource("FloorShape_1")
+
+[node name="BackWall" type="MeshInstance3D" parent="Room"]
+position = Vector3(3, 1.6, -0.95)
+mesh = SubResource("BackWallMesh_1")
+
+[node name="SideWall" type="MeshInstance3D" parent="Room"]
+position = Vector3(-1.75, 1.6, 0)
+mesh = SubResource("SideWallMesh_1")
 
 [node name="Workbench" type="StaticBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.76, 0)
 collision_layer = 1
 collision_mask = 0
+physics_material_override = SubResource("BenchPhys_1")
 
 [node name="Mesh" type="MeshInstance3D" parent="Workbench"]
 mesh = SubResource("BenchMesh_1")
@@ -56,8 +258,511 @@ mesh = SubResource("BenchMesh_1")
 [node name="Collision" type="CollisionShape3D" parent="Workbench"]
 shape = SubResource("BenchShape_1")
 
+[node name="LegFL" type="MeshInstance3D" parent="Workbench"]
+position = Vector3(-0.9, -0.4, 0.5)
+mesh = SubResource("LegMesh_1")
+
+[node name="LegFR" type="MeshInstance3D" parent="Workbench"]
+position = Vector3(0.9, -0.4, 0.5)
+mesh = SubResource("LegMesh_1")
+
+[node name="LegBL" type="MeshInstance3D" parent="Workbench"]
+position = Vector3(-0.9, -0.4, -0.5)
+mesh = SubResource("LegMesh_1")
+
+[node name="LegBR" type="MeshInstance3D" parent="Workbench"]
+position = Vector3(0.9, -0.4, -0.5)
+mesh = SubResource("LegMesh_1")
+
+[node name="Candle" type="MeshInstance3D" parent="."]
+position = Vector3(-0.82, 0.88, -0.45)
+mesh = SubResource("CandleMesh_1")
+
+[node name="CandleFlame" type="Node3D" parent="Candle" node_paths=PackedStringArray("flame", "light")]
+script = ExtResource("56_candle")
+flame = NodePath("../Flame")
+light = NodePath("../../CandleLight")
+
+[node name="Flame" type="MeshInstance3D" parent="Candle"]
+position = Vector3(0, 0.095, 0)
+mesh = SubResource("FlameMesh_1")
+cast_shadow = 0
+
+[node name="HotPlate" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.6, 0.81, -0.1)
+script = ExtResource("8_plate")
+
+[node name="Furniture" type="Node3D" parent="."]
+
+[node name="WallShelf" type="Node3D" parent="Furniture"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.93, -0.825)
+
+[node name="Mesh" parent="Furniture/WallShelf" instance=ExtResource("21_shelf")]
+
+[node name="Dressing" type="Node3D" parent="Furniture/WallShelf"]
+script = ExtResource("19_dress")
+
+[node name="Icebox" type="StaticBody3D" parent="Furniture"]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, -1.625, 0, -0.42)
+script = ExtResource("20_abox")
+
+[node name="Mesh" parent="Furniture/Icebox" instance=ExtResource("22_icebox")]
+
+[node name="Sink" type="StaticBody3D" parent="Furniture"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.45, 0, -0.825)
+script = ExtResource("20_abox")
+
+[node name="Mesh" parent="Furniture/Sink" instance=ExtResource("23_sink")]
+
+[node name="MagicStand" type="StaticBody3D" parent="Furniture"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.68, 0.8, -0.42)
+script = ExtResource("20_abox")
+
+[node name="Mesh" parent="Furniture/MagicStand" instance=ExtResource("25_magic")]
+
+[node name="OrbLight" type="OmniLight3D" parent="Furniture/MagicStand"]
+position = Vector3(0, 0.48, 0)
+light_color = Color(0.45, 0.65, 1, 1)
+light_energy = 0.6
+omni_range = 0.9
+
+[node name="ScienceStand" type="StaticBody3D" parent="Furniture"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.38, 0.8, -0.42)
+script = ExtResource("20_abox")
+
+[node name="Mesh" parent="Furniture/ScienceStand" instance=ExtResource("26_sci")]
+
+[node name="Mortar" type="StaticBody3D" parent="Furniture"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.55, 0.8, 0.22)
+script = ExtResource("20_abox")
+
+[node name="Mesh" parent="Furniture/Mortar" instance=ExtResource("27_mortar")]
+
+[node name="Tools" type="Node3D" parent="Furniture"]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0.5, 0.8, 0.3)
+script = ExtResource("29_pvis")
+
+[node name="Mesh" parent="Furniture/Tools" instance=ExtResource("28_tools")]
+
+[node name="ToolCrock" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.17, 0.8, 0.34)
+script = ExtResource("58_crock")
+model = ExtResource("59_crockm")
+stocked_tools = Array[NodePath]([NodePath("../StirTools/Whisk"), NodePath("../StirTools/GlassRod"), NodePath("../StirTools/SilverRod"), NodePath("../StirTools/WoodenSpoon"), NodePath("../StirTools/ArcaneWand")])
+
+[node name="StirTools" type="Node3D" parent="."]
+
+[node name="GlassRod" type="RigidBody3D" parent="StirTools"]
+transform = Transform3D(-4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, -0.36, 0.806, 0.3)
+script = ExtResource("31_stir")
+model = ExtResource("33_grod")
+swirl_coupling = 5.0
+agitation_gain = 0.4
+
+[node name="SilverRod" type="RigidBody3D" parent="StirTools"]
+transform = Transform3D(-4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, -0.29, 0.808, 0.32)
+script = ExtResource("31_stir")
+model = ExtResource("34_srod")
+swirl_coupling = 7.0
+agitation_gain = 0.5
+chirality_bias_rad_s = 1.5
+chirality_sign = -1.0
+
+[node name="WoodenSpoon" type="RigidBody3D" parent="StirTools"]
+transform = Transform3D(-4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, -0.2, 0.81, 0.3)
+script = ExtResource("31_stir")
+model = ExtResource("35_spoon")
+radius_meters = 0.008
+tool_mass_kg = 0.04
+swirl_coupling = 10.0
+agitation_gain = 0.8
+drag_coefficient = 0.6
+
+[node name="Whisk" type="RigidBody3D" parent="StirTools"]
+transform = Transform3D(-4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, -0.08, 0.83, 0.33)
+script = ExtResource("31_stir")
+model = ExtResource("36_whisk")
+length_meters = 0.2
+radius_meters = 0.018
+tool_mass_kg = 0.07
+swirl_coupling = 4.0
+agitation_gain = 2.5
+drag_coefficient = 0.9
+hover_offset_meters = -0.09
+
+[node name="ArcaneWand" type="RigidBody3D" parent="StirTools"]
+transform = Transform3D(-4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, 0.04, 0.808, 0.31)
+script = ExtResource("31_stir")
+model = ExtResource("37_wand")
+tool_mass_kg = 0.025
+swirl_coupling = 8.0
+agitation_gain = 0.7
+chirality_bias_rad_s = 6.0
+
+[node name="MagneticStirrer" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.64, 0.8, -0.42)
+script = ExtResource("32_mag")
+model = ExtResource("38_magm")
+
+[node name="Stands" type="Node3D" parent="."]
+
+[node name="CorkRing" type="StaticBody3D" parent="Stands"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.45, 0.8, -0.1)
+script = ExtResource("18_stand")
+
+[node name="TubeRack" type="StaticBody3D" parent="Stands"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.02, 0.8, -0.1)
+script = ExtResource("18_stand")
+kind = 1
+
 [node name="Vessels" type="Node3D" parent="."]
 
-[node name="Tools" type="Node3D" parent="."]
+[node name="FlaskMoonwater" parent="Vessels" instance=ExtResource("1_vessel")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.45, 0.905, -0.1)
+profile = ExtResource("13_pround")
+initial_substances = Array[Resource]([ExtResource("2_moon")])
+initial_moles = Array[float]([8.0])
 
-[node name="Reagents" type="Node3D" parent="."]
+[node name="FlaskHoney" parent="Vessels" instance=ExtResource("1_vessel")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.28, 0.874, -0.1)
+profile = ExtResource("14_perl")
+initial_substances = Array[Resource]([ExtResource("3_honey")])
+initial_moles = Array[float]([0.9])
+
+[node name="FlaskSpirits" parent="Vessels" instance=ExtResource("1_vessel")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.14, 0.866, -0.1)
+profile = ExtResource("15_pbottle")
+initial_substances = Array[Resource]([ExtResource("4_water"), ExtResource("5_ethanol")])
+initial_moles = Array[float]([6.0, 1.5])
+
+[node name="VialQuicksilver" parent="Vessels" instance=ExtResource("1_vessel")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.02, 0.857, -0.1)
+profile = ExtResource("16_pvial")
+initial_substances = Array[Resource]([ExtResource("6_quick")])
+initial_moles = Array[float]([1.2])
+
+[node name="Beaker" parent="Vessels" instance=ExtResource("1_vessel")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.25, 0.852, 0.12)
+profile = ExtResource("17_pbeaker")
+
+[node name="ReagentVinegar" parent="Vessels" instance=ExtResource("1_vessel")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.42, 0.866, 0.1)
+profile = ExtResource("15_pbottle")
+initial_substances = Array[Resource]([ExtResource("4_water"), ExtResource("40_acetic")])
+initial_moles = Array[float]([6.0, 1.2])
+
+[node name="ReagentGlue" parent="Vessels" instance=ExtResource("1_vessel")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.2, 0.873, 0.12)
+profile = ExtResource("14_perl")
+initial_substances = Array[Resource]([ExtResource("42_pva")])
+initial_moles = Array[float]([2.5])
+
+[node name="ReagentBorax" parent="Vessels" instance=ExtResource("1_vessel")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.04, 0.866, 0.13)
+profile = ExtResource("15_pbottle")
+initial_substances = Array[Resource]([ExtResource("43_borax")])
+initial_moles = Array[float]([5.0])
+
+[node name="BubbleBase" parent="Vessels" instance=ExtResource("1_vessel")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.62, 0.873, 0.12)
+profile = ExtResource("14_perl")
+initial_substances = Array[Resource]([ExtResource("44_soap"), ExtResource("45_glyc")])
+initial_moles = Array[float]([4.0, 0.6])
+
+[node name="VialSoda" parent="Vessels" instance=ExtResource("1_vessel")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.024, 0.857, -0.1)
+profile = ExtResource("16_pvial")
+initial_substances = Array[Resource]([ExtResource("41_soda")])
+initial_moles = Array[float]([0.3])
+
+[node name="VialDusk" parent="Vessels" instance=ExtResource("1_vessel")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.064, 0.857, -0.1)
+profile = ExtResource("16_pvial")
+initial_substances = Array[Resource]([ExtResource("49_dusk"), ExtResource("4_water")])
+initial_moles = Array[float]([0.3, 0.6])
+
+[node name="Berries" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, 0.8, 0.44)
+script = ExtResource("39_berry")
+juices = Array[Resource]([ExtResource("46_glow"), ExtResource("47_ember"), ExtResource("48_frost"), ExtResource("49_dusk")])
+
+[node name="Chalk" type="Node3D" parent="." node_paths=PackedStringArray("camera")]
+script = ExtResource("50_chalk")
+camera = NodePath("../Camera3D")
+
+[node name="Grabber" type="Node3D" parent="."]
+script = ExtResource("7_grabber")
+
+[node name="BenchParticleCollider" type="GPUParticlesCollisionBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.76, 0)
+size = Vector3(2, 0.08, 1.2)
+
+[node name="DustMotes" type="GPUParticles3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, -0.2)
+script = ExtResource("57_dust")
+
+[node name="MineralLab" type="Node3D" parent="."]
+
+[node name="LabBench" type="StaticBody3D" parent="MineralLab"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0.76, 0)
+collision_layer = 1
+collision_mask = 0
+physics_material_override = SubResource("BenchPhys_1")
+
+[node name="Mesh" type="MeshInstance3D" parent="MineralLab/LabBench"]
+mesh = SubResource("BenchMesh_1")
+
+[node name="Collision" type="CollisionShape3D" parent="MineralLab/LabBench"]
+shape = SubResource("BenchShape_1")
+
+[node name="LegFL" type="MeshInstance3D" parent="MineralLab/LabBench"]
+position = Vector3(-0.9, -0.4, 0.5)
+mesh = SubResource("LegMesh_1")
+
+[node name="LegFR" type="MeshInstance3D" parent="MineralLab/LabBench"]
+position = Vector3(0.9, -0.4, 0.5)
+mesh = SubResource("LegMesh_1")
+
+[node name="LegBL" type="MeshInstance3D" parent="MineralLab/LabBench"]
+position = Vector3(-0.9, -0.4, -0.5)
+mesh = SubResource("LegMesh_1")
+
+[node name="LegBR" type="MeshInstance3D" parent="MineralLab/LabBench"]
+position = Vector3(0.9, -0.4, -0.5)
+mesh = SubResource("LegMesh_1")
+
+[node name="LabLight" type="OmniLight3D" parent="MineralLab"]
+position = Vector3(3, 1.75, 0.5)
+light_color = Color(1, 0.88, 0.72, 1)
+light_energy = 0.75
+shadow_enabled = true
+omni_range = 3.5
+
+[node name="LabProbe" type="ReflectionProbe" parent="MineralLab"]
+position = Vector3(3, 1.1, 0)
+size = Vector3(2.4, 1.4, 2.2)
+box_projection = true
+interior = true
+
+[node name="LabParticleCollider" type="GPUParticlesCollisionBox3D" parent="MineralLab"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0.76, 0)
+size = Vector3(2, 0.08, 1.2)
+
+[node name="CrusherTray" parent="MineralLab" instance=ExtResource("1_vessel")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.45, 0.852, -0.1)
+profile = ExtResource("17_pbeaker")
+
+[node name="RockCrusher" type="StaticBody3D" parent="MineralLab" node_paths=PackedStringArray("tray")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.45, 0.8, -0.34)
+script = ExtResource("66_crusher")
+model = ExtResource("71_crusherm")
+tray = NodePath("../CrusherTray")
+
+[node name="SiftTrayCoarse" parent="MineralLab" instance=ExtResource("1_vessel")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.84, 0.852, -0.08)
+profile = ExtResource("17_pbeaker")
+
+[node name="SiftTrayMedium" parent="MineralLab" instance=ExtResource("1_vessel")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.96, 0.852, -0.08)
+profile = ExtResource("17_pbeaker")
+
+[node name="SiftTrayFine" parent="MineralLab" instance=ExtResource("1_vessel")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.08, 0.852, -0.08)
+profile = ExtResource("17_pbeaker")
+
+[node name="SandSifter" type="StaticBody3D" parent="MineralLab" node_paths=PackedStringArray("trays")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.96, 0.8, -0.36)
+script = ExtResource("67_sifter")
+model = ExtResource("72_sifterm")
+deck_model = ExtResource("73_deckm")
+trays = [NodePath("../SiftTrayCoarse"), NodePath("../SiftTrayMedium"), NodePath("../SiftTrayFine")]
+
+[node name="Polisher" type="StaticBody3D" parent="MineralLab" node_paths=PackedStringArray("camera")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.45, 0.8, -0.32)
+script = ExtResource("68_lap")
+model = ExtResource("74_polm")
+camera = NodePath("../../Camera3D")
+
+[node name="Faceter" type="StaticBody3D" parent="MineralLab" node_paths=PackedStringArray("camera")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.62, 0.8, 0.12)
+script = ExtResource("68_lap")
+mode = 1
+model = ExtResource("75_facm")
+camera = NodePath("../../Camera3D")
+
+[node name="Anvil" type="StaticBody3D" parent="MineralLab"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.2, 0.8, 0.22)
+script = ExtResource("20_abox")
+
+[node name="Mesh" parent="MineralLab/Anvil" instance=ExtResource("76_anvilm")]
+
+[node name="Hammer" type="RigidBody3D" parent="MineralLab"]
+transform = Transform3D(-4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, 3.32, 0.82, 0.4)
+script = ExtResource("70_hammer")
+
+[node name="RockCrate" type="StaticBody3D" parent="MineralLab"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.48, 0.8, 0.3)
+script = ExtResource("69_crate")
+model = ExtResource("77_cratem")
+stock = PackedStringArray("fizzrock", "geode", "geode", "granite", "basalt", "malachite_ore", "pyrite_cluster", "dragonstone")
+random_count = 4
+random_kinds = PackedInt32Array(0)
+
+[node name="SandCrate" type="StaticBody3D" parent="MineralLab"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.86, 0.8, 0.32)
+script = ExtResource("69_crate")
+model = ExtResource("77_cratem")
+stock = PackedStringArray("river_sand", "beach_sand", "volcanic_sand")
+
+[node name="SpecimenCrate" type="StaticBody3D" parent="MineralLab"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.48, 0.8, 0.52)
+script = ExtResource("69_crate")
+model = ExtResource("77_cratem")
+random_count = 8
+random_kinds = PackedInt32Array(2, 3, 4)
+
+[node name="StreakPlate" type="StaticBody3D" parent="MineralLab"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.62, 0.8, 0.42)
+script = ExtResource("90_streak")
+
+[node name="ScienceBench" type="Node3D" parent="."]
+
+[node name="Bench" type="StaticBody3D" parent="ScienceBench"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.76, 0)
+collision_layer = 1
+collision_mask = 0
+physics_material_override = SubResource("BenchPhys_1")
+
+[node name="Mesh" type="MeshInstance3D" parent="ScienceBench/Bench"]
+mesh = SubResource("BenchMesh_1")
+
+[node name="Collision" type="CollisionShape3D" parent="ScienceBench/Bench"]
+shape = SubResource("BenchShape_1")
+
+[node name="LegFL" type="MeshInstance3D" parent="ScienceBench/Bench"]
+position = Vector3(-0.9, -0.4, 0.5)
+mesh = SubResource("LegMesh_1")
+
+[node name="LegFR" type="MeshInstance3D" parent="ScienceBench/Bench"]
+position = Vector3(0.9, -0.4, 0.5)
+mesh = SubResource("LegMesh_1")
+
+[node name="LegBL" type="MeshInstance3D" parent="ScienceBench/Bench"]
+position = Vector3(-0.9, -0.4, -0.5)
+mesh = SubResource("LegMesh_1")
+
+[node name="LegBR" type="MeshInstance3D" parent="ScienceBench/Bench"]
+position = Vector3(0.9, -0.4, -0.5)
+mesh = SubResource("LegMesh_1")
+
+[node name="Light" type="OmniLight3D" parent="ScienceBench"]
+position = Vector3(6, 1.75, 0.5)
+light_color = Color(0.92, 0.95, 1, 1)
+light_energy = 0.8
+shadow_enabled = true
+omni_range = 3.5
+
+[node name="Probe" type="ReflectionProbe" parent="ScienceBench"]
+position = Vector3(6, 1.1, 0)
+size = Vector3(2.4, 1.4, 2.2)
+box_projection = true
+interior = true
+
+[node name="Viscometer" type="StaticBody3D" parent="ScienceBench"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.4, 0.8, -0.2)
+script = ExtResource("91_sci")
+kind = 0
+
+[node name="AirMeter" type="StaticBody3D" parent="ScienceBench"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.8, 0.8, -0.2)
+script = ExtResource("91_sci")
+kind = 1
+
+[node name="VolatilityTester" type="StaticBody3D" parent="ScienceBench"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.2, 0.8, -0.2)
+script = ExtResource("91_sci")
+kind = 2
+
+[node name="Hydrometer" type="StaticBody3D" parent="ScienceBench"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.6, 0.8, -0.2)
+script = ExtResource("91_sci")
+kind = 3
+
+[node name="SampleWater" parent="ScienceBench" instance=ExtResource("1_vessel")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.45, 0.852, 0.3)
+profile = ExtResource("17_pbeaker")
+initial_substances = Array[Resource]([ExtResource("4_water")])
+initial_moles = Array[float]([5])
+
+[node name="SampleHoney" parent="ScienceBench" instance=ExtResource("1_vessel")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.65, 0.852, 0.3)
+profile = ExtResource("17_pbeaker")
+initial_substances = Array[Resource]([ExtResource("92_honey")])
+initial_moles = Array[float]([0.6])
+
+[node name="SampleGlycerin" parent="ScienceBench" instance=ExtResource("1_vessel")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.85, 0.852, 0.3)
+profile = ExtResource("17_pbeaker")
+initial_substances = Array[Resource]([ExtResource("93_glyc")])
+initial_moles = Array[float]([1.2])
+
+[node name="SampleAcetone" parent="ScienceBench" instance=ExtResource("1_vessel")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.05, 0.852, 0.3)
+profile = ExtResource("17_pbeaker")
+initial_substances = Array[Resource]([ExtResource("94_acetone")])
+initial_moles = Array[float]([1.2])
+
+[node name="SampleSoap" parent="ScienceBench" instance=ExtResource("1_vessel")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.25, 0.852, 0.3)
+profile = ExtResource("17_pbeaker")
+initial_substances = Array[Resource]([ExtResource("4_water"), ExtResource("95_soap")])
+initial_moles = Array[float]([4, 0.6])
+
+[node name="DemoDirector" type="Node" parent="."]
+script = ExtResource("60_demo")
+
+[node name="RecipeBook" type="Node" parent="."]
+script = ExtResource("51_book")
+
+[node name="GrimoireJournal" type="Node" parent="."]
+script = ExtResource("61_journal")
+
+[node name="GrimoireBookUI" type="CanvasLayer" parent="."]
+script = ExtResource("62_bookui")
+
+[node name="HudOverlay" type="CanvasLayer" parent="." node_paths=PackedStringArray("grabber", "camera")]
+script = ExtResource("63_hud")
+grabber = NodePath("../Grabber")
+camera = NodePath("../Camera3D")
+
+[node name="Grimoire" type="StaticBody3D" parent="." node_paths=PackedStringArray("camera")]
+transform = Transform3D(0.819152, 0, 0.573576, 0, 1, 0, -0.573576, 0, 0.819152, -0.7, 0.8, 0.02)
+script = ExtResource("64_book3d")
+model = ExtResource("65_bookm")
+camera = NodePath("../Camera3D")
+
+[node name="InventoryStore" type="Node3D" parent="." node_paths=PackedStringArray("grabber")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.93, 0.16)
+script = ExtResource("52_store")
+grabber = NodePath("../Grabber")
+
+[node name="SafetySheetUI" type="CanvasLayer" parent="."]
+script = ExtResource("96_sds")
+
+[node name="InventoryPanel" type="CanvasLayer" parent="."]
+script = ExtResource("53_panel")
+
+[node name="Pegboard" type="Node3D" parent="Furniture"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.25, 1.0, -0.825)
+script = ExtResource("29_pvis")
+
+[node name="Mesh" parent="Furniture/Pegboard" instance=ExtResource("54_peg")]
+
+[node name="DrawerChest" type="StaticBody3D" parent="Furniture"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.87, 0.8, -0.45)
+script = ExtResource("20_abox")
+
+[node name="Mesh" parent="Furniture/DrawerChest" instance=ExtResource("55_drawers")]
+
+[node name="BenchReadout" type="CanvasLayer" parent="."]
+script = ExtResource("9_readout")

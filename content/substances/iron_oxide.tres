@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="SubstanceData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://core/chemistry/substance_data.gd" id="1_sub"]
+[ext_resource type="Resource" path="res://content/substances/molten_iron.tres" id="r0"]
+
+[resource]
+script = ExtResource("1_sub")
+substance_id = &"iron_oxide"
+display_name = "Rust (Haematite Powder)"
+chemical_formula = "Fe₂O₃"
+specific_heat_j_kg_k = 900
+melting_point_kelvin = 1838
+boiling_point_kelvin = 2000
+latent_heat_fusion_j_kg = 150000
+latent_heat_vaporization_j_kg = 1e+06
+viscosity_pas = 0.01
+pka_acidity = 7
+turbidity = 1
+molar_mass_kg_mol = 0.1597
+density_kg_m3 = 5240
+base_albedo_rgba = Color(0.55, 0.15, 0.08, 1)
+oxidizer_strength = 0.8
+redox_activation_kelvin = 1300
+redox_enthalpy_j_mol = -850000
+shelf = "Oxidisers"
+cas_number = "1309-37-1"
+description = "Red iron oxide. With aluminium powder it is thermite: once lit it burns at 2500 °C and pours out liquid iron."
+redox_products = Array[Resource]([ExtResource("r0")])
+redox_fractions = PackedFloat32Array(1)

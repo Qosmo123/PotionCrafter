@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/calcite_powder.tres" id="c0"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"seashell"
+display_name = "Spiral Seashell"
+formula = "CaCO₃ (aragonite)"
+kind = 4
+rarity = 0
+hardness_mohs = 3.5
+density_kg_m3 = 2900
+typical_mass_kg = 0.008
+color = Color(0.95, 0.85, 0.75, 1)
+luster = 4
+shape = 5
+emission = Color(0, 0, 0, 1)
+value_coins = 5
+can_facet = false
+fun_fact = "Seashells are built by soft sea animals from the same stuff as chalk, one thin layer at a time."
+crush_products = Array[Resource]([ExtResource("c0")])
+crush_fractions = PackedFloat32Array(1)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Organic (aragonite)"
+crystal_system = "Orthorhombic"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 0
+fracture = "uneven"
+diaphaneity = 2
+refractive_index = 1.53
+dispersion = 0
+phenomenon = 6
+colors_text = "cream, pink, pearly inside"
+localities = "beaches worldwide"
+uses = "collecting, lime"
+birthstone = ""
