@@ -8,8 +8,11 @@ extends Node3D
 ## Stiffness is fixed in N/m, so heavy objects have a lower natural frequency
 ## and visibly lag/sag while light glass feels crisp.
 ##
-## PC:      left-drag = move, scroll wheel or right-drag = tilt/pour,
-##          hold Shift while dragging for slow, precise placement.
+## PC:      click an item to pick it up (no need to hold the button), move
+##          the mouse, click again to put it down. Press-and-drag also works.
+##          Scroll wheel or right-drag = tilt/pour; Shift = slow, precise.
+##          Items with a "click_use" action (the hammer) use it on the
+##          second click when they have a target, instead of being dropped.
 ## Android: one finger = move, second finger twist = tilt/pour.
 ##
 ## Carry feel: the hand point under the cursor glides toward the pointer at a
@@ -71,6 +74,13 @@ var _target_world: Vector3 = Vector3.ZERO
 ## Where the pointer says the hand should be; _target_world chases it.
 var _pointer_target_world: Vector3 = Vector3.ZERO
 var _tracked_body: RigidBody3D = null
+## Mouse click-to-hold state.
+var _press_pos: Vector2 = Vector2.ZERO
+var _press_ms: int = 0
+var _swallow_release: bool = false
+
+const DRAG_PIXELS: float = 14.0
+const DRAG_MS: int = 350
 var _gravity_vector: Vector3 = Vector3.DOWN * SimConstants.GRAVITY_M_S2
 var _pick_ray: RayCast3D
 var _pick_cast: ShapeCast3D
@@ -116,9 +126,23 @@ func _unhandled_input(event: InputEvent) -> void:
 			MOUSE_BUTTON_LEFT:
 				_pointer_screen = mb.position
 				if mb.pressed:
-					_request_pick(false)
+					_press_pos = mb.position
+					_press_ms = Time.get_ticks_msec()
+					if held_body == null:
+						_request_pick(false)
+					else:
+						# Second click: use the item (hammer strike) or put it down.
+						var used: bool = held_body.has_method(&"click_use") and bool(held_body.call(&"click_use"))
+						if not used:
+							release()
+						_swallow_release = true
 				else:
-					release()
+					if _swallow_release:
+						_swallow_release = false
+					elif mb.position.distance_to(_press_pos) > DRAG_PIXELS or Time.get_ticks_msec() - _press_ms > DRAG_MS:
+						# It was a press-and-drag: let go like before.
+						release()
+					# A quick click keeps holding the item until the next click.
 			MOUSE_BUTTON_RIGHT:
 				_mouse_tilting = mb.pressed
 			MOUSE_BUTTON_WHEEL_UP:

@@ -65,6 +65,22 @@ func _process(_delta: float) -> void:
 		_facet_demo(bench)
 	if _args.has("brew"):
 		_brew_demo(bench)
+	if _args.has("noliquid") and _frames == 50:
+		for v: Vessel3D in Vessel3D.all_vessels:
+			var l: Node3D = v.get_node_or_null("Liquid") as Node3D
+			if l != null:
+				l.visible = false
+				v.set_process(false)
+	if _args.has("liquids") and _frames == 95:
+		var cam3: Camera3D = get_viewport().get_camera_3d()
+		for v: Vessel3D in Vessel3D.all_vessels:
+			if not cam3.is_position_behind(v.global_position):
+				var px: Vector2 = cam3.unproject_position(v.global_position)
+				var vs: Vector2 = get_viewport().get_visible_rect().size
+				print("VES %-16s px (%.0f%%, %.0f%%)  %s  turb %.2f  col %s" % [v.name, px.x / vs.x * 100.0, px.y / vs.y * 100.0, PotionNamer.formula_for(v.mixture), v.mixture.get_liquid_turbidity(), v.mixture.get_contents_color()])
+	if _args.has("liquids") and _frames == 2:
+		var cam: LabCamera3D = bench.get_node("Camera3D") as LabCamera3D
+		cam.set("_zoom_target", 0.45)
 	if _frames == SHOT_FRAME - 8 and _args.has("book"):
 		var book: GrimoireBookUI = bench.get_node("GrimoireBookUI") as GrimoireBookUI
 		book.open(1 if _args.has("formulas") else 0)

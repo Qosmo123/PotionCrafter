@@ -19,6 +19,7 @@ extends RigidBody3D
 ## preallocated tables).
 
 const LIQUID_MATERIAL: ShaderMaterial = preload("res://content/materials_3d/liquid_volume.tres")
+const LIQUID_MATERIAL_PC: ShaderMaterial = preload("res://content/materials_3d/liquid_volume_pc.tres")
 const GLASS_PC_MATERIAL: Material = preload("res://content/materials_3d/glass_pc.tres")
 const GLASS_MOBILE_MATERIAL: Material = preload("res://content/materials_3d/glass_mobile.tres")
 const POUR_RAY_LENGTH_METERS: float = 2.0
@@ -380,7 +381,7 @@ func _add_liquid_visual(mesh: Mesh, offset: Vector3) -> void:
 	_liquid_mesh.name = &"Liquid"
 	_liquid_mesh.mesh = mesh
 	_liquid_mesh.position = offset
-	_liquid_material = LIQUID_MATERIAL.duplicate() as ShaderMaterial
+	_liquid_material = (QualityTier.pick_material(LIQUID_MATERIAL_PC, LIQUID_MATERIAL) as ShaderMaterial).duplicate() as ShaderMaterial
 	_liquid_mesh.material_override = _liquid_material
 	_liquid_mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(_liquid_mesh)

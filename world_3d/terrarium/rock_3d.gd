@@ -140,6 +140,18 @@ func strike(energy_joules: float) -> void:
 		crack()
 
 
+## Assisted blow that removes a fixed share of the rock's strength (easy
+## mode: every rock cracks within a few hits, harder ones in more).
+func strike_fraction(fraction: float) -> void:
+	if mineral == null or mineral.kind == MineralData.Kind.SAND or cut != RockMeshes.Cut.NONE or fraction <= 0.0:
+		return
+	integrity -= fraction * integrity_max
+	AudioHaptics.impact(2.0)
+	_show_hit(fraction)
+	if integrity <= 0.0:
+		crack()
+
+
 ## 0 = pristine, 1 = about to split.
 func damage() -> float:
 	return clampf(1.0 - integrity / maxf(integrity_max, 1e-6), 0.0, 1.0)

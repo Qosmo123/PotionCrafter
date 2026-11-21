@@ -7,7 +7,8 @@ const TOAST_SECONDS: float = 3.2
 const STATION_RUNES: PackedStringArray = ["☿", "◆", "⊕"]  # alchemical glyphs with no emoji form
 const STATION_NAMES: PackedStringArray = ["Potion Bench", "Mineral Lab", "Science Bench"]
 const HELP_TEXT: String = """[b][color=#F4D06F]Hands[/color][/b]
-  Drag  ·  pick up and move anything
+  Click  ·  pick something up, move the mouse, click again to put it down (dragging works too)
+  Shift while moving  ·  slow, precise placement
   Wheel / right-drag while holding  ·  tilt and pour
   Wheel when empty-handed  ·  zoom      ·  Two fingers: twist to tilt, pinch to zoom
   E  ·  put the held item back in the satchel
@@ -23,7 +24,7 @@ const HELP_TEXT: String = """[b][color=#F4D06F]Hands[/color][/b]
   ○ ward   △ heat   □ chill   ⬠ levitate   ⬡ stir   ⯃ catalyse
 
 [b][color=#F4D06F]Mineral Lab  (press 2)[/color][/b]
-  Hammer + Space  ·  crack rocks open on the anvil (hold Space to wind up a big swing)
+  Hammer  ·  hold it over a rock and click (or Space) to strike: hold Space to wind up a big swing
   R  ·  Load Next Rock: toss the next rock from the crate onto the anvil
   Rock crusher  ·  drop a rock in the hopper, drag the crank handle in circles
   Sand sifter  ·  drop a sand bag in, drag the shaker handle side to side
@@ -634,7 +635,7 @@ static func describe(target: Object) -> String:
 			rock.describe_name(), CosmicTheme.rarity_aura(m.rarity).to_html(false), "★".repeat(m.rarity + 1), m.rarity_name(), m.formula, m.hardness_mohs,
 			rock.mass_kg * 1000.0, rock.value(), finish, m.fun_fact.get_slice(".", 0) + ".", hint]
 	if target is Hammer3D:
-		return "[b]Geologist's Hammer[/b]\n[color=#B3ADD6]Hold it over a rock and press Space (or Strike) to smash it open.[/color]"
+		return "[b]Geologist's Hammer[/b]\n[color=#B3ADD6]Pick it up, hold it over a rock and click (or Space) to strike.[/color]"
 	if target is MachineHandle3D:
 		return "[b]Handle[/b]\n[color=#B3ADD6]Grab and drag it to work the machine.[/color]"
 	if target is StirTool3D:

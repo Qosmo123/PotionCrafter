@@ -11,6 +11,10 @@ var _camera: Camera3D
 var _tick: int = 0
 var _max_speed: float = 0.0
 var _failures: PackedStringArray = PackedStringArray()
+var _rock: Rock3D = null
+var _hammer: Hammer3D = null
+var _hits: int = 0
+var _click_pos: Vector2 = Vector2.ZERO
 
 
 func _initialize() -> void:
@@ -48,6 +52,33 @@ func _physics_process(_delta: float) -> bool:
 		_vial.linear_velocity = Vector3(3.0, 0.0, 0.0)
 		_grabber.release()
 		_check(_vial.linear_velocity.length() <= _grabber.release_speed_m_s + 1e-4, "letting go caps the speed (%.2f m/s)" % _vial.linear_velocity.length())
+	if _tick == 160:
+		# Click-to-hold: a quick click picks up and keeps holding; a second click drops.
+		_grabber.held_body = null
+		_click_pos = _camera.unproject_position(_vial.global_position + Vector3(0.0, 0.04, 0.0))
+		_click(_click_pos, true)
+	if _tick == 162:
+		_click(_click_pos, false)  # a quick click: released where it was pressed
+	if _tick == 175:
+		_check(_grabber.held_body == _vial, "a quick click keeps holding the flask without holding the button")
+		_click(_click_pos, true)
+		_click(_click_pos, false)
+		_check(_grabber.held_body == null, "a second click puts it down")
+	if _tick == 180:
+		# Easy hammer: hold it over a granite rock and click until it cracks.
+		var hammer: Hammer3D = _bench.get_node("MineralLab/Hammer") as Hammer3D
+		var anvil: Node3D = get_first_node_in_group(&"anvil") as Node3D
+		_rock = Rock3D.spawn(_bench, Rock3D.get_mineral("granite"), AnvilLoader.anvil_top(anvil) + Vector3(0.0, 0.03, 0.0), 0.25)
+		_hammer = hammer
+		_hammer.freeze = true
+		_hammer.global_position = AnvilLoader.anvil_top(anvil) + Vector3(0.0, 0.12, 0.0)
+	if _tick > 190 and _tick < 400 and _hammer != null and (_tick - 190) % 25 == 0 and is_instance_valid(_rock):
+		_hammer._cooldown = 0.0
+		if _hammer.click_use():
+			_hits += 1
+	if _tick == 400:
+		_check(not is_instance_valid(_rock) or _rock.is_queued_for_deletion(), "granite cracks with easy clicks (still whole after %d hits)" % _hits)
+		_check(_hits > 0 and _hits <= 5, "granite needs a handful of clicks, not dozens (%d)" % _hits)
 		if _failures.is_empty():
 			print("GRAB SMOKE PASS")
 		else:
@@ -56,6 +87,14 @@ func _physics_process(_delta: float) -> bool:
 			print("GRAB SMOKE FAIL")
 		quit(0 if _failures.is_empty() else 1)
 	return false
+
+
+func _click(screen: Vector2, pressed: bool) -> void:
+	var e: InputEventMouseButton = InputEventMouseButton.new()
+	e.button_index = MOUSE_BUTTON_LEFT
+	e.pressed = pressed
+	e.position = screen
+	_grabber._unhandled_input(e)
 
 
 ## True when the exact pointer ray at `screen` touches no pickable body.
