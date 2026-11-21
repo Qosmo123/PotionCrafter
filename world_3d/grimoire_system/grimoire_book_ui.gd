@@ -1,16 +1,19 @@
 class_name GrimoireBookUI
 extends CanvasLayer
-## The Grimoire: a leather-bound two-page spread (G, the book on the bench, or
-## the HUD button). Ribbon tabs: Recipes · Formulas · Cellar · Commissions.
-## Left page = organised index; right page = the selected entry, with formula,
-## ingredients, method, property radar, thermal curve and the shareable hex-sigil.
-## Arrow keys page through entries; Esc closes.
+## The Astral Grimoire & Lapidary Almanac (G, the book on the bench, or the HUD
+## button): a star-glass two-page spread over a drifting nebula. Rune tabs:
+## Recipes · Formulas · Collection · Cellar · Commissions. Left page = index
+## with rarity auras and NEW badges; right page = the selected entry as a
+## recipe card (affinity tags, ingredient chips, process flowchart, property
+## radar, thermal curve, hex-sigil) or a field-guide card for minerals.
+## Arrow keys page through entries, Tab cycles tabs, Esc closes.
 
-const PARCHMENT: Color = Color(0.93, 0.87, 0.72)
-const INK: Color = Color(0.25, 0.14, 0.06)
-const FADED_INK: Color = Color(0.45, 0.33, 0.2)
-const ACCENT: Color = Color(0.55, 0.12, 0.08)
+const PAGE: Color = Color(0.055, 0.058, 0.13, 0.72)
+const INK: Color = CosmicTheme.TEXT
+const FADED_INK: Color = CosmicTheme.TEXT_DIM
+const ACCENT: Color = CosmicTheme.STARLIGHT_GOLD
 const TABS: PackedStringArray = ["Recipes", "Formulas", "Collection", "Cellar", "Commissions"]
+const TAB_RUNES: PackedStringArray = ["☿", "✶", "◆", "☽", "☉"]  # alchemical glyphs with no emoji form
 const CATEGORY_TITLES: PackedStringArray = ["Natural Philosophy", "Arcana", "Secret Recipes", "Fun & Silly"]
 
 static var instance: GrimoireBookUI = null
@@ -26,6 +29,10 @@ var _header: Label
 var _tab: int = 0
 var _entries: Array[Dictionary] = []
 var _selected: int = 0
+var _backdrop: ColorRect
+var _spread: HBoxContainer
+var _progress: ProgressBar
+var _progress_label: Label
 
 
 func _enter_tree() -> void:
@@ -42,31 +49,39 @@ func _ready() -> void:
 	_root = Control.new()
 	_root.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_root.visible = false
+	CosmicTheme.apply(_root)
 	add_child(_root)
-	var dim: ColorRect = ColorRect.new()
-	dim.color = Color(0.0, 0.0, 0.0, 0.55)
-	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
-	dim.gui_input.connect(func(e: InputEvent) -> void:
+	_backdrop = CosmicTheme.backdrop(0.9)
+	_backdrop.gui_input.connect(func(e: InputEvent) -> void:
 		if e is InputEventMouseButton and (e as InputEventMouseButton).pressed:
 			close())
-	_root.add_child(dim)
+	_root.add_child(_backdrop)
 
 	_book = PanelContainer.new()
 	_book.set_anchors_preset(Control.PRESET_CENTER)
-	_book.add_theme_stylebox_override(&"panel", _box(Color(0.24, 0.12, 0.07), Color(0.78, 0.6, 0.28), 3, 14, 14))
+	var book_style: CosmicStyleBox = CosmicTheme.glass(ACCENT, 24, 2, Color(CosmicTheme.DEEP, 0.9), 14)
+	book_style.glow_color = Color(CosmicTheme.VIOLET, 0.28)
+	book_style.glow_size = 24
+	_book.add_theme_stylebox_override(&"panel", book_style)
 	_root.add_child(_book)
 	var outer: VBoxContainer = VBoxContainer.new()
-	outer.add_theme_constant_override(&"separation", 8)
+	outer.add_theme_constant_override(&"separation", 10)
 	_book.add_child(outer)
 
 	var top: HBoxContainer = HBoxContainer.new()
+	top.add_theme_constant_override(&"separation", 6)
 	outer.add_child(top)
 	for i: int in TABS.size():
 		var b: Button = Button.new()
-		b.text = TABS[i]
-		b.custom_minimum_size = Vector2(130, 40)
+		b.text = "%s  %s" % [TAB_RUNES[i], TABS[i]]
+		b.tooltip_text = "%s  (Tab cycles)" % TABS[i]
+		b.custom_minimum_size = Vector2(150, CosmicTheme.TOUCH_MIN)
 		b.toggle_mode = true
 		b.add_theme_font_size_override(&"font_size", 17)
+		b.add_theme_font_override(&"font", CosmicTheme.display_font())
+		b.add_theme_stylebox_override(&"normal", CosmicTheme.rune_tab(false))
+		b.add_theme_stylebox_override(&"pressed", CosmicTheme.rune_tab(true))
+		b.add_theme_stylebox_override(&"hover_pressed", CosmicTheme.rune_tab(true))
 		var idx: int = i
 		b.pressed.connect(func() -> void: _show_tab(idx))
 		top.add_child(b)
@@ -74,20 +89,34 @@ func _ready() -> void:
 	var spacer: Control = Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top.add_child(spacer)
-	_header = Label.new()
-	_header.add_theme_color_override(&"font_color", Color(0.95, 0.82, 0.5))
-	_header.add_theme_font_size_override(&"font_size", 16)
+	_header = CosmicTheme.label("", 16, CosmicTheme.STARLIGHT_GOLD, CosmicTheme.mono_font())
+	_header.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	top.add_child(_header)
 	var close_button: Button = Button.new()
-	close_button.text = "  ✕  "
-	close_button.custom_minimum_size = Vector2(48, 40)
+	close_button.text = "✕"
+	close_button.tooltip_text = "Close (Esc or G)"
+	close_button.custom_minimum_size = Vector2(CosmicTheme.TOUCH_MIN, CosmicTheme.TOUCH_MIN)
 	close_button.pressed.connect(close)
 	top.add_child(close_button)
+
+	# Discovery progress for the current tab.
+	var progress_row: HBoxContainer = HBoxContainer.new()
+	progress_row.add_theme_constant_override(&"separation", 12)
+	outer.add_child(progress_row)
+	_progress = ProgressBar.new()
+	_progress.show_percentage = false
+	_progress.custom_minimum_size = Vector2(0, 8)
+	_progress.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_progress.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	progress_row.add_child(_progress)
+	_progress_label = CosmicTheme.label("", CosmicTheme.SIZE_CAPTION, CosmicTheme.TEXT_DIM)
+	progress_row.add_child(_progress_label)
 
 	var spread: HBoxContainer = HBoxContainer.new()
 	spread.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	spread.add_theme_constant_override(&"separation", 0)
 	outer.add_child(spread)
+	_spread = spread
 	var left: PanelContainer = _page(true)
 	left.size_flags_stretch_ratio = 0.8
 	spread.add_child(left)
@@ -98,8 +127,8 @@ func _ready() -> void:
 	_index_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_index_scroll.add_child(_index_list)
 	var spine: ColorRect = ColorRect.new()
-	spine.color = Color(0.45, 0.32, 0.18)
-	spine.custom_minimum_size = Vector2(6, 0)
+	spine.color = Color(ACCENT, 0.55)
+	spine.custom_minimum_size = Vector2(2, 0)
 	spread.add_child(spine)
 	var right: PanelContainer = _page(false)
 	right.size_flags_stretch_ratio = 1.2
@@ -134,7 +163,10 @@ func open(tab: int = -1) -> void:
 	_root.visible = true
 	TactileGrabber3D.input_captured = true
 	_layout()
-	_show_tab(_tab if tab < 0 else tab, _selected)
+	_show_tab(_tab if tab < 0 else tab, _selected, false)
+	_backdrop.modulate.a = 0.0
+	_backdrop.create_tween().tween_property(_backdrop, "modulate:a", 1.0, 0.3)
+	CosmicTheme.reveal(_book, 0.28, 0.95)
 
 
 func close() -> void:
@@ -171,7 +203,8 @@ func _layout() -> void:
 
 # --- Tabs & index -------------------------------------------------------------------
 
-func _show_tab(tab: int, keep_selection: int = 0) -> void:
+func _show_tab(tab: int, keep_selection: int = 0, animate: bool = true) -> void:
+	var tab_changed: bool = tab != _tab
 	_tab = tab
 	for i: int in _tab_buttons.size():
 		_tab_buttons[i].button_pressed = i == tab
@@ -189,9 +222,47 @@ func _show_tab(tab: int, keep_selection: int = 0) -> void:
 		for r: RecipeData in book.recipes:
 			learned += 1 if book.is_discovered(r) else 0
 	if tab != 2:
-		_header.text = "%d / %d recipes learned   ◉ %d   " % [learned, book.recipes.size() if book != null else 0, journal.coins if journal != null else 0]
+		_header.text = "◉ %d   " % (journal.coins if journal != null else 0)
+	_update_progress(tab, learned, book.recipes.size() if book != null else 0)
 	_rebuild_index()
 	_select(clampi(keep_selection, 0, maxi(_entries.size() - 1, 0)))
+	if animate and tab_changed:
+		# Ethereal tab transition: the spread fades up with a slight lift.
+		_spread.modulate.a = 0.0
+		var tw: Tween = _spread.create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		tw.tween_property(_spread, "modulate:a", 1.0, 0.22)
+
+
+func _update_progress(tab: int, learned: int, total: int) -> void:
+	var journal: GrimoireJournal = GrimoireJournal.instance
+	match tab:
+		0:
+			_progress.max_value = maxi(total, 1)
+			_progress.value = learned
+			_progress_label.text = "%d / %d recipes learned" % [learned, total]
+		2:
+			var all: Dictionary = Rock3D.registry()
+			var found: int = 0
+			for id: String in all:
+				if journal != null and journal.collection.has(id):
+					found += 1
+			_progress.max_value = maxi(all.size(), 1)
+			_progress.value = found
+			_progress_label.text = "%d / %d specimens catalogued" % [found, all.size()]
+		1:
+			_progress.max_value = 1
+			_progress.value = 1
+			_progress_label.text = "%d substances in the codex" % SubstanceRegistry.count()
+		3:
+			var n: int = journal.cellar.size() if journal != null else 0
+			_progress.max_value = GrimoireJournal.MAX_CELLAR
+			_progress.value = n
+			_progress_label.text = "%d / %d cellar racks filled" % [n, GrimoireJournal.MAX_CELLAR]
+		4:
+			var n: int = journal.commissions.size() if journal != null else 0
+			_progress.max_value = GrimoireJournal.ACTIVE_COMMISSIONS
+			_progress.value = n
+			_progress_label.text = "%d open commissions" % n
 
 
 func _collect_recipes() -> void:
@@ -205,7 +276,7 @@ func _collect_recipes() -> void:
 				continue
 			var known: bool = book.is_discovered(r)
 			var label: String = r.title if known or r.category != RecipeData.Category.SECRET else "Sealed page"
-			_entries.append({"kind": "recipe", "recipe": r, "known": known, "label": ("✓  " if known else ("✧  " if r.category == RecipeData.Category.SECRET else "○  ")) + label})
+			_entries.append({"kind": "recipe", "recipe": r, "known": known, "label": label + ("   ✓" if known else "")})
 
 
 func _collect_formulas() -> void:
@@ -231,7 +302,7 @@ func _collect_collection() -> void:
 	for id: String in all:
 		if journal != null and journal.collection.has(id):
 			found_count += 1
-	_header.text = "Collection %d / %d   ◉ %d   " % [found_count, all.size(), journal.coins if journal != null else 0]
+	_header.text = "◉ %d   " % (journal.coins if journal != null else 0)
 	for kind: int in [MineralData.Kind.GEM, MineralData.Kind.MINERAL, MineralData.Kind.FOSSIL, MineralData.Kind.ROCK, MineralData.Kind.SAND]:
 		var group: Array[MineralData] = []
 		for id: String in all:
@@ -291,25 +362,84 @@ func _rebuild_index() -> void:
 	for i: int in _entries.size():
 		var e: Dictionary = _entries[i]
 		if e.has("header"):
-			var h: Label = Label.new()
-			h.text = e["header"]
-			h.add_theme_color_override(&"font_color", ACCENT)
-			h.add_theme_font_size_override(&"font_size", 18)
-			_index_list.add_child(h)
+			if i > 0:
+				var gap: Control = Control.new()
+				gap.custom_minimum_size = Vector2(0, 6)
+				_index_list.add_child(gap)
+			_index_list.add_child(CosmicTheme.title("✧  " + String(e["header"]), 18))
 			continue
 		var b: Button = Button.new()
 		b.text = e["label"]
 		b.flat = true
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		b.clip_text = true
-		b.custom_minimum_size = Vector2(0, 32)
-		b.add_theme_color_override(&"font_color", INK if not (e.get("kind") == "recipe" and not e.get("known", true)) else FADED_INK)
+		b.custom_minimum_size = Vector2(0, 36)
+		var dim: bool = (e.get("kind") == "recipe" and not e.get("known", true)) or (e.get("kind") == "mineral" and not e.get("found", true))
+		b.add_theme_color_override(&"font_color", FADED_INK if dim else INK)
 		b.add_theme_color_override(&"font_hover_color", ACCENT)
+		b.add_theme_color_override(&"font_focus_color", INK)
 		b.add_theme_font_size_override(&"font_size", 15)
+		b.add_theme_constant_override(&"h_separation", 10)
+		b.add_theme_stylebox_override(&"hover", CosmicTheme.flat(Color(CosmicTheme.NEBULA, 0.45), Color(0, 0, 0, 0), 0, 6, 6))
+		var icon: Texture2D = _index_icon(e)
+		if icon != null:
+			b.icon = icon
+		if _is_new(e):
+			var badge: Label = CosmicTheme.label("NEW", 11, CosmicTheme.VOID, CosmicTheme.mono_font())
+			badge.add_theme_stylebox_override(&"normal", CosmicTheme.flat(CosmicTheme.PRISM_PINK, Color(0, 0, 0, 0), 0, 6, 3))
+			badge.set_anchors_preset(Control.PRESET_CENTER_RIGHT)
+			badge.offset_left = -46
+			badge.offset_right = -6
+			badge.offset_top = -10
+			badge.offset_bottom = 10
+			badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			b.add_child(badge)
+			e["badge"] = badge
 		var idx: int = i
 		b.pressed.connect(func() -> void: _select(idx))
 		e["button"] = b
 		_index_list.add_child(b)
+
+
+## Orb icon for an index row: substance colour, rarity aura for minerals,
+## gold for learned recipes.
+func _index_icon(e: Dictionary) -> Texture2D:
+	match e.get("kind", ""):
+		"mineral":
+			var m: MineralData = e["mineral"]
+			return CosmicTheme.orb_icon(m.color if e.get("found", false) else CosmicTheme.TEXT_FAINT, m.rarity if e.get("found", false) else 0, 22)
+		"substance":
+			return CosmicTheme.orb_icon((e["substance"] as SubstanceData).base_albedo_rgba, 0, 22)
+		"recipe":
+			var r: RecipeData = e["recipe"]
+			if not e.get("known", false):
+				return CosmicTheme.orb_icon(Color("#3A3560"), 0, 22)
+			return CosmicTheme.orb_icon(CosmicTheme.PRISM_PINK if r.category == RecipeData.Category.SECRET else CosmicTheme.STARLIGHT_GOLD, 0, 22)
+		"bottle":
+			return CosmicTheme.orb_icon(Color.from_string(String(e["bottle"].get("color", "#ffffff")), Color.WHITE), 0, 22)
+		"commission":
+			return CosmicTheme.orb_icon(CosmicTheme.PRISM_CYAN, 0, 22)
+	return null
+
+
+static func _seen_key(e: Dictionary) -> String:
+	match e.get("kind", ""):
+		"recipe": return "recipe:" + String((e["recipe"] as RecipeData).recipe_id)
+		"mineral": return "mineral:" + String((e["mineral"] as MineralData).mineral_id)
+	return ""
+
+
+func _is_new(e: Dictionary) -> bool:
+	var journal: GrimoireJournal = GrimoireJournal.instance
+	var key: String = _seen_key(e)
+	if journal == null or key == "":
+		return false
+	if e.get("kind") == "recipe" and not e.get("known", false):
+		return false
+	if e.get("kind") == "mineral" and not journal.collection.has(String((e["mineral"] as MineralData).mineral_id)):
+		return false
+	return not journal.is_seen(key)
 
 
 func _select(index: int) -> void:
@@ -327,7 +457,21 @@ func _select(index: int) -> void:
 	for j: int in _entries.size():
 		var b: Button = _entries[j].get("button") as Button
 		if b != null:
-			b.add_theme_stylebox_override(&"normal", _box(Color(0.55, 0.12, 0.08, 0.12), Color(0, 0, 0, 0), 0, 4, 4) if j == i else StyleBoxEmpty.new())
+			if j == i:
+				var sel: StyleBoxFlat = CosmicTheme.flat(Color(CosmicTheme.VIOLET, 0.4), ACCENT, 0, 6, 6)
+				sel.border_width_left = 3
+				sel.shadow_color = Color(CosmicTheme.VIOLET, 0.3)
+				sel.shadow_size = 6
+				b.add_theme_stylebox_override(&"normal", sel)
+				b.add_theme_stylebox_override(&"focus", StyleBoxEmpty.new())
+			else:
+				b.add_theme_stylebox_override(&"normal", StyleBoxEmpty.new())
+	var key: String = _seen_key(_entries[i])
+	if key != "" and _is_new(_entries[i]) and GrimoireJournal.instance != null:
+		GrimoireJournal.instance.mark_seen(key)
+		var badge: Control = _entries[i].get("badge") as Control
+		if badge != null:
+			badge.create_tween().tween_property(badge, "modulate:a", 0.0, 0.6)
 	_render_detail(_entries[i])
 
 
@@ -360,43 +504,54 @@ func _detail_recipe(r: RecipeData, known: bool) -> void:
 		_text("“%s”" % r.riddle, 22, INK, true)
 		return
 	var info: Dictionary = GrimoireJournal.instance.discovery_of(r.recipe_id) if GrimoireJournal.instance != null else {}
-	_text(r.title, 28, INK)
+	_text(r.title, 30, ACCENT if known else INK)
 	var sub: String = CATEGORY_TITLES[int(r.category)]
 	if known and info.has("time"):
 		sub += "   ·   learned %s   ·   first grade %s" % [Time.get_datetime_string_from_unix_time(int(info["time"]), true).substr(0, 16), info.get("grade", "?")]
 	elif not known:
 		sub += "   ·   not yet brewed"
 	_text(sub, 13, FADED_INK)
+	_tags(_affinity_tags(r))
 	_rule()
-	_text(r.formula, 19, ACCENT)
+	_mono(r.formula, 18, CosmicTheme.PRISM_CYAN)
 	_text(r.description, 16, INK)
-	_text("Ingredients", 17, ACCENT)
+	_text("Ingredients", 18, ACCENT)
+	var chips: Array[Array] = []
 	for ing: String in r.ingredients:
-		_text("   •  " + ing, 15, INK)
-	_text("Method", 17, ACCENT)
+		chips.append([ing, _ingredient_color(ing)])
+	_chips(chips)
+	_text("Process", 18, ACCENT)
+	var flow: Array[Array] = []
 	for k: int in r.method_steps.size():
-		_text("   %d.  %s" % [k + 1, r.method_steps[k]], 15, INK)
-	_text("Signature", 17, ACCENT)
-	_text("   " + _signature_text(r), 13, FADED_INK)
+		flow.append(["%d  %s" % [k + 1, r.method_steps[k]], CosmicTheme.PRISM_CYAN])
+	flow.append(["✦ " + (r.title if known else "?"), CosmicTheme.STARLIGHT_GOLD])
+	_flow(flow)
+	_text("Signature (what the grimoire listens for)", 14, FADED_INK)
+	_text("   " + _signature_text(r), 13, CosmicTheme.TEXT_FAINT)
 	_rule()
 	var charts: HBoxContainer = HBoxContainer.new()
 	charts.add_theme_constant_override(&"separation", 12)
 	_detail.add_child(charts)
 	var radar: RadarChart = RadarChart.new()
+	radar.ink = CosmicTheme.TEXT_DIM
+	radar.fill = Color(CosmicTheme.VIOLET, 0.4)
 	radar.custom_minimum_size = Vector2(280, 250)
 	charts.add_child(radar)
 	var right_col: VBoxContainer = VBoxContainer.new()
 	right_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	charts.add_child(right_col)
 	var curve: CurveChart = CurveChart.new()
+	curve.ink = CosmicTheme.TEXT_DIM
+	curve.line = CosmicTheme.PRISM_PINK
 	curve.custom_minimum_size = Vector2(240, 110)
 	right_col.add_child(curve)
 	var sigil: HexSigilView = HexSigilView.new()
+	sigil.ink = CosmicTheme.STARLIGHT_GOLD
 	sigil.custom_minimum_size = Vector2(240, 140)
 	right_col.add_child(sigil)
 	if known and info.has("traits"):
 		var values: PackedFloat32Array = info["traits"]
-		radar.set_values(values)
+		radar.set_values(values, Color(CosmicTheme.VIOLET, 0.4))
 		curve.set_samples(info.get("curve", PackedFloat32Array()))
 		sigil.set_seed(GrimoireJournal.sigil_seed(values))
 	else:
@@ -419,8 +574,16 @@ func _signature_text(r: RecipeData) -> String:
 
 
 func _detail_substance(s: SubstanceData) -> void:
-	_text(s.display_name, 28, INK)
-	_text(s.chemical_formula, 22, ACCENT)
+	var head: HBoxContainer = HBoxContainer.new()
+	head.add_theme_constant_override(&"separation", 12)
+	_detail.add_child(head)
+	var orb: TextureRect = TextureRect.new()
+	orb.texture = CosmicTheme.orb_icon(s.base_albedo_rgba, 0, 44)
+	orb.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
+	head.add_child(orb)
+	var title_label: Label = CosmicTheme.title(s.display_name, 30, INK)
+	head.add_child(title_label)
+	_mono(s.chemical_formula, 22, CosmicTheme.PRISM_CYAN)
 	_text(substance_group(s), 13, FADED_INK)
 	_rule()
 	var grid: GridContainer = GridContainer.new()
@@ -514,14 +677,24 @@ func _detail_mineral(m: MineralData, found: bool) -> void:
 		_text("%s %s, not yet found" % [m.rarity_name(), ["rock", "sand", "mineral", "gemstone", "fossil"][int(m.kind)]], 15, FADED_INK)
 		_rule()
 		_text("Where to look:  " + _where_found(m), 16, INK)
+		_text("Journey", 18, ACCENT)
+		_flow(_journey(m, false))
 		return
-	_text(m.display_name, 28, INK)
-	_text(m.formula, 20, ACCENT)
-	var rarity_label: Label = Label.new()
-	rarity_label.text = "%s  %s" % ["★".repeat(m.rarity + 1), m.rarity_name()]
-	rarity_label.add_theme_color_override(&"font_color", m.rarity_color().darkened(0.35))
-	rarity_label.add_theme_font_size_override(&"font_size", 18)
-	_detail.add_child(rarity_label)
+	var head: HBoxContainer = HBoxContainer.new()
+	head.add_theme_constant_override(&"separation", 12)
+	_detail.add_child(head)
+	var orb: TextureRect = TextureRect.new()
+	orb.texture = CosmicTheme.orb_icon(m.color, m.rarity, 56)
+	orb.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
+	head.add_child(orb)
+	var name_col: VBoxContainer = VBoxContainer.new()
+	head.add_child(name_col)
+	name_col.add_child(CosmicTheme.title(m.display_name, 30, INK))
+	var rarity_label: Label = CosmicTheme.title("%s  %s" % ["★".repeat(m.rarity + 1), m.rarity_name()], 17, CosmicTheme.rarity_aura(m.rarity))
+	name_col.add_child(rarity_label)
+	_mono(m.formula, 18, CosmicTheme.PRISM_CYAN)
+	_text("Journey", 18, ACCENT)
+	_flow(_journey(m))
 	_rule()
 	_text("Mohs hardness  %.1f / 10" % m.hardness_mohs, 15, INK)
 	var bar: ProgressBar = ProgressBar.new()
@@ -660,14 +833,176 @@ func _detail_commission(o: Dictionary) -> void:
 # --- Helpers -------------------------------------------------------------------------
 
 func _text(content: String, font_size: int, color: Color, italic: bool = false) -> void:
-	var l: Label = Label.new()
-	l.text = content
+	var l: Label = CosmicTheme.title(content, font_size, color) if font_size >= 17 and color == ACCENT else CosmicTheme.label(content, font_size, color)
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	l.add_theme_color_override(&"font_color", color)
-	l.add_theme_font_size_override(&"font_size", font_size)
+	if font_size >= 24 and color != ACCENT:
+		l.add_theme_font_override(&"font", CosmicTheme.display_font())
 	if italic:
 		l.add_theme_constant_override(&"line_spacing", 4)
+		l.add_theme_color_override(&"font_color", color.lerp(CosmicTheme.PRISM_PINK, 0.15) if color == INK else color)
 	_detail.add_child(l)
+
+
+func _mono(content: String, font_size: int, color: Color) -> void:
+	var l: Label = CosmicTheme.label(content, font_size, color, CosmicTheme.mono_font())
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_detail.add_child(l)
+
+
+## Iconographic tag chips: [[text, colour], ...]
+func _tags(tags: Array[Array]) -> void:
+	if tags.is_empty():
+		return
+	var row: HFlowContainer = HFlowContainer.new()
+	row.add_theme_constant_override(&"h_separation", 6)
+	row.add_theme_constant_override(&"v_separation", 6)
+	_detail.add_child(row)
+	for t: Array in tags:
+		var c: Color = t[1]
+		var chip: Label = CosmicTheme.label(String(t[0]), 13, c.lightened(0.2))
+		chip.add_theme_stylebox_override(&"normal", CosmicTheme.flat(Color(c, 0.14), Color(c, 0.55), 1, 12, 4))
+		(chip.get_theme_stylebox(&"normal") as StyleBoxFlat).content_margin_left = 10
+		(chip.get_theme_stylebox(&"normal") as StyleBoxFlat).content_margin_right = 10
+		row.add_child(chip)
+
+
+## Ingredient chips with glowing colour orbs.
+func _chips(items: Array[Array]) -> void:
+	var row: HFlowContainer = HFlowContainer.new()
+	row.add_theme_constant_override(&"h_separation", 8)
+	row.add_theme_constant_override(&"v_separation", 8)
+	_detail.add_child(row)
+	for it: Array in items:
+		var chip: PanelContainer = PanelContainer.new()
+		chip.add_theme_stylebox_override(&"panel", CosmicTheme.flat(Color(CosmicTheme.DEEP, 0.85), Color(CosmicTheme.VIOLET, 0.45), 1, 14, 6))
+		var h: HBoxContainer = HBoxContainer.new()
+		h.add_theme_constant_override(&"separation", 6)
+		chip.add_child(h)
+		var orb: TextureRect = TextureRect.new()
+		orb.texture = CosmicTheme.orb_icon(it[1], 0, 20)
+		orb.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
+		h.add_child(orb)
+		h.add_child(CosmicTheme.label(String(it[0]), 15, INK))
+		row.add_child(chip)
+
+
+## Visual flowchart: node chips joined by glowing arrows. [[text, colour], ...]
+func _flow(nodes: Array[Array]) -> void:
+	var row: HFlowContainer = HFlowContainer.new()
+	row.add_theme_constant_override(&"h_separation", 6)
+	row.add_theme_constant_override(&"v_separation", 8)
+	_detail.add_child(row)
+	for k: int in nodes.size():
+		var c: Color = nodes[k][1]
+		var last: bool = k == nodes.size() - 1
+		var node: Label = CosmicTheme.label(String(nodes[k][0]), 14, Color.WHITE if last else c.lightened(0.35))
+		var sb: StyleBoxFlat = CosmicTheme.flat(Color(c, 0.3 if last else 0.12), Color(c, 0.85 if last else 0.5), 1, 8, 6)
+		sb.content_margin_left = 10
+		sb.content_margin_right = 10
+		if last:
+			sb.shadow_color = Color(c, 0.35)
+			sb.shadow_size = 8
+		node.add_theme_stylebox_override(&"normal", sb)
+		row.add_child(node)
+		if not last:
+			var arrow: Label = CosmicTheme.label("➜", 16, Color(CosmicTheme.STARLIGHT_GOLD, 0.8))
+			arrow.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+			row.add_child(arrow)
+
+
+## Elemental affinity tags read from the recipe's signature traits.
+static func _affinity_tags(r: RecipeData) -> Array[Array]:
+	var out: Array[Array] = []
+	var seen_tags: Dictionary = {}
+	for i: int in r.condition_traits.size():
+		var t: String = r.condition_traits[i]
+		var lo: float = r.condition_min[i] if i < r.condition_min.size() else -1e9
+		var hi: float = r.condition_max[i] if i < r.condition_max.size() else 1e9
+		var tag: Array = []
+		if t.begins_with("fraction:"):
+			var idx: int = SubstanceRegistry.index_of_id(StringName(t.substr(9)))
+			if idx >= 0:
+				var sub: SubstanceData = SubstanceRegistry.get_substance(idx)
+				tag = ["◆ " + sub.display_name, sub.base_albedo_rgba.lerp(CosmicTheme.TEXT, 0.25)]
+		else:
+			match t:
+				"ph": tag = ["⚗ Acidic", CosmicTheme.SUCCESS] if hi < 7.0 else (["⚗ Alkaline", Color("#8FA8FF")] if lo > 7.0 else ["⚗ Neutral", CosmicTheme.TEXT_DIM])
+				"temperature_c": tag = ["❄ Frost", CosmicTheme.PRISM_CYAN] if hi < 15.0 else ["♨ Heat", Color("#FF9A5C")]
+				"boiling": tag = ["♨ Boiling", Color("#FF9A5C")]
+				"burning", "flash": tag = ["✹ Fire", Color("#FF7A45")]
+				"flame_r", "flame_g", "flame_b": tag = ["✹ Coloured flame", Color("#FF9A5C")]
+				"glow": tag = ["✺ Glow", CosmicTheme.STARLIGHT_GOLD]
+				"glitter", "rainbow": tag = ["✧ Shimmer", CosmicTheme.PRISM_PINK]
+				"gravity_coupling": tag = ["⇡ Levitation", Color("#B18CFF")]
+				"thaums_per_mol": tag = ["✦ Arcana", Color("#B18CFF")]
+				"spooky": tag = ["☾ Spooky", Color("#9F8CFF")]
+				"electric": tag = ["ϟ Storm", CosmicTheme.PRISM_CYAN]
+				"magnetic": tag = ["⊕ Magnetic", Color("#C9CCE0")]
+				"gas_rate": tag = ["∘ Fizz", CosmicTheme.PRISM_CYAN]
+				"foam_m", "foaming", "foam_overflow", "foam_stability": tag = ["◌ Foam", Color("#D9D3F5")]
+				"gel", "viscosity_pas": tag = ["≋ Thick", Color("#C9A0FF")]
+				"layers", "emulsion": tag = ["☰ Layers", Color("#8FE9FF")]
+				"swirl": tag = ["↻ Swirl", CosmicTheme.PRISM_CYAN]
+				"precipitate_ml": tag = ["⋮ Precipitate", Color("#D9D3F5")]
+				"odor": tag = ["~ Pungent", Color("#B8E07F")]
+				"toxic": tag = ["☠ Toxic", Color("#B8E07F")]
+		if not tag.is_empty() and not seen_tags.has(tag[0]):
+			seen_tags[tag[0]] = true
+			out.append(tag)
+	return out
+
+
+## Best-effort colour for an ingredient written in plain words.
+static func _ingredient_color(words: String) -> Color:
+	var w: String = words.to_lower()
+	var best: SubstanceData = null
+	var best_len: int = 0
+	for i: int in SubstanceRegistry.count():
+		var sub: SubstanceData = SubstanceRegistry.get_substance(i)
+		var n: String = sub.display_name.to_lower()
+		if n.length() > best_len and w.contains(n):
+			best = sub
+			best_len = n.length()
+	if best != null:
+		return best.base_albedo_rgba
+	if w.contains("heat") or w.contains("flame") or w.contains("candle"):
+		return Color("#FF9A5C")
+	if w.contains("chill") or w.contains("ice") or w.contains("cold"):
+		return CosmicTheme.PRISM_CYAN
+	if w.contains("berr"):
+		return CosmicTheme.PRISM_PINK
+	return CosmicTheme.STARLIGHT_GOLD
+
+
+## The specimen's path through the lab, as flowchart nodes.
+static func _journey(m: MineralData, found: bool = true) -> Array[Array]:
+	var gold: Color = CosmicTheme.STARLIGHT_GOLD
+	var cyan: Color = CosmicTheme.PRISM_CYAN
+	var aura: Color = CosmicTheme.rarity_aura(m.rarity)
+	var name: String = m.display_name if found else "???"
+	match m.kind:
+		MineralData.Kind.ROCK:
+			var out: Array[Array] = [["Rock Crate", cyan], ["Hammer or Crusher", cyan]]
+			var crush: PackedStringArray = PackedStringArray()
+			for p: Resource in m.crush_products:
+				crush.append((p as SubstanceData).display_name)
+			out.append([", ".join(crush) if not crush.is_empty() else "Powder", gold])
+			return out
+		MineralData.Kind.SAND:
+			return [["Sand Bag", cyan], ["Sand Sifter", cyan], ["Hidden grains & fossils", gold]]
+	var start: String = "Specimen Crate"
+	var hosts: String = _where_found(m)
+	if hosts.contains(",") or (hosts != "" and not hosts.begins_with("the Specimen")):
+		var parts: PackedStringArray = hosts.split(", ")
+		start = parts[parts.size() - 1] if parts.size() > 0 else start
+	var out: Array[Array] = [[start, cyan], ["Hammer on the Anvil", cyan], ["Raw " + name, aura]]
+	out.append(["Gem Polisher", cyan])
+	if m.can_facet:
+		out.append(["Faceting Wheel", cyan])
+		out.append(["Cut " + name, gold])
+	else:
+		out.append(["Polished " + name, gold])
+	return out
 
 
 func _rule() -> void:
@@ -680,9 +1015,7 @@ func _rule() -> void:
 func _page(left: bool) -> PanelContainer:
 	var p: PanelContainer = PanelContainer.new()
 	p.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var style: StyleBoxFlat = _box(PARCHMENT, Color(0.7, 0.58, 0.38), 1, 6, 22)
-	style.shadow_color = Color(0.0, 0.0, 0.0, 0.25)
-	style.shadow_size = 4
+	var style: StyleBoxFlat = _box(PAGE, Color(CosmicTheme.VIOLET, 0.3), 1, 10, 22)
 	if left:
 		style.corner_radius_top_right = 0
 		style.corner_radius_bottom_right = 0

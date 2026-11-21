@@ -27,6 +27,9 @@ var coins: int = 0
 var commissions: Array[Dictionary] = []
 ## mineral_id -> {count, first_time, best_value, best_name}
 var collection: Dictionary = {}
+## Grimoire entries the player has opened ("recipe:<id>", "mineral:<id>" -> true),
+## so newly unlocked pages can wear a NEW badge. Additive save key.
+var seen: Dictionary = {}
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 
 
@@ -228,6 +231,19 @@ func record_specimen(specimen: Rock3D) -> void:
 		changed.emit()
 
 
+# --- Seen pages ------------------------------------------------------------------------------
+
+func is_seen(key: String) -> bool:
+	return seen.has(key)
+
+
+func mark_seen(key: String) -> void:
+	if seen.has(key):
+		return
+	seen[key] = true
+	_save()
+
+
 # --- Persistence ------------------------------------------------------------------------
 
 func _save() -> void:
@@ -240,6 +256,7 @@ func _save() -> void:
 	cfg.set_value("journal", "coins", coins)
 	cfg.set_value("journal", "commissions", commissions)
 	cfg.set_value("journal", "collection", collection)
+	cfg.set_value("journal", "seen", seen)
 	cfg.save(SAVE_PATH)
 
 
@@ -255,6 +272,7 @@ func _load() -> void:
 		cellar.append(e as Dictionary)
 	coins = cfg.get_value("journal", "coins", 0)
 	collection = cfg.get_value("journal", "collection", {})
+	seen = cfg.get_value("journal", "seen", {})
 	var saved_orders: Array = cfg.get_value("journal", "commissions", [])
 	for o: Variant in saved_orders:
 		commissions.append(o as Dictionary)

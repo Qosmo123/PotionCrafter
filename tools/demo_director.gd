@@ -68,10 +68,15 @@ func _process(_delta: float) -> void:
 		_lab(bench)
 	if _frames == SHOT_FRAME - 8 and _args.has("collection"):
 		var book: GrimoireBookUI = bench.get_node("GrimoireBookUI") as GrimoireBookUI
+		if GrimoireJournal.instance != null:
+			for id: String in ["star_sapphire", "precious_opal", "diamond", "amethyst", "emerald"]:
+				var found_m: MineralData = Rock3D.get_mineral(id)
+				if found_m != null:
+					GrimoireJournal.instance.record_find(found_m)
 		book.open(2)
 		for i: int in book._entries.size():
 			var e: Dictionary = book._entries[i]
-			if e.get("kind") == "mineral" and e.get("found", false) and (e["mineral"] as MineralData).kind == MineralData.Kind.GEM:
+			if e.get("kind") == "mineral" and e.get("found", false) and (e["mineral"] as MineralData).mineral_id == &"star_sapphire":
 				book._select(i)
 				break
 	if _args.has("demo"):

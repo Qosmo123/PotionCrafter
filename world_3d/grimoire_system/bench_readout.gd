@@ -17,21 +17,17 @@ func _ready() -> void:
 	margin.add_theme_constant_override(&"margin_left", maxi(16, safe.position.x))
 	margin.add_theme_constant_override(&"margin_top", maxi(16, safe.position.y))
 	add_child(margin)
+	CosmicTheme.apply(margin)
 	var panel: PanelContainer = PanelContainer.new()
-	var style: StyleBoxFlat = StyleBoxFlat.new()
-	style.bg_color = Color(0.06, 0.045, 0.035, 0.72)
-	style.border_color = Color(0.75, 0.6, 0.3, 0.6)
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(6)
-	style.set_content_margin_all(10)
-	panel.add_theme_stylebox_override(&"panel", style)
+	panel.add_theme_stylebox_override(&"panel", CosmicTheme.glass(CosmicTheme.PRISM_CYAN, 12, 1))
 	margin.add_child(panel)
 	_label = RichTextLabel.new()
 	_label.bbcode_enabled = true
 	_label.fit_content = true
 	_label.custom_minimum_size = Vector2(620, 0)
 	_label.add_theme_font_size_override(&"normal_font_size", 17)
-	_label.add_theme_color_override(&"default_color", Color(0.95, 0.9, 0.78))
+	_label.add_theme_color_override(&"default_color", CosmicTheme.TEXT)
+	_label.add_theme_font_override(&"mono_font", CosmicTheme.mono_font())
 	panel.add_child(_label)
 
 

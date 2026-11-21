@@ -4,38 +4,36 @@ extends CanvasLayer
 ## corner buttons (Grimoire, Help) with the coin purse, and bottling (B).
 
 const TOAST_SECONDS: float = 3.2
-const KIND_COLORS: Dictionary = {
-	&"discovery": Color(0.95, 0.78, 0.35), &"secret": Color(0.78, 0.6, 1.0), &"bottle": Color(0.7, 0.9, 0.7),
-	&"coins": Color(1.0, 0.85, 0.3), &"info": Color(0.85, 0.85, 0.85),
-}
-const HELP_TEXT: String = """[b][color=#e8c070]Hands[/color][/b]
+const STATION_RUNES: PackedStringArray = ["☿", "◆", "⊕"]  # alchemical glyphs with no emoji form
+const STATION_NAMES: PackedStringArray = ["Potion Bench", "Mineral Lab", "Science Bench"]
+const HELP_TEXT: String = """[b][color=#F4D06F]Hands[/color][/b]
   Drag  ·  pick up and move anything
   Wheel / right-drag while holding  ·  tilt and pour
   Wheel when empty-handed  ·  zoom      ·  Two fingers: twist to tilt, pinch to zoom
   E  ·  put the held item back in the satchel
 
-[b][color=#e8c070]Brewing[/color][/b]
+[b][color=#F4D06F]Brewing[/color][/b]
   Pour vessels into each other  ·  stir with rods, spoons, whisks and the wand
   Hot plate heats  ·  M cycles the magnetic stirrer  ·  the candle lights spirits
   Drop berries into vessels to burst them
   B  ·  cork and label the held vessel (bottle it) for the cellar and commissions
 
-[b][color=#e8c070]Magic[/color][/b]
+[b][color=#F4D06F]Magic[/color][/b]
   C  ·  pick up chalk, draw a closed shape on the bench  ·  X wipes sigils
   ○ ward   △ heat   □ chill   ⬠ levitate   ⬡ stir   ⯃ catalyse
 
-[b][color=#e8c070]Mineral Lab  (press 2)[/color][/b]
+[b][color=#F4D06F]Mineral Lab  (press 2)[/color][/b]
   Hammer + Space  ·  crack rocks open on the anvil to find minerals, gems and fossils
   Rock crusher  ·  drop a rock in the hopper, drag the crank handle in circles
   Sand sifter  ·  drop a sand bag in, drag the shaker handle side to side
   Polisher / faceting machine  ·  click the brass switch, hold a stone on the wheel
   Faceting: click the grey dial to choose a cut; keep your hand steady!
 
-[b][color=#e8c070]Books & storage[/color][/b]
+[b][color=#F4D06F]Books & storage[/color][/b]
   Tab / I  ·  Satchel (reagents, berries, glass, tools)
   G  ·  Grimoire (learned recipes, formulas, cellar, commissions)
 
-[b][color=#e8c070]View[/color][/b]
+[b][color=#F4D06F]View[/color][/b]
   F5 graphics preset  ·  F11 fullscreen  ·  F3 lab readout  ·  H this help"""
 
 @export var grabber: TactileGrabber3D
@@ -48,10 +46,17 @@ var _help: PanelContainer
 var _coins: Label
 var _strike: Button
 var _station_buttons: Array[Button] = []
+var _shell: Control
 
 
 func _ready() -> void:
 	layer = 6
+	var shell: Control = Control.new()
+	shell.set_anchors_preset(Control.PRESET_FULL_RECT)
+	shell.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	CosmicTheme.apply(shell)
+	add_child(shell)
+	_shell = shell
 	_toasts = VBoxContainer.new()
 	_toasts.anchor_left = 0.5
 	_toasts.anchor_right = 0.5
@@ -60,28 +65,36 @@ func _ready() -> void:
 	_toasts.offset_top = 18
 	_toasts.add_theme_constant_override(&"separation", 6)
 	_toasts.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_toasts)
+	_shell.add_child(_toasts)
 
 	_corner_button("Grimoire  [G]", -340, func() -> void:
 		if GrimoireBookUI.instance != null:
 			GrimoireBookUI.instance.toggle())
 	_corner_button("Help  [H]", -470, toggle_help, 120)
-	var station_titles: PackedStringArray = ["1  Potion Bench", "2  Mineral Lab", "3  Science Bench"]
-	for i: int in station_titles.size():
+	# Navigation bar: one glass strip of glowing rune tabs, one per station.
+	var nav: PanelContainer = PanelContainer.new()
+	nav.position = Vector2(CosmicTheme.GUTTER, CosmicTheme.GUTTER - 4)
+	nav.add_theme_stylebox_override(&"panel", CosmicTheme.glass(CosmicTheme.STARLIGHT_GOLD, 6, 1))
+	CosmicTheme.frost(nav)
+	_shell.add_child(nav)
+	var nav_row: HBoxContainer = HBoxContainer.new()
+	nav_row.add_theme_constant_override(&"separation", 6)
+	nav.add_child(nav_row)
+	for i: int in STATION_NAMES.size():
 		var idx: int = i
 		var sb: Button = Button.new()
-		sb.text = station_titles[i]
+		sb.text = "%s  %s   %d" % [STATION_RUNES[i], STATION_NAMES[i], i + 1]
+		sb.tooltip_text = "Go to the %s (key %d)" % [STATION_NAMES[i], i + 1]
 		sb.toggle_mode = true
 		sb.button_pressed = i == 0
-		sb.position = Vector2(16 + 170 * i, 16)
-		sb.custom_minimum_size = Vector2(160, 48)
-		sb.add_theme_stylebox_override(&"normal", GrimoireBookUI._box(Color(0.1, 0.07, 0.05, 0.85), Color(0.75, 0.6, 0.3, 0.55), 1, 6, 8))
-		sb.add_theme_stylebox_override(&"pressed", GrimoireBookUI._box(Color(0.3, 0.2, 0.1, 0.92), Color(0.95, 0.8, 0.4, 0.9), 2, 6, 8))
-		sb.add_theme_color_override(&"font_color", Color(0.95, 0.85, 0.6))
+		sb.custom_minimum_size = Vector2(176, CosmicTheme.TOUCH_MIN)
+		sb.add_theme_stylebox_override(&"normal", CosmicTheme.rune_tab(false))
+		sb.add_theme_stylebox_override(&"pressed", CosmicTheme.rune_tab(true))
+		sb.add_theme_stylebox_override(&"hover_pressed", CosmicTheme.rune_tab(true))
 		sb.pressed.connect(func() -> void:
 			if LabCamera3D.instance != null:
 				LabCamera3D.instance.go_to_station(idx))
-		add_child(sb)
+		nav_row.add_child(sb)
 		_station_buttons.append(sb)
 	_strike = Button.new()
 	_strike.text = "STRIKE  [Space]"
@@ -94,28 +107,40 @@ func _ready() -> void:
 	_strike.offset_top = -96
 	_strike.offset_bottom = -32
 	_strike.add_theme_font_size_override(&"font_size", 22)
-	_strike.add_theme_stylebox_override(&"normal", GrimoireBookUI._box(Color(0.45, 0.12, 0.06, 0.9), Color(1.0, 0.75, 0.3), 2, 10, 10))
-	_strike.add_theme_color_override(&"font_color", Color(1.0, 0.92, 0.75))
+	_strike.add_theme_font_override(&"font", CosmicTheme.display_font())
+	CosmicTheme.style_button(_strike, CosmicTheme.PRISM_PINK, true)
+	_strike.add_theme_stylebox_override(&"normal", CosmicTheme.glow(CosmicTheme.PRISM_PINK, 10, 12, Color(CosmicTheme.NEBULA, 0.85), 0))
 	_strike.visible = false
 	_strike.pressed.connect(_slam_held)
-	add_child(_strike)
+	_shell.add_child(_strike)
 	_coins = Label.new()
 	_coins.anchor_left = 1.0
 	_coins.anchor_right = 1.0
 	_coins.offset_left = -200
 	_coins.offset_right = -24
-	_coins.offset_top = 70
+	_coins.offset_top = 74
 	_coins.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_coins.add_theme_color_override(&"font_color", Color(1.0, 0.85, 0.35))
-	_coins.add_theme_color_override(&"font_shadow_color", Color(0, 0, 0, 0.8))
-	_coins.add_theme_font_size_override(&"font_size", 18)
-	add_child(_coins)
+	_coins.add_theme_color_override(&"font_color", CosmicTheme.STARLIGHT_GOLD)
+	_coins.add_theme_color_override(&"font_shadow_color", Color(CosmicTheme.STARLIGHT_GOLD, 0.45))
+	_coins.add_theme_constant_override(&"shadow_outline_size", 8)
+	_coins.add_theme_constant_override(&"shadow_offset_y", 0)
+	_coins.add_theme_font_override(&"font", CosmicTheme.mono_font())
+	_coins.add_theme_font_size_override(&"font_size", 20)
+	var purse: StyleBoxFlat = CosmicTheme.flat(Color(CosmicTheme.DEEP, 0.82), Color(CosmicTheme.STARLIGHT_GOLD, 0.45), 1, 16, 6)
+	purse.content_margin_left = 14
+	purse.content_margin_right = 14
+	_coins.add_theme_stylebox_override(&"normal", purse)
+	_coins.offset_left = -150
+	_coins.tooltip_text = "Coins earned from commissions and specimens"
+	_coins.mouse_filter = Control.MOUSE_FILTER_PASS
+	_shell.add_child(_coins)
 
 	_inspector = PanelContainer.new()
-	_inspector.add_theme_stylebox_override(&"panel", GrimoireBookUI._box(Color(0.07, 0.05, 0.035, 0.88), Color(0.75, 0.6, 0.3, 0.6), 1, 6, 10))
+	_inspector.add_theme_stylebox_override(&"panel", CosmicTheme.glass(CosmicTheme.PRISM_CYAN, 14, 1))
+	CosmicTheme.frost(_inspector)
 	_inspector.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_inspector.visible = false
-	add_child(_inspector)
+	_shell.add_child(_inspector)
 	_inspector_label = RichTextLabel.new()
 	_inspector_label.bbcode_enabled = true
 	_inspector_label.fit_content = true
@@ -123,22 +148,27 @@ func _ready() -> void:
 	_inspector_label.custom_minimum_size = Vector2(340, 0)
 	_inspector_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_inspector_label.add_theme_font_size_override(&"normal_font_size", 15)
-	_inspector_label.add_theme_color_override(&"default_color", Color(0.95, 0.9, 0.78))
+	_inspector_label.add_theme_color_override(&"default_color", CosmicTheme.TEXT)
+	_inspector_label.add_theme_font_override(&"bold_font", CosmicTheme.display_font())
+	_inspector_label.add_theme_font_size_override(&"bold_font_size", 18)
 	_inspector.add_child(_inspector_label)
 
 	_help = PanelContainer.new()
 	_help.set_anchors_preset(Control.PRESET_CENTER)
-	_help.add_theme_stylebox_override(&"panel", GrimoireBookUI._box(Color(0.07, 0.05, 0.035, 0.94), Color(0.78, 0.6, 0.28), 2, 10, 22))
+	_help.add_theme_stylebox_override(&"panel", CosmicTheme.glass(CosmicTheme.STARLIGHT_GOLD, 28, 2, Color(CosmicTheme.DEEP, 0.93)))
+	CosmicTheme.frost(_help)
 	_help.visible = false
 	var help_label: RichTextLabel = RichTextLabel.new()
 	help_label.bbcode_enabled = true
 	help_label.fit_content = true
 	help_label.custom_minimum_size = Vector2(700, 0)
 	help_label.add_theme_font_size_override(&"normal_font_size", 16)
-	help_label.add_theme_color_override(&"default_color", Color(0.95, 0.9, 0.78))
+	help_label.add_theme_color_override(&"default_color", CosmicTheme.TEXT)
+	help_label.add_theme_font_override(&"bold_font", CosmicTheme.display_font())
+	help_label.add_theme_font_size_override(&"bold_font_size", 19)
 	help_label.text = HELP_TEXT
 	_help.add_child(help_label)
-	add_child(_help)
+	_shell.add_child(_help)
 
 	var journal: GrimoireJournal = GrimoireJournal.instance
 	if journal != null:
@@ -155,31 +185,32 @@ func _corner_button(text: String, offset_left: float, action: Callable, width: f
 	b.offset_right = offset_left + width
 	b.offset_top = 16
 	b.offset_bottom = 64
-	b.add_theme_stylebox_override(&"normal", GrimoireBookUI._box(Color(0.1, 0.07, 0.05, 0.85), Color(0.75, 0.6, 0.3, 0.55), 1, 6, 8))
-	b.add_theme_stylebox_override(&"hover", GrimoireBookUI._box(Color(0.2, 0.14, 0.08, 0.9), Color(0.85, 0.7, 0.35, 0.8), 1, 6, 8))
-	b.add_theme_color_override(&"font_color", Color(0.95, 0.85, 0.6))
 	b.pressed.connect(action)
-	add_child(b)
+	_shell.add_child(b)
 
 
 func toggle_help() -> void:
 	_help.visible = not _help.visible
 	if _help.visible:
 		var vp: Vector2 = get_viewport().get_visible_rect().size
+		_help.reset_size()
 		_help.position = (vp - _help.size) * 0.5
+		CosmicTheme.reveal(_help)
 
 
 func show_toast(text: String, kind: StringName = &"info") -> void:
 	var panel: PanelContainer = PanelContainer.new()
-	var accent: Color = KIND_COLORS.get(kind, Color.WHITE)
-	panel.add_theme_stylebox_override(&"panel", GrimoireBookUI._box(Color(0.08, 0.05, 0.03, 0.9), accent, 2, 8, 12))
+	var accent: Color = CosmicTheme.toast_color(kind)
+	panel.add_theme_stylebox_override(&"panel", CosmicTheme.glow(accent, 12, 8 if kind != &"info" else 0, Color(CosmicTheme.DEEP, 0.9), 0))
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var label: Label = Label.new()
 	label.text = ("✦  " if kind == &"discovery" or kind == &"secret" else "") + text
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	label.add_theme_color_override(&"font_color", accent)
+	label.add_theme_color_override(&"font_color", accent.lerp(CosmicTheme.TEXT, 0.25))
 	label.add_theme_font_size_override(&"font_size", 18)
+	if kind != &"info":
+		label.add_theme_font_override(&"font", CosmicTheme.display_font())
 	panel.add_child(label)
 	_toasts.add_child(panel)
 	while _toasts.get_child_count() > 4:
@@ -267,21 +298,21 @@ static func describe(target: Object) -> String:
 		var v: Vessel3D = target as Vessel3D
 		var m: MixtureContainer = v.mixture
 		if m == null or m.get_liquid_volume_m3() * 1e6 < 0.5:
-			return "[b]Empty %s[/b]\n[color=#a89a80]Pour something in, or take reagents from the satchel.[/color]" % _vessel_kind(v)
+			return "[b]Empty %s[/b]\n[color=#B3ADD6]Pour something in, or take reagents from the satchel.[/color]" % _vessel_kind(v)
 		var flags: PackedStringArray = PackedStringArray()
 		if m.burning:
-			flags.append("[color=#ff8a3a]burning[/color]")
+			flags.append("[color=#FF9A5C]burning[/color]")
 		if v.is_boiling:
-			flags.append("[color=#9fd0ff]boiling[/color]")
+			flags.append("[color=#8FE9FF]boiling[/color]")
 		if v.sealed:
-			flags.append("[color=#c9a35a]corked[/color]")
+			flags.append("[color=#F4D06F]corked[/color]")
 		if m.gas_generation_mol_s > 0.002:
 			flags.append("fizzing")
 		if m.precipitation_rate_mol_s > 0.0 or v.suspension_level > 0.05:
 			flags.append("precipitating")
 		if m.transmutation_rate_mol_s > 0.0:
-			flags.append("[color=#ffd36e]transmuting[/color]")
-		return "[b]%s[/b]\n[color=#9fb7c9]%.1f °C  ·  %.0f mL  ·  pH %.1f  ·  %s[/color]\n[color=#a89a80]%s[/color]%s" % [
+			flags.append("[color=#F4D06F]transmuting[/color]")
+		return "[b]%s[/b]\n[color=#5CE1E6]%.1f °C  ·  %.0f mL  ·  pH %.1f  ·  %s[/color]\n[color=#B3ADD6]%s[/color]%s" % [
 			PotionNamer.name_for(m, v.foam_height_meters), m.temperature_kelvin - 273.15, m.get_liquid_volume_m3() * 1e6, m.get_ph(),
 			_vessel_kind(v), PotionNamer.formula_for(m), ("\n" + "  ·  ".join(flags)) if not flags.is_empty() else ""]
 	if target is Rock3D:
@@ -292,20 +323,20 @@ static func describe(target: Object) -> String:
 			MineralData.Kind.SAND: hint = "Drop it into the sand sifter and shake"
 			MineralData.Kind.GEM, MineralData.Kind.MINERAL, MineralData.Kind.FOSSIL:
 				hint = ("Facet it on the faceting machine" if m.can_facet and rock.polish >= 0.3 else "Polish it on the gem polisher") if rock.cut == RockMeshes.Cut.NONE else "A finished gem! Worth %d ◉" % rock.value()
-		return "[b]%s[/b]   [color=#%s]%s %s[/color]\n[color=#9fb7c9]%s  ·  Mohs %.1f  ·  %.0f g  ·  %d ◉[/color]\n[color=#cfc3a6][i]%s[/i][/color]\n[color=#a89a80]%s[/color]" % [
+		return "[b]%s[/b]   [color=#%s]%s %s[/color]\n[color=#5CE1E6]%s  ·  Mohs %.1f  ·  %.0f g  ·  %d ◉[/color]\n[color=#D9D3F5][i]%s[/i][/color]\n[color=#B3ADD6]%s[/color]" % [
 			rock.describe_name(), m.rarity_color().to_html(false), "★".repeat(m.rarity + 1), m.rarity_name(), m.formula, m.hardness_mohs,
 			rock.mass_kg * 1000.0, rock.value(), m.fun_fact.get_slice(".", 0) + ".", hint]
 	if target is Hammer3D:
-		return "[b]Geologist's Hammer[/b]\n[color=#a89a80]Hold it over a rock and press Space (or Strike) to smash it open.[/color]"
+		return "[b]Geologist's Hammer[/b]\n[color=#B3ADD6]Hold it over a rock and press Space (or Strike) to smash it open.[/color]"
 	if target is MachineHandle3D:
-		return "[b]Handle[/b]\n[color=#a89a80]Grab and drag it to work the machine.[/color]"
+		return "[b]Handle[/b]\n[color=#B3ADD6]Grab and drag it to work the machine.[/color]"
 	if target is StirTool3D:
 		var tool: StirTool3D = target as StirTool3D
 		var hint: String = "spins liquids the opposite way" if tool.chirality_bias_rad_s > 0.0 and tool.chirality_sign < 0.0 else ("whips up foam" if tool.agitation_gain > 1.5 else "drag it through a liquid to stir")
-		return "[b]%s[/b]\n[color=#a89a80]%s[/color]" % [String(tool.name).capitalize(), hint]
+		return "[b]%s[/b]\n[color=#B3ADD6]%s[/color]" % [String(tool.name).capitalize(), hint]
 	if target is Berry3D:
 		var berry: Berry3D = target as Berry3D
-		return "[b]%s[/b]  [color=#e8b04a]%s[/color]\n[color=#a89a80]Drop it into a vessel to burst it.[/color]" % [berry.juice.display_name.replace(" Juice", ""), berry.juice.chemical_formula]
+		return "[b]%s[/b]  [color=#F4D06F]%s[/color]\n[color=#B3ADD6]Drop it into a vessel to burst it.[/color]" % [berry.juice.display_name.replace(" Juice", ""), berry.juice.chemical_formula]
 	return ""
 
 

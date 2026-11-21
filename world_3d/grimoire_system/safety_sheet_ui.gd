@@ -108,16 +108,20 @@ func _ready() -> void:
 	visible = false
 	_root = Control.new()
 	_root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	CosmicTheme.apply(_root)
 	add_child(_root)
-	var dim: ColorRect = ColorRect.new()
-	dim.color = Color(0, 0, 0, 0.55)
-	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	# The sheet itself stays a crisp real-world paper document; the astral
+	# backdrop frames it like the rest of the cosmic UI.
+	var dim: ColorRect = CosmicTheme.backdrop(0.85)
 	dim.gui_input.connect(func(e: InputEvent) -> void:
 		if e is InputEventMouseButton and (e as InputEventMouseButton).pressed:
 			close())
 	_root.add_child(dim)
 	var panel: PanelContainer = PanelContainer.new()
-	panel.add_theme_stylebox_override(&"panel", GrimoireBookUI._box(PAPER, Color(0.2, 0.2, 0.22), 2, 4, 28))
+	var paper: StyleBoxFlat = GrimoireBookUI._box(PAPER, CosmicTheme.STARLIGHT_GOLD, 2, 4, 28)
+	paper.shadow_color = Color(CosmicTheme.VIOLET, 0.45)
+	paper.shadow_size = 22
+	panel.add_theme_stylebox_override(&"panel", paper)
 	panel.anchor_left = 0.5
 	panel.anchor_right = 0.5
 	panel.anchor_top = 0.04
