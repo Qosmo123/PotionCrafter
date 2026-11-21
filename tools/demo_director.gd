@@ -61,6 +61,8 @@ func _process(_delta: float) -> void:
 			(panel.get_child(0) as Control).add_child(tip)
 	if _args.has("crush"):
 		_crush_demo(bench)
+	if _args.has("rocks"):
+		_rocks_demo(bench)
 	if _args.has("facet"):
 		_facet_demo(bench)
 	if _args.has("brew"):
@@ -286,3 +288,23 @@ func _brew_demo(bench: Node) -> void:
 				GrimoireJournal.instance.pin(String(r.recipe_id))
 	if _frames == 10 and HudOverlay.instance != null:
 		HudOverlay.instance.set("_pin_vessel", bench.get_node("Vessels/FlaskMoonwater"))
+
+
+## 4K rock and gem surfaces: a row of rough specimens, frozen for a close look.
+func _rocks_demo(bench: Node) -> void:
+	if _frames == 2:
+		var cam: LabCamera3D = bench.get_node("Camera3D") as LabCamera3D
+		cam.go_to_station(1)
+		cam.set("_zoom_target", 0.35)
+	if _frames != 40:
+		return
+	var ids: Array = ["granite", "basalt", "sandstone", "shale", "gneiss", "pyrite_cluster", "galena",
+		"amethyst", "emerald", "ruby", "trilobite", "malachite_ore", "river_sand"]
+	for i: int in ids.size():
+		var m: MineralData = Rock3D.get_mineral(ids[i])
+		if m == null:
+			continue
+		var row: int = i / 7
+		var rock: Rock3D = Rock3D.spawn(bench, m, Vector3(2.66 + 0.11 * float(i % 7), 1.08 - 0.11 * float(row), 0.35), m.typical_mass_kg * (3.0 if m.kind != MineralData.Kind.ROCK else 1.0))
+		rock.freeze = true
+		rock.rotation = Vector3(0.5, 0.4 * float(i), 0.2)

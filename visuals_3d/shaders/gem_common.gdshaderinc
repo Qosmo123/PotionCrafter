@@ -25,6 +25,11 @@ uniform float metallic_amount : hint_range(0.0, 1.0) = 0.0;
 uniform float inclusion_amount : hint_range(0.0, 1.0) = 0.15;
 uniform float size_meters = 0.01;
 uniform float seed = 0.0;
+// Raw-crystal surface (4K tileable, triplanar in size-normalised object space).
+uniform sampler2D etch_normal : hint_normal, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D etch_rough : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform float rough_surface : hint_range(0.0, 1.0) = 0.0;
+uniform float etch_scale = 0.7;
 
 #ifdef GEM_SCREEN_REFRACTION
 uniform sampler2D screen_texture : hint_screen_texture, filter_linear_mipmap, repeat_disable;
@@ -88,6 +93,21 @@ void fragment() {
 	mat3 to_obj = transpose(mat3(MODEL_MATRIX));
 	vec3 v_obj = normalize(to_obj * (mat3(INV_VIEW_MATRIX) * VIEW));
 	vec3 n_obj = normalize(obj_normal);
+	float etch_r = 0.0;
+	if (rough_surface > 0.001) {
+		// Triplanar etched faces: perturb the normal (in object space) and
+		// frost the roughness. Fades out as the stone is polished.
+		vec3 tw = pow(abs(n_obj), vec3(4.0));
+		tw /= max(tw.x + tw.y + tw.z, 1e-4);
+		vec3 ep = obj_pos * etch_scale;
+		vec2 nx = texture(etch_normal, ep.zy).xy * 2.0 - 1.0;
+		vec2 ny = texture(etch_normal, ep.xz).xy * 2.0 - 1.0;
+		vec2 nz = texture(etch_normal, ep.xy).xy * 2.0 - 1.0;
+		vec3 dn = vec3(0.0, nx.y, nx.x) * tw.x + vec3(ny.x, 0.0, ny.y) * tw.y + vec3(nz.x, nz.y, 0.0) * tw.z;
+		n_obj = normalize(n_obj + dn * rough_surface * 1.2);
+		NORMAL = normalize((VIEW_MATRIX * MODEL_MATRIX * vec4(n_obj, 0.0)).xyz);
+		etch_r = texture(etch_rough, ep.zy).r * tw.x + texture(etch_rough, ep.xz).r * tw.y + texture(etch_rough, ep.xy).r * tw.z;
+	}
 	float n_dot_v = clamp(dot(NORMAL, VIEW), 0.001, 1.0);
 	float f0 = pow((ior - 1.0) / (ior + 1.0), 2.0);
 	float fresnel = f0 + (1.0 - f0) * pow(1.0 - n_dot_v, 5.0);
@@ -186,7 +206,7 @@ void fragment() {
 
 	ALBEDO = mix(body, body * 0.12, clarity) * (1.0 - metallic_amount * 0.2);
 	EMISSION = emit;
-	ROUGHNESS = mix(0.65, 0.025, polish);
+	ROUGHNESS = mix(mix(0.65, 0.025, polish), clamp(etch_r, 0.0, 1.0), rough_surface * 0.7);
 	METALLIC = metallic_amount;
 	SPECULAR = clamp(f0 / 0.08 * 0.5, 0.2, 1.0);
 #ifndef GEM_OPAQUE

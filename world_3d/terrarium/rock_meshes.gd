@@ -487,6 +487,10 @@ static func _strip(tb: TriBuilder, a: Array[Vector3], ta: int, b: Array[Vector3]
 ## Real-looking stone material. Transparent/translucent gems and minerals (and
 ## any stone with an optical phenomenon) use the gem shader; tier-aware, so
 ## Android never gets the screen-texture variant.
+const ETCH_NORMAL: Texture2D = preload("res://content/textures_4k/crystal_etched_normal.jpg")
+const ETCH_ROUGH: Texture2D = preload("res://content/textures_4k/crystal_etched_rough.jpg")
+
+
 static func material_for(m: MineralData, polish: float, cut: int) -> Material:
 	var transparent_stone: bool = m.diaphaneity != MineralData.Diaphaneity.OPAQUE and m.kind in [MineralData.Kind.GEM, MineralData.Kind.MINERAL]
 	var phenomenal: bool = m.phenomenon != MineralData.Phenomenon.NONE and m.phenomenon != MineralData.Phenomenon.FLUORESCENCE
@@ -526,6 +530,11 @@ static func gem_material(m: MineralData, polish: float, cut: int, see_through: b
 	mat.set_shader_parameter(&"glow_color", m.emission)
 	mat.set_shader_parameter(&"glow_energy", glow_e)
 	mat.set_shader_parameter(&"seed", float(hash(m.mineral_id) % 97) * 0.37)
+	# Raw crystals: frosty etched 4K faces (pits, striations) that polishing
+	# and cutting clear away.
+	mat.set_shader_parameter(&"etch_normal", ETCH_NORMAL)
+	mat.set_shader_parameter(&"etch_rough", ETCH_ROUGH)
+	mat.set_shader_parameter(&"rough_surface", (1.0 - polish) if cut == Cut.NONE else 0.0)
 	return mat
 
 
@@ -562,4 +571,36 @@ static func _standard(m: MineralData, polish: float, cut: int) -> StandardMateri
 		mat.emission_enabled = true
 		mat.emission = m.emission
 		mat.emission_energy_multiplier = 1.0 + polish * 1.5 + (1.0 if cut != Cut.NONE else 0.0)
+	_apply_rock_texture(mat, m, polish)
 	return mat
+
+
+## 4K surface for an opaque stone: which set and how big one tile is (metres).
+static func rock_texture_set(m: MineralData) -> Array:
+	if m.shape == MineralData.Shape.BAG:
+		return ["burlap", 0.12]
+	match m.kind:
+		MineralData.Kind.ROCK:
+			var layered: bool = m.mineral_class.contains("Sedimentary") or m.mineral_class.contains("Metamorphic")
+			return ["rock_layered", 0.08] if layered else ["rock_granular", 0.06]
+		MineralData.Kind.FOSSIL:
+			return ["stone", 0.06]
+	if m.luster == MineralData.Luster.METALLIC:
+		return ["ore_metallic", 0.04]
+	return ["crystal_etched", 0.03]
+
+
+## Tileable 4K detail (triplanar). Rough stones show the full texture; the
+## bumps and matte patches fade as the stone is polished.
+static func _apply_rock_texture(mat: StandardMaterial3D, m: MineralData, polish: float) -> void:
+	var info: Array = rock_texture_set(m)
+	var roughness_now: float = mat.roughness
+	PropMaterials.apply_set(mat, String(info[0]), float(info[1]))
+	# Albedo maps are mid-grey detail: lift the tint so stones keep their colour.
+	var c: Color = mat.albedo_color
+	mat.albedo_color = Color(minf(c.r * 1.3, 1.0), minf(c.g * 1.3, 1.0), minf(c.b * 1.3, 1.0), c.a)
+	if m.shape == MineralData.Shape.BAG:
+		mat.albedo_color = Color(0.95, 0.9, 0.85)
+	# The roughness map is absolute (~0.75 average): scale it to the stone's finish.
+	mat.roughness = clampf(roughness_now / 0.75, 0.02, 1.0)
+	mat.normal_scale = lerpf(1.0, 0.12, polish)

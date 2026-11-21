@@ -87,12 +87,15 @@ def wood():
     f = phase - np.floor(phase)
     width_jitter = noise(2.8, lo=0.0, hi=0.01)
     f = np.clip(f * (0.8 + 0.4 * width_jitter), 0, 1)
-    rings = np.clip((f - 0.72) / 0.2, 0, 1) ** 1.5 * (1.0 - np.clip((f - 0.93) / 0.07, 0, 1))
+    # Broad, soft latewood gradients (no hard "contour line" edges).
+    rings = np.clip((f - 0.45) / 0.45, 0, 1) ** 2.0 * (1.0 - np.clip((f - 0.9) / 0.1, 0, 1))
     grain = noise(1.2, sx=0.02, sy=1.0, lo=0.004, hi=0.5)      # long streaks along x
     fine = noise(0.6, sx=0.06, sy=1.0, lo=0.05, hi=0.5)
     pores = (noise(0.2, sx=0.12, sy=1.0, lo=0.15, hi=0.5) > 0.8).astype(np.float64)
-    tone = 0.72 - 0.11 * rings + 0.3 * (grain - 0.5) + 0.12 * (fine - 0.5) - 0.08 * pores
-    height = 0.2 * rings + 0.9 * grain + 0.35 * fine - 0.5 * pores
+    # Broad colour streaks along the board read as wood more than ring lines do.
+    streaks = noise(2.0, sx=40.0, sy=1.0, lo=0.002, hi=0.05)
+    tone = 0.72 - 0.035 * rings + 0.3 * (grain - 0.5) + 0.12 * (fine - 0.5) + 0.16 * (streaks - 0.5) - 0.08 * pores
+    height = 0.03 * rings + 0.9 * grain + 0.35 * fine - 0.5 * pores
     rough = 0.62 + 0.15 * (grain - 0.5) + 0.1 * pores - 0.08 * rings
     save("wood", warm(tone, (1.0, 0.93, 0.85)), height, rough, 6.0)
 
@@ -179,8 +182,106 @@ def cork():
     save("cork", warm(tone, (1.0, 0.95, 0.88)), height, rough, 6.0)
 
 
+def rock_granular():
+    """Igneous rock (granite, gabbro): interlocking mineral grains of three
+    tones (dark mafics, pale feldspar, glassy quartz) with fine pits."""
+    a = noise(0.6, lo=0.02, hi=0.12)
+    b = noise(0.6, lo=0.02, hi=0.12)
+    dark = (a > 0.62).astype(np.float64)
+    pale = ((b > 0.6) & (a < 0.5)).astype(np.float64)
+    fine = noise(0.4, lo=0.1, hi=0.5)
+    pits = (noise(0.5, lo=0.08, hi=0.4) < 0.15).astype(np.float64)
+    tone = 0.72 - 0.38 * dark + 0.22 * pale + 0.1 * (fine - 0.5) - 0.2 * pits
+    albedo = np.stack([tone + pale * 0.04, tone + pale * 0.02, tone - pale * 0.02], axis=-1)
+    height = 0.5 * a + 0.4 * fine - 0.9 * pits + 0.3 * pale
+    rough = 0.8 - 0.25 * pale * (b > 0.75) + 0.08 * pits
+    save("rock_granular", albedo, height, rough, 7.0)
+
+
+def rock_layered():
+    """Sedimentary rock (limestone, sandstone, shale): wavy bedding layers
+    of varying tone and thickness, with sand grains and small voids."""
+    yy = np.mgrid[0:SIZE, 0:SIZE][0] / SIZE
+    bend = noise(2.6, lo=0.0, hi=0.008)
+    layers = noise(1.6, sx=40.0, sy=1.0, lo=0.003, hi=0.08)  # bands: varies along y only
+    layers = warp(layers, bend, bend, 0.04)
+    grains = noise(0.3, lo=0.15, hi=0.5)
+    voids = (noise(0.5, lo=0.05, hi=0.3) < 0.12).astype(np.float64)
+    tone = 0.66 + 0.3 * (layers - 0.5) + 0.1 * (grains - 0.5) - 0.25 * voids
+    height = 0.8 * layers + 0.35 * grains - 0.9 * voids
+    rough = 0.86 + 0.06 * (grains - 0.5)
+    save("rock_layered", warm(tone, (1.0, 0.97, 0.92)), height, rough, 6.0)
+
+
+def crystal_etched():
+    """Raw crystal faces: frosty micro-etch, triangular etch pits, parallel
+    growth striations and a few fine fractures. Near-white albedo."""
+    frost = noise(0.2, lo=0.2, hi=0.5)
+    stria = noise(1.0, sx=40.0, sy=1.0, lo=0.01, hi=0.2)
+    pits = np.zeros((SIZE, SIZE))
+    tri = np.zeros((SIZE, SIZE))
+    yy, xx = np.mgrid[0:SIZE, 0:SIZE]
+    cell = SIZE // 48
+    jitter = RNG.integers(0, cell, (48, 48, 2))
+    on = RNG.random((48, 48)) < 0.35
+    size = RNG.integers(cell // 6, cell // 3, (48, 48))
+    lx = (xx % cell)
+    ly = (yy % cell)
+    cx = jitter[yy // cell % 48, xx // cell % 48, 0]
+    cy = jitter[yy // cell % 48, xx // cell % 48, 1]
+    s = size[yy // cell % 48, xx // cell % 48]
+    dx = (lx - cx) / np.maximum(s, 1)
+    dy = (ly - cy) / np.maximum(s, 1)
+    # Triangle (trigon) membership: three half-planes.
+    inside = (dy < 0.5) & (dy > -1.0 + np.abs(dx) * 1.7)
+    tri = inside.astype(np.float64) * on[yy // cell % 48, xx // cell % 48]
+    depth = np.clip(1.0 - np.sqrt(dx * dx + (dy + 0.25) ** 2), 0, 1)
+    pits = tri * depth
+    cracks = 1.0 - np.abs(noise(1.8, lo=0.003, hi=0.05) - 0.5) * 2
+    cracks = np.clip((cracks - 0.965) * 30, 0, 1)
+    tone = 0.92 + 0.05 * (frost - 0.5) - 0.12 * tri - 0.15 * cracks
+    height = 0.25 * frost + 0.5 * stria - 1.2 * pits - 0.6 * cracks
+    rough = 0.55 + 0.25 * frost - 0.2 * tri + 0.1 * cracks
+    save("crystal_etched", tone, height, rough, 5.0)
+
+
+def ore_metallic():
+    """Metallic ore (pyrite, galena): striated crystal faces with tarnish."""
+    stria = noise(1.2, sx=40.0, sy=1.0, lo=0.01, hi=0.3)
+    stria2 = noise(1.2, sx=1.0, sy=40.0, lo=0.01, hi=0.3)
+    tarnish = noise(2.6, lo=0.0, hi=0.02)
+    pits = (noise(0.5, lo=0.08, hi=0.4) < 0.12).astype(np.float64)
+    tone = 0.88 + 0.06 * (stria - 0.5) - 0.3 * np.clip(tarnish - 0.6, 0, 1) - 0.2 * pits
+    tarn = np.clip((tarnish - 0.6) * 3, 0, 1)
+    albedo = np.stack([tone + tarn * 0.05, tone - tarn * 0.02, tone + tarn * 0.08], axis=-1)
+    height = 0.7 * stria + 0.3 * stria2 - 1.0 * pits
+    rough = 0.3 + 0.2 * tarn + 0.1 * pits
+    save("ore_metallic", albedo, height, rough, 4.0)
+
+
+def burlap():
+    """Coarse woven jute sacking for sand bags: over-under weave with fuzz."""
+    yy, xx = np.mgrid[0:SIZE, 0:SIZE]
+    threads = 64
+    u = xx / SIZE * threads
+    v = yy / SIZE * threads
+    wobble = noise(2.0, lo=0.002, hi=0.03)
+    u = u + (wobble - 0.5) * 2.0
+    v = v + (noise(2.0, lo=0.002, hi=0.03) - 0.5) * 2.0
+    warp_t = np.abs(np.sin(u * np.pi))
+    weft_t = np.abs(np.sin(v * np.pi))
+    over = ((np.floor(u) + np.floor(v)) % 2).astype(np.float64)
+    h = np.where(over > 0.5, warp_t, weft_t)
+    fuzz = noise(0.3, lo=0.2, hi=0.5)
+    tone = 0.62 + 0.3 * h + 0.12 * (fuzz - 0.5)
+    height = h + 0.2 * fuzz
+    rough = 0.95 - 0.05 * h
+    save("burlap", warm(tone, (1.0, 0.9, 0.72)), height, rough, 6.0)
+
+
 if __name__ == "__main__":
     wanted = set(sys.argv[2:])
-    for fn in (wood, metal, iron, leather, ceramic, stone, parchment, cork):
+    for fn in (wood, metal, iron, leather, ceramic, stone, parchment, cork,
+               rock_granular, rock_layered, crystal_etched, ore_metallic, burlap):
         if not wanted or fn.__name__ in wanted:
             fn()
