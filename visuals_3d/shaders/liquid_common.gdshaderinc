@@ -17,6 +17,10 @@
 //     refracted by the curved surface and multiplied by the transmission.
 //     Mobile: no screen reads; transparency + dark absorptive tint instead.
 //   * Glossy surface with Fresnel: clear highlights, brighter at grazing angles.
+// Alive: the surface line always wobbles a little (more when shaken), the
+// meniscus climbs the glass at the walls, a bright edge with a shadow band
+// marks the waterline, deeper liquid is darker and richer, clear liquids
+// carry a slow caustic shimmer, and round bubbles drift up.
 // Front faces = liquid seen through the wall; back faces = the free surface,
 // seen from above (intersected properly with the surface plane). Up to 3
 // density layers, foam head, bubbles, swirl, glitter, rainbow, arcane glow.
@@ -53,6 +57,9 @@ uniform float absorption_per_m = 140.0;
 // turbidity (t^2.5): water (0.03) stays crystal clear, soap (0.25) is hazy,
 // glue/milk (0.7+) turn opaque.
 uniform float scatter_per_m = 420.0;
+// Idle surface wobble (metres) and meniscus climb at the glass (metres).
+uniform float idle_wave_meters = 0.0007;
+uniform float meniscus_climb_meters = 0.0018;
 
 #ifdef LIQUID_SCREEN_REFRACTION
 uniform sampler2D screen_tex : hint_screen_texture, filter_linear_mipmap;
@@ -112,6 +119,12 @@ void fragment() {
 	float R = vessel_radius_meters;
 	float vortex_k = swirl_rad_s * swirl_rad_s / (2.0 * GRAVITY);
 	float surface_offset = vortex_k * (r * r - 0.5 * R * R);
+	// Living surface: two travelling waves (stronger when agitated) and the
+	// meniscus curling up where the liquid meets the glass.
+	float wave_amp = idle_wave_meters + agitation * 0.004 + effervescence * 0.0015;
+	float wave = (sin(world_pos.x * 190.0 + TIME * 3.1) * 0.6 + sin(world_pos.x * 330.0 - world_pos.z * 140.0 - TIME * 4.7) * 0.4) * wave_amp;
+	float climb = meniscus_climb_meters * smoothstep(0.78, 1.0, clamp(r / max(R, 1e-4), 0.0, 1.0));
+	surface_offset -= wave + climb;
 	float signed_dist = dot(rel, surface_normal_world) - surface_offset;
 	if (fill_fraction <= 0.0005 || signed_dist > foam_thickness_meters) {
 		discard;
@@ -169,8 +182,11 @@ void fragment() {
 			col.a = max(col.a, rainbow * 0.6);
 		}
 		float swirl_band = sin(ang * 3.0 - TIME * swirl_rad_s * 0.6 + depth_m * 70.0) * clamp(abs(swirl_rad_s) * 0.04, 0.0, 0.2);
-		vec3 cell = floor(vec3(world_pos.x, world_pos.y - TIME * 0.06, world_pos.z) * 420.0);
-		float bubble = step(1.0 - effervescence * 0.06, hash13(cell));
+		vec3 bp = vec3(world_pos.x, world_pos.y - TIME * (0.035 + effervescence * 0.05), world_pos.z) * 380.0;
+		vec3 bcell = floor(bp);
+		vec3 bf = fract(bp) - 0.5;
+		float bubble_rate = 0.0015 + effervescence * 0.08;
+		float bubble = step(1.0 - bubble_rate, hash13(bcell)) * smoothstep(0.32, 0.22, length(bf.xy));
 		vec3 aura = emission_hdr.rgb * (0.8 + 0.2 * sin(TIME * 1.7 + depth_m * 90.0 + ang * 2.0));
 		vec3 flake_cell = floor(world_pos * 700.0 + vec3(0.0, TIME * 0.4, 0.0));
 		float flake = step(1.0 - glitter * 0.035, hash13(flake_cell)) * (0.5 + 0.5 * sin(TIME * 9.0 + hash13(flake_cell + 7.0) * 40.0));
@@ -206,7 +222,16 @@ void fragment() {
 			meniscus = smoothstep(0.85, 1.0, clamp(r / max(R, 1e-4), 0.0, 1.0));
 			ROUGHNESS = 0.05 + agitation * 0.05;
 		}
+		// Deeper liquid looks darker and richer (longer light path to the eye).
+		path_m += depth_m * 0.5;
 		vec3 transmit = exp(-sigma * path_m);
+		// Waterline: a bright edge right at the surface and a soft shadow band below.
+		float edge = (1.0 - smoothstep(0.0, 0.0012, depth_m)) * (FRONT_FACING ? 1.0 : 0.0);
+		float shadow_band = smoothstep(0.0008, 0.003, depth_m) * (1.0 - smoothstep(0.003, 0.009, depth_m)) * (FRONT_FACING ? 1.0 : 0.0);
+		transmit *= 1.0 - shadow_band * 0.22;
+		// Caustic shimmer: slow light ripples, strongest in clear liquids.
+		vec2 cq = vec2(world_pos.x * 140.0 + TIME * 0.6, world_pos.y * 140.0 - TIME * 0.4);
+		float caustic = pow(abs(sin(cq.x + vnoise(cq * 0.7) * 3.0) * sin(cq.y * 0.8 + vnoise(cq.yx * 0.6) * 3.0)), 6.0);
 		float transmit_avg = (transmit.r + transmit.g + transmit.b) / 3.0;
 		// Scattering: cloudy liquids glow with their own (lit) colour.
 		float scatter = 1.0 - exp(-scatter_coeff(turbidity) * path_m);
@@ -219,14 +244,16 @@ void fragment() {
 		float blur = clamp(scatter * 5.0, 0.0, 4.0);
 		vec3 behind = textureLod(screen_tex, SCREEN_UV - bend, blur).rgb;
 		ALBEDO = tint * scatter * 0.9 + vec3(bubble * 0.5) + surface_color.rgb * meniscus * 0.25;
-		EMISSION = behind * transmit * (1.0 - fresnel) + aura * (0.4 + 0.6 * (1.0 - transmit_avg));
+		EMISSION = behind * transmit * (1.0 - fresnel) + aura * (0.4 + 0.6 * (1.0 - transmit_avg))
+			+ tint * caustic * transmit_avg * 0.25 + vec3(edge * 0.35) + vec3(bubble * 0.4);
 		ALPHA = clamp(0.94 + meniscus * 0.06, 0.0, 1.0);
 #else
 		// No screen reads on mobile: darken by absorption, light only the scatter.
 		float opacity = clamp(1.0 - transmit_avg, 0.0, 1.0);
 		ALBEDO = mix(tint * 0.35, tint, scatter) * (0.4 + 0.6 * scatter) + vec3(bubble * 0.5) + surface_color.rgb * meniscus * 0.25;
 		ALPHA = clamp(0.06 + opacity * 0.85 + scatter * 0.3 + fresnel * 0.4 + meniscus * 0.2 + bubble * 0.3, 0.0, 0.97);
-		EMISSION = aura * (0.35 + 0.65 * opacity);
+		EMISSION = aura * (0.35 + 0.65 * opacity) + tint * caustic * (1.0 - opacity) * 0.2 + vec3(edge * 0.3);
+		ALPHA = clamp(ALPHA + edge * 0.4 - shadow_band * 0.0, 0.0, 0.98);
 #endif
 		SPECULAR = FRONT_FACING ? 0.6 : 0.4;
 		if (!FRONT_FACING && foam_thickness_meters > 0.0008) {

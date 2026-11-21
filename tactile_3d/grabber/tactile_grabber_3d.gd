@@ -15,6 +15,13 @@ extends Node3D
 ##          second click when they have a target, instead of being dropped.
 ## Android: one finger = move, second finger twist = tilt/pour.
 ##
+## Side view (2.5D, orthographic camera): the cursor moves held items left/
+## right and up/down only. Depth is automatic: a column of downward probes at
+## the cursor finds the surface under it in the 2D view (anvil, machine,
+## another vessel's rim, the bench) and the item slides to that depth and
+## hovers just above it, so pouring and placing never need depth control.
+## Cranks (machine handles) keep the classic horizontal-plane drag.
+##
 ## Carry feel: the hand point under the cursor glides toward the pointer at a
 ## limited speed (it never jumps), so a quick mouse flick can't fling a light
 ## vial across the bench; objects let go with a capped speed so they settle
@@ -54,6 +61,14 @@ const MAX_OMEGA_DT: float = 0.3
 ## Pick tolerance around the cursor for the mouse, in screen pixels.
 @export var mouse_pick_radius_px: float = 14.0
 
+@export_group("Side view")
+## Depth range the auto-depth probes search (world z), front to back.
+@export var probe_front_z: float = 0.5
+@export var probe_back_z: float = -0.4
+@export var probe_step_z: float = 0.06
+## Lowest the hand may go (just above the bench top).
+@export var floor_y_meters: float = 0.81
+
 @export_group("Tilt input")
 @export var wheel_tilt_step_rad: float = 0.14
 @export var mouse_tilt_rad_per_px: float = 0.008
@@ -74,6 +89,12 @@ var _target_world: Vector3 = Vector3.ZERO
 ## Where the pointer says the hand should be; _target_world chases it.
 var _pointer_target_world: Vector3 = Vector3.ZERO
 var _tracked_body: RigidBody3D = null
+var _probe: RayCast3D
+## Height from the held item's centre to its underside (measured at pick-up).
+var _half_height: float = 0.03
+var _probe_tick: int = 0
+var _surface_y: float = 0.8
+var _surface_z: float = 0.15
 ## Mouse click-to-hold state.
 var _press_pos: Vector2 = Vector2.ZERO
 var _press_ms: int = 0
@@ -113,6 +134,13 @@ func _ready() -> void:
 	_pick_cast.max_results = 1
 	_pick_cast.collision_mask = PICK_MASK
 	add_child(_pick_cast)
+
+	_probe = RayCast3D.new()
+	_probe.enabled = false
+	_probe.top_level = true
+	_probe.collision_mask = SimConstants.LAYER_STATIC_BENCH | SimConstants.LAYER_RIGID_VESSEL | SimConstants.LAYER_SOLID_REAGENT
+	_probe.hit_back_faces = false
+	add_child(_probe)
 
 
 # --- Input routing ----------------------------------------------------------------
@@ -252,6 +280,7 @@ func _physics_process(_delta: float) -> void:
 		_tracked_body = held_body
 		_target_world = held_body.global_position
 		_pointer_target_world = _target_world
+		_on_new_hold()
 	_update_target()
 	_drive_linear()
 	if not (held_body.has_method(&"wants_free_rotation") and held_body.call(&"wants_free_rotation")):
@@ -299,7 +328,109 @@ func _touch_pick_radius_meters() -> float:
 	return clampf(radius_px * view_h_m / viewport_h, 0.005, 0.08)
 
 
+## True when the camera is orthographic: the game plays as a 2.5D side view.
+func is_side_view() -> bool:
+	return camera != null and camera.projection == Camera3D.PROJECTION_ORTHOGONAL
+
+
+func _on_new_hold() -> void:
+	_probe.clear_exceptions()
+	_probe.add_exception(held_body)
+	# Measure how far the item's underside sits below its centre.
+	var p: Vector3 = held_body.global_position
+	var hit_y: float = _cast_down(p + Vector3(0.0, 0.002, 0.0), p.y - 0.4)
+	_half_height = clampf(p.y - hit_y, 0.008, 0.2) if not is_nan(hit_y) else 0.03
+	_surface_z = p.z
+	_probe_tick = 0
+
+
+## Downward ray (excluding the held item); returns the hit height or NAN.
+func _cast_down(from: Vector3, to_y: float) -> float:
+	_probe.global_transform = Transform3D(Basis.IDENTITY, from)
+	_probe.target_position = Vector3(0.0, to_y - from.y, 0.0)
+	_probe.force_raycast_update()
+	return _probe.get_collision_point().y if _probe.is_colliding() else NAN
+
+
+## Point on the vertical work plane z = `plane_z` under the screen position.
+func cursor_on_plane(screen: Vector2, plane_z: float) -> Vector3:
+	var origin: Vector3 = camera.project_ray_origin(screen)
+	var dir: Vector3 = camera.project_ray_normal(screen)
+	if absf(dir.z) < 1e-4:
+		return origin
+	return origin + dir * ((plane_z - origin.z) / dir.z)
+
+
+## The surface under the cursor in the 2D view: probes every depth and keeps
+## the highest surface below the cursor (a machine, rim or rock beats the
+## plain bench); ties keep the current depth. Returns Vector2(y, z).
+func surface_under(x: float, from_y: float, current_z: float) -> Vector2:
+	var best_y: float = -INF
+	var best_z: float = current_z
+	var current_y: float = -INF
+	var z: float = probe_front_z
+	while z >= probe_back_z - 1e-4:
+		var y: float = _cast_down(Vector3(x, from_y, z), from_y - 0.6)
+		if not is_nan(y):
+			if y > best_y + 0.01:
+				best_y = y
+				best_z = z
+			if absf(z - current_z) < probe_step_z * 0.5:
+				current_y = y
+		z -= probe_step_z
+	if current_y >= best_y - 0.01:
+		best_z = current_z
+		best_y = maxf(current_y, best_y)
+	return Vector2(best_y if best_y > -INF else floor_y_meters - 0.01, best_z)
+
+
+## Where a satchel item dropped at `screen` would land (side view).
+func side_drop_point(screen: Vector2) -> Dictionary:
+	var p: Vector3 = cursor_on_plane(screen, 0.15)
+	_probe.clear_exceptions()
+	if held_body != null:
+		_probe.add_exception(held_body)
+	var s: Vector2 = surface_under(p.x, p.y, 0.15)
+	var flat_x: float = p.x - global_position.x
+	if absf(flat_x) > reach_radius_meters:
+		return {"valid": false, "position": Vector3(p.x, s.x, s.y), "reason": "Out of reach: drop it closer, or switch station"}
+	if p.y < s.x - 0.01:
+		return {"valid": false, "position": Vector3(p.x, s.x, s.y), "reason": "Drop it above the bench"}
+	return {"valid": true, "position": Vector3(p.x, s.x, s.y), "reason": ""}
+
+
+func _update_target_side() -> void:
+	var dt: float = 1.0 / float(Engine.physics_ticks_per_second)
+	var cur: Vector3 = cursor_on_plane(_pointer_screen, _target_world.z)
+	var override_y: float = NAN
+	if held_body.has_method(&"get_hover_override_y"):
+		override_y = held_body.call(&"get_hover_override_y") as float
+	# Probe the depth column every other tick (16 short rays, allocation-free).
+	_probe_tick += 1
+	if _probe_tick % 2 == 1:
+		var s: Vector2 = surface_under(cur.x, maxf(cur.y, floor_y_meters) + 0.01, _surface_z)
+		_surface_y = s.x
+		_surface_z = s.y
+	var want_y: float = maxf(maxf(cur.y, _surface_y + _half_height + 0.006), floor_y_meters)
+	if not is_nan(override_y):
+		want_y = override_y
+	var center: Vector3 = global_position
+	var want_x: float = center.x + clampf(cur.x - center.x, -reach_radius_meters, reach_radius_meters)
+	_pointer_target_world = Vector3(want_x, want_y, _surface_z)
+	var speed: float = precise_speed_m_s if Input.is_key_pressed(KEY_SHIFT) else carry_speed_m_s
+	var cur_xy: Vector2 = Vector2(_target_world.x, _target_world.y)
+	var want_xy: Vector2 = Vector2(want_x, want_y)
+	cur_xy = cur_xy.move_toward(want_xy, speed * dt)
+	if not is_nan(override_y):
+		cur_xy.y = override_y  # hammer slams stay instant
+	var z: float = move_toward(_target_world.z, _surface_z, lift_speed_m_s * dt)
+	_target_world = Vector3(cur_xy.x, cur_xy.y, z)
+
+
 func _update_target() -> void:
+	if is_side_view() and not (held_body is MachineHandle3D):
+		_update_target_side()
+		return
 	var origin: Vector3 = camera.project_ray_origin(_pointer_screen)
 	var dir: Vector3 = camera.project_ray_normal(_pointer_screen)
 	if absf(dir.y) < 1e-4:

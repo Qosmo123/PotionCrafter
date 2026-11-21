@@ -110,7 +110,10 @@ func apply() -> void:
 		env.ssil_radius = 1.2
 		env.ssil_intensity = 0.8
 
-		env.volumetric_fog_enabled = high
+		# Volumetric fog froxels assume a perspective camera; the 2.5D side view
+		# (orthographic) would just get a uniform haze, so it's skipped there.
+		var cam: Camera3D = get_viewport().get_camera_3d()
+		env.volumetric_fog_enabled = high and not (cam != null and cam.projection == Camera3D.PROJECTION_ORTHOGONAL)
 		env.volumetric_fog_density = 0.035
 		env.volumetric_fog_albedo = Color(0.95, 0.85, 0.72)
 		env.volumetric_fog_anisotropy = 0.65

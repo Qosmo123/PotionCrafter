@@ -14,6 +14,6 @@ void fragment() {
 	NORMAL = n;
 	ALBEDO = edge_tint * 0.05;
 	ALPHA = clamp((0.02 + fresnel * 0.6 + (1.0 - n_dot_v) * 0.08) * strength, 0.0, 0.6);
-	ROUGHNESS = 0.02;
+	ROUGHNESS = 0.07;  // softer pin-point light glints
 	SPECULAR = 0.6;
 }

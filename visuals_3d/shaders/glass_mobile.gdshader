@@ -8,7 +8,7 @@ uniform vec3 edge_tint : source_color = vec3(0.55, 0.85, 0.78);
 uniform float ior = 1.47;
 uniform float wall_thickness_meters = 0.0022;
 uniform float absorption_per_meter = 55.0;
-uniform float glass_roughness : hint_range(0.0, 1.0) = 0.02;
+uniform float glass_roughness : hint_range(0.0, 1.0) = 0.06;
 
 void fragment() {
 	float n_dot_v = clamp(dot(NORMAL, VIEW), 0.001, 1.0);

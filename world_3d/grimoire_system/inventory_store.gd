@@ -150,6 +150,8 @@ func find_item(id: String) -> Dictionary:
 ## Where a satchel item would land if dropped at `screen`: the bench surface
 ## under the pointer, within arm's reach. {valid, position, reason}
 func drop_point(camera: Camera3D, screen: Vector2) -> Dictionary:
+	if grabber != null and grabber.is_side_view():
+		return grabber.side_drop_point(screen)
 	if camera == null:
 		return {"valid": false, "position": Vector3.ZERO, "reason": "No camera"}
 	var origin: Vector3 = camera.project_ray_origin(screen)

@@ -8,6 +8,7 @@ const STATION_RUNES: PackedStringArray = ["☿", "◆", "⊕"]  # alchemical gly
 const STATION_NAMES: PackedStringArray = ["Potion Bench", "Mineral Lab", "Science Bench"]
 const HELP_TEXT: String = """[b][color=#F4D06F]Hands[/color][/b]
   Click  ·  pick something up, move the mouse, click again to put it down (dragging works too)
+  Side view  ·  move left/right and up/down; held items slide onto whatever is under them
   Shift while moving  ·  slow, precise placement
   Wheel / right-drag while holding  ·  tilt and pour
   Wheel when empty-handed  ·  zoom      ·  Two fingers: twist to tilt, pinch to zoom

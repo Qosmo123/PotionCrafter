@@ -15,6 +15,8 @@ var _rock: Rock3D = null
 var _hammer: Hammer3D = null
 var _hits: int = 0
 var _click_pos: Vector2 = Vector2.ZERO
+var _beaker: Vessel3D = null
+var _hover_screen: Vector2 = Vector2.ZERO
 
 
 func _initialize() -> void:
@@ -76,7 +78,20 @@ func _physics_process(_delta: float) -> bool:
 		_hammer._cooldown = 0.0
 		if _hammer.click_use():
 			_hits += 1
-	if _tick == 400:
+	if _tick == 400 and _grabber.is_side_view():
+		# 2.5D side view: hold the flask over the beaker (a different depth).
+		_beaker = _bench.get_node("Vessels/Beaker") as Vessel3D
+		_grabber.held_body = _vial
+		_hover_screen = _camera.unproject_position(_beaker.global_position + Vector3(0.0, 0.2, 0.0))
+		_grabber._pointer_screen = _hover_screen
+	if _tick == 520 and _grabber.is_side_view():
+		var dz: float = absf(_vial.global_position.z - _beaker.global_position.z)
+		_check(dz < 0.07, "side view: the flask slides to the beaker's depth automatically (dz %.3f m)" % dz)
+		_check(_vial.global_position.y > _beaker.global_position.y + 0.05, "side view: the flask hovers above the beaker (y %.3f)" % _vial.global_position.y)
+		_grabber.release()
+	if _tick == 400 and not _grabber.is_side_view():
+		_tick = 529
+	if _tick == 530:
 		_check(not is_instance_valid(_rock) or _rock.is_queued_for_deletion(), "granite cracks with easy clicks (still whole after %d hits)" % _hits)
 		_check(_hits > 0 and _hits <= 5, "granite needs a handful of clicks, not dozens (%d)" % _hits)
 		if _failures.is_empty():

@@ -18,7 +18,7 @@ uniform float absorption_per_meter = 55.0;
 uniform float refraction_strength = 0.035;
 uniform float chromatic_spread = 0.22;
 uniform float waviness = 0.25;
-uniform float glass_roughness : hint_range(0.0, 1.0) = 0.015;
+uniform float glass_roughness : hint_range(0.0, 1.0) = 0.06;
 
 varying vec3 world_pos;
 

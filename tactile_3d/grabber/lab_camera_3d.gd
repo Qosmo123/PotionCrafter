@@ -27,6 +27,8 @@ var _zoom_target: float = 0.0
 var _zoom_current: float = 0.0
 var _touches: Dictionary = {}
 var _last_pinch_px: float = -1.0
+## Orthographic (2.5D side view) size at zoom 0, read from the scene.
+var _base_ortho_size: float = 0.7
 ## Screen-shake "trauma" 0..1 (decays). Offset scales with trauma² so small
 ## taps barely nudge and big breaks really thump.
 var _trauma: float = 0.0
@@ -43,6 +45,7 @@ func _enter_tree() -> void:
 
 func _ready() -> void:
 	_base_transform = transform
+	_base_ortho_size = size
 	if inventory_store != null:
 		_store_base = inventory_store.global_position
 
@@ -118,4 +121,9 @@ func _process(delta: float) -> void:
 		jitter = (basis.x * sin(_shake_time * 1.13) + basis.y * sin(_shake_time * 0.91 + 1.7)) * SHAKE_MAX_METERS * k
 		basis = basis.rotated(basis.z.normalized(), sin(_shake_time * 0.77 + 3.1) * SHAKE_MAX_ROLL_RAD * k)
 		_trauma = maxf(_trauma - SHAKE_DECAY_PER_S * delta, 0.0)
-	transform = Transform3D(basis, _base_transform.origin + _station_offset + forward * _zoom_current + jitter)
+	if projection == PROJECTION_ORTHOGONAL:
+		# Side view: zoom by changing how much of the bench fits on screen.
+		size = clampf(_base_ortho_size * exp(-_zoom_current * 1.4), 0.25, 1.4)
+		transform = Transform3D(basis, _base_transform.origin + _station_offset + jitter)
+	else:
+		transform = Transform3D(basis, _base_transform.origin + _station_offset + forward * _zoom_current + jitter)
