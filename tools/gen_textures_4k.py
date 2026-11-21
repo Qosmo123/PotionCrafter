@@ -279,9 +279,100 @@ def burlap():
     save("burlap", warm(tone, (1.0, 0.9, 0.72)), height, rough, 6.0)
 
 
+def _smooth(e0, e1, x):
+    t = np.clip((x - e0) / (e1 - e0), 0.0, 1.0)
+    return t * t * (3.0 - 2.0 * t)
+
+
+def masonry_wall():
+    """Ashlar lab wall, one tile = 1.8 m: 4 x 8 hand-cut blocks in running
+    bond, recessed gritty mortar, chipped bevelled arrises, pitted tooled
+    faces, per-block tone and vertical damp streaks."""
+    tile_m = 1.8
+    cols, rows = 4, 8
+    yy, xx = np.mgrid[0:SIZE, 0:SIZE].astype(np.float32) / SIZE
+    wx = (noise(2.0, lo=0.001, hi=0.012) - 0.5) * 0.01
+    wy = (noise(2.0, lo=0.001, hi=0.012) - 0.5) * 0.01
+    v = (yy + wy) * rows
+    row = np.floor(v)
+    u = (xx + wx) * cols + 0.5 * (np.mod(row, 2))
+    col = np.floor(u)
+    fu = u - col
+    fv = v - row
+    edge = np.minimum(np.minimum(fu, 1 - fu) / cols, np.minimum(fv, 1 - fv) / rows) * tile_m  # metres
+    cid = (np.mod(row, rows) * cols + np.mod(col, cols)).astype(np.int32)
+    rnd = RNG.random((rows * cols, 5))
+    chip = noise(1.6, lo=0.01, hi=0.06)
+    joint = 0.005 + 0.007 * np.clip(chip - 0.45, 0, 1) * 2.0
+    face = _smooth(joint, joint + 0.014, edge)  # 0 in mortar, 1 on the face
+    big = noise(2.2, lo=0.002, hi=0.5)
+    grain = noise(0.5, lo=0.08, hi=0.5)
+    pits = (noise(0.6, lo=0.03, hi=0.3) < 0.14).astype(np.float32)
+    tool = noise(1.0, sx=6.0, sy=1.0, lo=0.02, hi=0.4)  # faint horizontal tooling
+    streak = noise(2.0, sx=1.0, sy=8.0, lo=0.001, hi=0.02)  # vertical damp stains
+    block_tone = 0.62 + 0.22 * rnd[cid, 0]
+    tilt = (rnd[cid, 1] - 0.5) * 0.3 * fu + (rnd[cid, 2] - 0.5) * 0.3 * fv
+    tone = block_tone + 0.18 * (big - 0.5) + 0.06 * (grain - 0.5) + 0.04 * (tool - 0.5) - 0.2 * pits
+    tone -= 0.16 * np.clip(streak - 0.55, 0, 1) * 2.0
+    mortar = 0.42 + 0.12 * (grain - 0.5)
+    tone = mortar + (tone - mortar) * face
+    warmth = (rnd[cid, 3] - 0.3) * 0.05 * face
+    albedo = np.stack([tone * (1.0 + warmth), tone * (0.97 + warmth * 0.3), tone * (0.92 - warmth)], axis=-1)
+    height = face * (1.0 + 0.7 * big + 0.12 * tool + tilt) + 0.15 * grain - 0.5 * pits * face
+    rough = 0.97 - 0.12 * face + 0.04 * (grain - 0.5) + 0.05 * pits
+    save("masonry_wall", albedo, height, rough, 9.0)
+
+
+def flagstone_floor():
+    """Worn flagstone floor, one tile = 2.0 m: irregular slabs (periodic
+    Voronoi on a 5 x 5 jittered grid) with dark grout, hairline cracks and
+    smoother, slightly polished tops."""
+    tile_m = 2.0
+    n = 5
+    yy, xx = np.mgrid[0:SIZE, 0:SIZE].astype(np.float32) / SIZE
+    x = xx + (noise(2.4, lo=0.001, hi=0.02).astype(np.float32) - 0.5) * 0.025
+    y = yy + (noise(2.4, lo=0.001, hi=0.02).astype(np.float32) - 0.5) * 0.025
+    pts = RNG.random((n, n, 2)).astype(np.float32) * 0.6 + 0.2
+    cx = np.floor(x * n)
+    cy = np.floor(y * n)
+    f1 = np.full(x.shape, 9.0, np.float32)
+    f2 = np.full(x.shape, 9.0, np.float32)
+    cid = np.zeros(x.shape, np.int32)
+    for oy in (-1, 0, 1):
+        for ox in (-1, 0, 1):
+            gx = cx + ox
+            gy = cy + oy
+            ix = np.mod(gx, n).astype(np.int32)
+            iy = np.mod(gy, n).astype(np.int32)
+            px = (gx + pts[iy, ix, 0]) / n
+            py = (gy + pts[iy, ix, 1]) / n
+            d = np.sqrt((px - x) ** 2 + (py - y) ** 2)
+            closer = d < f1
+            f2 = np.where(closer, f1, np.minimum(f2, d))
+            cid = np.where(closer, iy * n + ix, cid)
+            f1 = np.where(closer, d, f1)
+    edge = (f2 - f1) * 0.5 * tile_m  # metres to the slab border
+    rnd = RNG.random((n * n, 4))
+    face = _smooth(0.004, 0.011, edge)
+    big = noise(2.3, lo=0.002, hi=0.5)
+    grain = noise(0.5, lo=0.08, hi=0.5)
+    pits = (noise(0.6, lo=0.03, hi=0.3) < 0.12).astype(np.float32)
+    ridge = np.abs(noise(2.0, lo=0.003, hi=0.05) - 0.5)
+    crack = (ridge < 0.004).astype(np.float32) * (noise(2.0, lo=0.001, hi=0.01) > 0.62) * face
+    wear = _smooth(0.02, 0.15, edge)  # tops worn smooth, edges rough
+    tone = 0.6 + 0.25 * rnd[cid, 0] + 0.16 * (big - 0.5) + 0.05 * (grain - 0.5) - 0.18 * pits - 0.35 * crack
+    grout = 0.3 + 0.08 * (grain - 0.5)
+    tone = grout + (tone - grout) * face
+    albedo = warm(tone, (1.0, 0.97, 0.92))
+    height = face * (1.0 + 0.25 * big + 0.15 * (rnd[cid, 1] - 0.5)) + 0.1 * grain - 0.4 * pits * face - 0.5 * crack
+    rough = 0.95 - 0.22 * face * wear + 0.05 * (grain - 0.5) + 0.06 * pits
+    save("flagstone_floor", albedo, height, rough, 8.0)
+
+
 if __name__ == "__main__":
     wanted = set(sys.argv[2:])
     for fn in (wood, metal, iron, leather, ceramic, stone, parchment, cork,
-               rock_granular, rock_layered, crystal_etched, ore_metallic, burlap):
+               rock_granular, rock_layered, crystal_etched, ore_metallic, burlap,
+               masonry_wall, flagstone_floor):
         if not wanted or fn.__name__ in wanted:
             fn()

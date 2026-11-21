@@ -1,12 +1,22 @@
-// Procedural mortared stone blocks for the lab walls and floor (no textures).
+// Lab walls and floor: 4K tileable masonry / flagstone sets (made by
+// tools/gen_textures_4k.py) projected in world space, tinted, with a slow
+// macro variation to hide tiling, damp grime near the floor and soot
+// toward the ceiling.
 shader_type spatial;
 render_mode specular_schlick_ggx;
 
-uniform vec3 stone_light : source_color = vec3(0.42, 0.39, 0.35);
-uniform vec3 stone_dark : source_color = vec3(0.17, 0.155, 0.14);
-uniform vec3 mortar_color : source_color = vec3(0.1, 0.09, 0.08);
-uniform vec2 block_size_meters = vec2(0.45, 0.22);
-uniform float bump_strength = 1.0;
+uniform sampler2D albedo_tex : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D normal_tex : hint_normal, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D rough_tex : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform vec3 tint : source_color = vec3(0.5, 0.47, 0.43);
+uniform float tile_meters = 1.8;
+uniform float normal_strength = 1.0;
+uniform float macro_strength = 0.22;
+// Walls only: darker, damper stone near the floor, soot near the ceiling.
+uniform float grime_height_meters = 0.7;
+uniform float grime_strength = 0.0;
+uniform float soot_start_meters = 2.2;
+uniform float soot_strength = 0.0;
 
 varying vec3 world_pos;
 varying vec3 world_normal;
@@ -25,43 +35,48 @@ float vnoise(vec2 p) {
 		mix(hash12(i + vec2(0.0, 1.0)), hash12(i + vec2(1.0, 1.0)), u.x), u.y);
 }
 
-float fbm(vec2 p) {
-	float sum = 0.0;
-	float amp = 0.5;
-	for (int i = 0; i < 4; i++) {
-		sum += amp * vnoise(p);
-		p *= 2.1;
-		amp *= 0.5;
-	}
-	return sum;
-}
-
-vec3 stone(vec2 p) {
-	vec2 cell = p / block_size_meters;
-	cell.x += step(1.0, mod(floor(cell.y), 2.0)) * 0.5;
-	vec2 id = floor(cell);
-	vec2 f = fract(cell);
-	vec2 edge = min(f, 1.0 - f) * block_size_meters;
-	float joint = smoothstep(0.004, 0.014, min(edge.x, edge.y));
-	float n = fbm(p * 9.0 + id * 3.1);
-	float tone = clamp(hash12(id) * 0.5 + n * 0.7, 0.0, 1.0);
-	float height = joint * (0.6 + n * 0.4);
-	return vec3(tone, height, joint);
-}
-
 void vertex() {
 	world_pos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
 	world_normal = normalize((MODEL_MATRIX * vec4(NORMAL, 0.0)).xyz);
 }
 
 void fragment() {
-	vec2 p = abs(world_normal.y) > 0.5 ? world_pos.xz : (abs(world_normal.x) > 0.5 ? world_pos.zy : world_pos.xy);
-	vec3 s = stone(p);
-	float e = 0.002;
-	float hx = stone(p + vec2(e, 0.0)).y - s.y;
-	float hy = stone(p + vec2(0.0, e)).y - s.y;
-	ALBEDO = mix(mortar_color, mix(stone_dark, stone_light, s.x), s.z);
-	NORMAL_MAP = normalize(vec3(-hx / e * 0.01 * bump_strength, -hy / e * 0.01 * bump_strength, 1.0)) * 0.5 + 0.5;
-	ROUGHNESS = mix(0.95, 0.78, s.z);
-	SPECULAR = 0.3;
+	vec3 n = normalize(world_normal);
+	// Planar projection along the dominant axis; V is "image up".
+	vec3 u_axis;
+	vec3 v_axis;
+	if (abs(n.y) > 0.5) {
+		u_axis = vec3(1.0, 0.0, 0.0);
+		v_axis = vec3(0.0, 0.0, -1.0);
+	} else if (abs(n.x) > 0.5) {
+		u_axis = vec3(0.0, 0.0, -sign(n.x));
+		v_axis = vec3(0.0, 1.0, 0.0);
+	} else {
+		u_axis = vec3(sign(n.z), 0.0, 0.0);
+		v_axis = vec3(0.0, 1.0, 0.0);
+	}
+	vec2 p = vec2(dot(world_pos, u_axis), dot(world_pos, v_axis));
+	vec2 uv = vec2(p.x, -p.y) / tile_meters;
+
+	vec3 alb = texture(albedo_tex, uv).rgb;
+	vec3 tn = texture(normal_tex, uv).xyz * 2.0 - 1.0;
+	tn.xy *= normal_strength;
+	vec3 wn = normalize(u_axis * tn.x + v_axis * tn.y + n * tn.z);
+	NORMAL = normalize((VIEW_MATRIX * vec4(wn, 0.0)).xyz);
+
+	// Slow colour variation (two octaves) so repeats don't line up.
+	float macro = vnoise(p * 0.7) * 0.65 + vnoise(p * 2.3 + 7.1) * 0.35;
+	vec3 col = alb * tint * (1.0 + (macro - 0.5) * 2.0 * macro_strength);
+	float rough = texture(rough_tex, uv).r;
+
+	float grime = (1.0 - smoothstep(0.0, grime_height_meters, world_pos.y)) * grime_strength;
+	grime *= 0.7 + 0.3 * vnoise(p * vec2(6.0, 1.5));
+	col *= 1.0 - grime * 0.55;
+	rough = mix(rough, rough * 0.8, grime);
+	float soot = smoothstep(soot_start_meters, soot_start_meters + 0.9, world_pos.y) * soot_strength;
+	col *= 1.0 - soot * (0.6 + 0.4 * vnoise(p * 3.0));
+
+	ALBEDO = col;
+	ROUGHNESS = clamp(rough, 0.05, 1.0);
+	SPECULAR = 0.35;
 }

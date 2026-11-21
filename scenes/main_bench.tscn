@@ -1,4 +1,4 @@
-[gd_scene load_steps=127 format=3]
+[gd_scene load_steps=133 format=3]
 
 [ext_resource type="PackedScene" path="res://world_3d/vessels/vessel_3d.tscn" id="1_vessel"]
 [ext_resource type="Resource" path="res://content/substances/moonwater.tres" id="2_moon"]
@@ -85,6 +85,12 @@
 [ext_resource type="PackedScene" path="res://world_3d/props/faceting_machine.gltf" id="75_facm"]
 [ext_resource type="PackedScene" path="res://world_3d/props/stone_anvil.gltf" id="76_anvilm"]
 [ext_resource type="PackedScene" path="res://world_3d/props/rock_crate.gltf" id="77_cratem"]
+[ext_resource type="Texture2D" path="res://content/textures_4k/masonry_wall_albedo.jpg" id="tex_masonry_wall_albedo"]
+[ext_resource type="Texture2D" path="res://content/textures_4k/masonry_wall_normal.jpg" id="tex_masonry_wall_normal"]
+[ext_resource type="Texture2D" path="res://content/textures_4k/masonry_wall_rough.jpg" id="tex_masonry_wall_rough"]
+[ext_resource type="Texture2D" path="res://content/textures_4k/flagstone_floor_albedo.jpg" id="tex_flagstone_floor_albedo"]
+[ext_resource type="Texture2D" path="res://content/textures_4k/flagstone_floor_normal.jpg" id="tex_flagstone_floor_normal"]
+[ext_resource type="Texture2D" path="res://content/textures_4k/flagstone_floor_rough.jpg" id="tex_flagstone_floor_rough"]
 
 [sub_resource type="ProceduralSkyMaterial" id="SkyMat_1"]
 sky_top_color = Color(0.09, 0.08, 0.12, 1)
@@ -118,13 +124,22 @@ shader = ExtResource("11_wood")
 [sub_resource type="ShaderMaterial" id="StoneMat_1"]
 render_priority = 0
 shader = ExtResource("12_stone")
+shader_parameter/albedo_tex = ExtResource("tex_masonry_wall_albedo")
+shader_parameter/normal_tex = ExtResource("tex_masonry_wall_normal")
+shader_parameter/rough_tex = ExtResource("tex_masonry_wall_rough")
+shader_parameter/tint = Color(0.44, 0.41, 0.37, 1)
+shader_parameter/tile_meters = 1.8
+shader_parameter/grime_strength = 0.6
+shader_parameter/soot_strength = 0.5
 
 [sub_resource type="ShaderMaterial" id="FloorMat_1"]
 render_priority = 0
 shader = ExtResource("12_stone")
-shader_parameter/stone_light = Color(0.33, 0.3, 0.27, 1)
-shader_parameter/stone_dark = Color(0.13, 0.12, 0.11, 1)
-shader_parameter/block_size_meters = Vector2(0.6, 0.6)
+shader_parameter/albedo_tex = ExtResource("tex_flagstone_floor_albedo")
+shader_parameter/normal_tex = ExtResource("tex_flagstone_floor_normal")
+shader_parameter/rough_tex = ExtResource("tex_flagstone_floor_rough")
+shader_parameter/tint = Color(0.36, 0.33, 0.3, 1)
+shader_parameter/tile_meters = 2.0
 
 [sub_resource type="BoxMesh" id="BenchMesh_1"]
 material = SubResource("WoodMat_1")
