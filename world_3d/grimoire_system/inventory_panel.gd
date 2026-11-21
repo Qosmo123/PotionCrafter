@@ -8,8 +8,8 @@ extends CanvasLayer
 
 const PANEL_WIDTH: float = 620.0
 const COMPACT_WIDTH: float = 420.0
-const TAB_NAMES: PackedStringArray = ["Reagents", "Berries", "Glass", "Tools", "Rocks", "Lab Chem", "Fun", "Recipes", "Codex"]
-const ITEM_TABS: int = 7
+const TAB_NAMES: PackedStringArray = ["Reagents", "Berries", "Glass", "Tools", "Rocks", "Lab Chem", "Fun", "Finds", "Materials", "Recipes", "Codex"]
+const ITEM_TABS: int = 9
 ## Default shelf for each station (index = LabCamera3D.station).
 const STATION_TABS: PackedInt32Array = [0, 4, 5]
 const MARKER_VALID: Color = Color("#F4D06F")

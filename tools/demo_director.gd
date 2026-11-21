@@ -32,11 +32,25 @@ func _process(_delta: float) -> void:
 		moon.freeze = true
 		var tilt: Basis = Basis(Vector3(0.0, 0.0, 1.0), deg_to_rad(105.0))
 		moon.global_transform = Transform3D(tilt, beaker.global_position + Vector3(0.0, 0.12, 0.0) - tilt.y * 0.07)
+	if _frames == 2 and _args.has("stored") and InventoryStore.instance != null:
+		# A few finds and materials already put away in the cabinet.
+		var store: InventoryStore = InventoryStore.instance
+		for pair: Array in [["amethyst", 0, 0.0], ["emerald", 1, 0.9], ["ammonite_fossil", 0, 0.5], ["hiddenite", 0, 0.0], ["garnet", 0, 0.9], ["amethyst", 0, 0.0]]:
+			var r: Rock3D = Rock3D.new()
+			r.mineral = Rock3D.get_mineral(pair[0])
+			r.mass_kg = r.mineral.typical_mass_kg
+			r.cut = int(pair[1])
+			r.polish = float(pair[2])
+			store.store_find(r)
+		for mat: Array in [[&"calcite_powder", 0.08], [&"quartz_sand_fine", 0.12], [&"garnet_sand", 0.045], [&"malachite_powder", 0.03]]:
+			var item: Dictionary = store._material_item(SubstanceRegistry.get_substance(SubstanceRegistry.index_of_id(mat[0])))
+			item["kg"] = mat[1]
+			store._refresh_material(item)
 	if _frames == 3 and _args.has("satchel"):
 		var panel: CanvasLayer = bench.get_node("InventoryPanel") as CanvasLayer
 		panel.call(&"toggle")
 		var tabs: TabContainer = panel.find_children("*", "TabContainer", true, false)[0] as TabContainer
-		tabs.current_tab = 7 if _args.has("recipes") else (4 if _args.has("rocks") else (5 if _args.has("chem") else (6 if _args.has("fun") else 0)))
+		tabs.current_tab = 9 if _args.has("recipes") else (4 if _args.has("rocks") else (5 if _args.has("chem") else (6 if _args.has("fun") else (8 if _args.has("materials") else (7 if _args.has("finds") else 0)))))
 		panel.call(&"refresh")
 		if _args.has("compact"):
 			panel.call(&"set_compact", true)

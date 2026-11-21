@@ -13,6 +13,9 @@ var machine_name: String = "machine"
 var drop_local: Vector3 = Vector3.ZERO
 ## Returns true for items this machine takes (set by the machine).
 var accepts: Callable = Callable()
+## Optional: called with each caught item instead of placing it in the
+## hopper (the storage cabinet puts items away).
+var on_catch: Callable = Callable()
 
 var _marker: MeshInstance3D
 var _marker_label: Label3D
@@ -68,6 +71,18 @@ func takes(body: Node) -> bool:
 	return accepts.is_valid() and bool(accepts.call(body))
 
 
+## Take an item that was let go over the machine.
+func receive(body: RigidBody3D) -> void:
+	if body.is_queued_for_deletion():
+		return  # already taken this frame
+	if on_catch.is_valid():
+		on_catch.call(body)
+		return
+	body.global_position = drop_world()
+	body.linear_velocity = Vector3(0.0, -0.2, 0.0)
+	body.angular_velocity = Vector3.ZERO
+
+
 ## The intake a carried item at `x` would drop into (left/right only), or null.
 static func under(body: Node, x: float) -> MachineIntake:
 	var best: MachineIntake = null
@@ -101,9 +116,6 @@ func _physics_process(delta: float) -> void:
 		var rb: RigidBody3D = body as RigidBody3D
 		if rb == null or rb == TactileGrabber3D.current_held or rb.freeze or not takes(rb):
 			continue
-		var at: Vector3 = drop_world()
-		if rb.global_position.distance_to(at) < 0.03:
+		if not on_catch.is_valid() and rb.global_position.distance_to(drop_world()) < 0.03:
 			continue
-		rb.global_position = at
-		rb.linear_velocity = Vector3(0.0, -0.2, 0.0)
-		rb.angular_velocity = Vector3.ZERO
+		receive(rb)

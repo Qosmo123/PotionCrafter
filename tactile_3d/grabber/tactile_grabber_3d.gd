@@ -392,11 +392,9 @@ func put_down() -> void:
 		var intake: MachineIntake = MachineIntake.under(body, body.global_position.x)
 		release()
 		if intake != null:
-			# Into the hopper: the machine takes it from here.
-			body.global_position = intake.drop_world()
-			body.linear_velocity = Vector3(0.0, -0.2, 0.0)
-			body.angular_velocity = Vector3.ZERO
+			# Into the hopper (or the cabinet): the machine takes it from here.
 			AudioDirector.impact(&"stone", 0.5, body.global_position, 0.9)
+			intake.receive(body)
 		return
 	_end_assist()
 	swirling = false
@@ -1139,7 +1137,9 @@ func _update_machine_hints() -> void:
 		intake_target = MachineIntake.under(held_body, held_body.global_position.x)
 		var rock: Rock3D = held_body as Rock3D
 		if intake_target != null:
-			_assist_note = "Click to drop it into the %s" % intake_target.machine_name
+			_assist_note = ("Click to put it away in the %s" if intake_target.on_catch.is_valid() else "Click to drop it into the %s") % intake_target.machine_name
+		elif InventoryStore.is_find(rock):
+			_assist_note = "Put it away: carry it over the storage cabinet's tray and click (or press E)"
 		elif rock.mineral != null and rock.mineral.kind == MineralData.Kind.SAND:
 			_assist_note = "Carry it over the sand sifter (the glow) and click to drop it in"
 		else:

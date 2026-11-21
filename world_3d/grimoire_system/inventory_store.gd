@@ -3,10 +3,14 @@ extends Node3D
 ## Lab storage: what can be taken out (spawned onto the bench) and put back.
 ## Reagents and berries are unlimited stock bottles; glassware and tools are
 ## counted, and stashing a held item (E) returns it to storage.
+## Things made in the Mineral Lab are kept too: gems, minerals and fossils
+## (with their polish and cut) under Finds, and the powders and sands from
+## the crusher and sifter, by weight, under Materials. Stashing a vessel
+## keeps its contents as materials instead of rinsing them away.
 
 signal changed
 
-enum Category { REAGENTS, BERRIES, GLASSWARE, TOOLS, ROCKS, CHEMICALS, FUN }
+enum Category { REAGENTS, BERRIES, GLASSWARE, TOOLS, ROCKS, CHEMICALS, FUN, FINDS, MATERIALS }
 
 const VESSEL_SCENE: PackedScene = preload("res://world_3d/vessels/vessel_3d.tscn")
 const STIR_SCRIPT: Script = preload("res://tactile_3d/interactions/stir_tool_3d.gd")
@@ -14,6 +18,10 @@ const BERRY_SCRIPT: Script = preload("res://world_3d/terrarium/berry_3d.gd")
 const PROFILE_DIR: String = "res://world_3d/vessels/profiles/"
 const REAGENT_FILL_M3: float = 150e-6
 const POWDER_FILL_M3: float = 15e-6
+## One scoop of a stored material taken out at a time.
+const MATERIAL_PORTION_KG: float = 0.03
+## Less than this of a substance isn't worth keeping (dust, traces).
+const MATERIAL_MIN_KG: float = 1e-4
 
 static var instance: InventoryStore = null
 
@@ -295,6 +303,23 @@ func take(id: String, drop_at: Vector3 = Vector3.INF) -> RigidBody3D:
 			var berry: Berry3D = BERRY_SCRIPT.new() as Berry3D
 			berry.juice = item["juice"]
 			body = berry
+		Category.FINDS:
+			var find: Rock3D = Rock3D.new()
+			find.mineral = item["mineral"]
+			find.cut = int(item["cut"])
+			find.polish = float(item["polish"])
+			find.cut_quality = float(item["cut_quality"])
+			find.mass_kg = float(item["mass_kg"])
+			body = find
+		Category.MATERIALS:
+			var s: SubstanceData = SubstanceRegistry.get_substance(SubstanceRegistry.index_of_id(StringName(item["substances"][0])))
+			var portion_kg: float = minf(float(item["kg"]), MATERIAL_PORTION_KG)
+			var jar: Vessel3D = VESSEL_SCENE.instantiate() as Vessel3D
+			jar.profile = load(PROFILE_DIR + String(item["profile"]) + ".tres") as VesselProfile
+			jar.initial_substances = [s] as Array[Resource]
+			jar.initial_moles = [portion_kg / s.molar_mass_kg_mol] as Array[float]
+			item["kg"] = float(item["kg"]) - portion_kg
+			body = jar
 		Category.ROCKS:
 			if item.has("mineral"):
 				var rock: Rock3D = Rock3D.new()
@@ -323,7 +348,9 @@ func take(id: String, drop_at: Vector3 = Vector3.INF) -> RigidBody3D:
 		for crock: ToolCrock3D in ToolCrock3D.all_crocks:
 			if crock.has_free_slot() and crock.place_tool(body as StirTool3D):
 				break
-	if item["count"] > 0:
+	if item["category"] == Category.MATERIALS:
+		_refresh_material(item)
+	elif item["count"] > 0:
 		item["count"] -= 1
 	last_message = "Took out: %s" % item["label"]
 	changed.emit()
@@ -332,8 +359,18 @@ func take(id: String, drop_at: Vector3 = Vector3.INF) -> RigidBody3D:
 
 ## Put a body back into storage. Vessels are emptied into the sink first.
 func stash(body: RigidBody3D) -> bool:
-	if body == null:
+	if body == null or body.is_queued_for_deletion():
 		return false
+	var rock_body: Rock3D = body as Rock3D
+	if rock_body != null and is_find(rock_body):
+		if grabber != null and grabber.held_body == body:
+			grabber.release()
+		last_message = "Stored: %s (Finds)" % store_find(rock_body)
+		changed.emit()
+		return true
+	var kept: String = ""
+	if body is Vessel3D and (body as Vessel3D).mixture != null:
+		kept = store_contents(body as Vessel3D)
 	var id: String = String(body.get_meta(&"inventory_id", ""))
 	if id == "":
 		if body is Vessel3D and (body as Vessel3D).profile != null:
@@ -359,9 +396,124 @@ func stash(body: RigidBody3D) -> bool:
 	if grabber != null and grabber.held_body == body:
 		grabber.release()
 	body.queue_free()
-	last_message = "Stored: %s%s" % [item["label"], " (contents rinsed away)" if body is Vessel3D else ""]
+	last_message = "Stored: %s%s" % [item["label"], ("  ·  kept " + kept) if kept != "" else ""]
 	changed.emit()
 	return true
+
+
+# --- Mineral Lab finds and materials ------------------------------------------------
+
+## Gems, minerals and fossils, and any stone that has been polished or cut,
+## are finds (kept one by one); plain rocks and sand bags go back to the crates.
+static func is_find(rock: Rock3D) -> bool:
+	if rock.mineral == null:
+		return false
+	if rock.mineral.kind != MineralData.Kind.ROCK and rock.mineral.kind != MineralData.Kind.SAND:
+		return true
+	return rock.cut != RockMeshes.Cut.NONE or rock.polish > 0.3
+
+
+## Put a find away (it leaves the bench). Returns its label.
+func store_find(rock: Rock3D) -> String:
+	var m: MineralData = rock.mineral
+	var finish: int = 2 if rock.polish > 0.85 else (1 if rock.polish > 0.3 else 0)
+	var id: String = "find:%s:%d:%d" % [m.mineral_id, rock.cut, finish]
+	var item: Dictionary = find_item(id)
+	if item.is_empty():
+		var shelf: String = "Fossils" if m.kind == MineralData.Kind.FOSSIL else ("Gems" if m.kind == MineralData.Kind.GEM else "Minerals")
+		if rock.cut != RockMeshes.Cut.NONE:
+			shelf = "Cut gems"
+		item = {"id": id, "category": Category.FINDS, "label": rock.describe_name(), "shelf": shelf,
+			"detail": "%s · Mohs %.1f · about %d ◉" % [m.rarity_name(), m.hardness_mohs, rock.value()],
+			"color": m.color, "count": 0, "mineral": m, "cut": rock.cut, "polish": rock.polish,
+			"cut_quality": rock.cut_quality, "mass_kg": rock.mass_kg}
+		_insert_sorted(item)
+	item["count"] = int(item["count"]) + 1
+	item["cut_quality"] = maxf(float(item["cut_quality"]), rock.cut_quality)
+	if GrimoireJournal.instance != null:
+		GrimoireJournal.instance.record_find(m)
+	rock.queue_free()
+	return String(item["label"])
+
+
+## Empty `vessel` into storage: every substance in it is kept by weight
+## (crushed powder, sifted sand, anything). Returns a short summary like
+## "80 g Calcite Powder", or "" when there was nothing worth keeping.
+func store_contents(vessel: Vessel3D) -> String:
+	var mix: MixtureContainer = vessel.mixture
+	if mix == null or mix.get_total_mass_kg() < MATERIAL_MIN_KG:
+		return ""
+	var parts: PackedStringArray = PackedStringArray()
+	var total_kg: float = 0.0
+	for k: int in mix.active_count():
+		var idx: int = mix.active_index(k)
+		var s: SubstanceData = SubstanceRegistry.get_substance(idx)
+		var kg: float = mix.moles[idx] * s.molar_mass_kg_mol
+		if kg < MATERIAL_MIN_KG:
+			continue
+		var item: Dictionary = _material_item(s)
+		item["kg"] = float(item["kg"]) + kg
+		_refresh_material(item)
+		total_kg += kg
+		if parts.size() < 3:
+			parts.append("%.0f g %s" % [kg * 1000.0, s.display_name])
+	mix.clear()
+	if parts.is_empty():
+		return ""
+	var text: String = ", ".join(parts)
+	return text if total_kg > 0.0 else ""
+
+
+func _material_item(s: SubstanceData) -> Dictionary:
+	var id: String = "mat:" + String(s.substance_id)
+	var item: Dictionary = find_item(id)
+	if item.is_empty():
+		var solid: bool = s.melting_point_kelvin > SimConstants.AMBIENT_TEMP_KELVIN
+		item = {"id": id, "category": Category.MATERIALS, "label": s.display_name, "shelf": "Powders & sands" if solid else "Liquids",
+			"detail": "", "color": s.base_albedo_rgba, "count": 0, "kg": 0.0, "substances": [s.substance_id], "ratios": [1.0],
+			"profile": "vial" if solid else "apothecary_bottle", "tooltip": s.description}
+		_insert_sorted(item)
+	return item
+
+
+## Count = scoops left; the row shows the weight.
+func _refresh_material(item: Dictionary) -> void:
+	var kg: float = maxf(float(item["kg"]), 0.0)
+	item["count"] = int(ceil(kg / MATERIAL_PORTION_KG - 1e-6)) if kg >= MATERIAL_MIN_KG else 0
+	var s: SubstanceData = SubstanceRegistry.get_substance(SubstanceRegistry.index_of_id(StringName(item["substances"][0])))
+	item["detail"] = "%.0f g · %s" % [kg * 1000.0, s.chemical_formula]
+
+
+## Keep a category's rows grouped by shelf, then by name.
+func _insert_sorted(item: Dictionary) -> void:
+	var at: int = items.size()
+	for i: int in items.size():
+		var other: Dictionary = items[i]
+		if int(other["category"]) != int(item["category"]):
+			if int(other["category"]) > int(item["category"]):
+				at = mini(at, i)
+			continue
+		var a: String = "%s|%s" % [item.get("shelf", ""), item["label"]]
+		var b: String = "%s|%s" % [other.get("shelf", ""), other["label"]]
+		if a < b:
+			at = i
+			break
+		at = i + 1
+	items.insert(at, item)
+
+
+## Total stored weight of a material (kg), for tests and the HUD.
+func material_kg(substance_id: StringName) -> float:
+	return float(find_item("mat:" + String(substance_id)).get("kg", 0.0))
+
+
+## How many of a find are stored (any finish).
+func find_count(mineral_id: StringName) -> int:
+	var n: int = 0
+	for item: Dictionary in items:
+		if String(item["id"]).begins_with("find:%s:" % mineral_id):
+			n += int(item["count"])
+	return n
 
 
 func _unhandled_input(event: InputEvent) -> void:

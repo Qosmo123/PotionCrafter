@@ -24,7 +24,7 @@ const HELP_TEXT: String = """[b][color=#F4D06F]Hands[/color][/b]
   Shift while moving  ·  slow, precise placement    ·    Wheel / right-drag  ·  tilt by hand
   Wheel when empty-handed  ·  zoom    ·    Right-drag when empty-handed  ·  move the view (station key re-centres)
   Two fingers  ·  twist to tilt, pinch to zoom
-  E  ·  put the held item back in the satchel
+  E  ·  put the held item back in the satchel (gems go to Finds; a vessel's contents are kept under Materials)
 
 [b][color=#F4D06F]Brewing[/color][/b]
   Pour vessels into each other  ·  stir with rods, spoons, whisks and the wand

@@ -6,6 +6,9 @@ extends SceneTree
 ##            shaker handle left and right: it travels its stroke and sifts.
 ##   Crusher  carry a rock over the crusher, click: it drops in; drag the
 ##            crank in circles: the rock is ground to powder.
+##   Storage  the crusher's beaker set on the storage cabinet's pan is
+##            emptied into Materials; a gem dropped on its tray goes into
+##            Finds; a scoop of the powder comes back out of the satchel.
 
 const TICKS_PER_S: float = 60.0
 ## Open bench between the crusher's beaker and the sifter trays, away from
@@ -27,6 +30,8 @@ var _max_x: float = -INF
 var _base: Vector2
 var _phase: float = 0.0
 var _tray_start_kg: float = 0.0
+var _cabinet: StorageCabinet3D
+var _powder_kg: float = 0.0
 
 
 func _initialize() -> void:
@@ -36,6 +41,7 @@ func _initialize() -> void:
 	_camera = _bench.get_node("Camera3D") as LabCamera3D
 	_crusher = _bench.get_node("MineralLab/RockCrusher") as RockCrusher3D
 	_sifter = _bench.get_node("MineralLab/SandSifter") as SandSifter3D
+	_cabinet = _bench.get_node("MineralLab/StorageCabinet") as StorageCabinet3D
 
 
 func _click(at: Vector2) -> void:
@@ -153,7 +159,42 @@ func _physics_process(_d: float) -> bool:
 				_check(_tray_kg(_crusher.tray) > _tray_start_kg + 0.05, "the powder lands in the crusher's beaker (+%.0f g, beaker upright %.2f)" % [(_tray_kg(_crusher.tray) - _tray_start_kg) * 1000.0, _crusher.tray.global_basis.y.y])
 				_grabber.release()
 				_next()
-		10:
+		10:  # Carry the crusher's beaker of powder onto the cabinet's pan.
+			if _step_ticks == 20:
+				_grabber.grab(_crusher.tray)
+			if _step_ticks > 20:
+				_move(_camera.unproject_position(_cabinet._pan.global_position + Vector3(0.0, 0.22, 0.0)))
+				if _until(not _grabber.dock_seat.is_empty() and absf(_crusher.tray.global_position.x - _cabinet._pan.global_position.x) < 0.03, 10.0):
+					_check(not _grabber.dock_seat.is_empty(), "carrying a beaker over the cabinet offers its pan (\"%s\")" % _grabber.assist_hint())
+					_click(_grabber._pointer_screen)
+					_next()
+		11:
+			if _until(InventoryStore.instance.material_kg(&"calcite_powder") > 0.05, 8.0):
+				_powder_kg = InventoryStore.instance.material_kg(&"calcite_powder")
+				_check(_powder_kg > 0.05, "the powder is stored in the cabinet (%.0f g calcite powder)" % (_powder_kg * 1000.0))
+				_check(_crusher.tray.mixture.get_total_mass_kg() < 1e-4, "the beaker is left empty on the pan")
+				_item = Rock3D.spawn(_bench, Rock3D.get_mineral("amethyst"), CLEAR_SPOT, 0.012)
+				_next()
+		12:  # Put a gem away on the velvet tray.
+			if _step_ticks == 40:
+				_click(_camera.unproject_position(_item.global_position))
+			if _step_ticks > 45:
+				_move(_camera.unproject_position(_cabinet.global_transform * Vector3(-0.055, 0.3, 0.0)))
+				if _until(_grabber.intake_target != null and absf(_item.global_position.x - (_cabinet.global_position.x - 0.055)) < 0.03, 8.0):
+					_check(_grabber.assist_hint().contains("put it away"), "the hint says to put it away (\"%s\")" % _grabber.assist_hint())
+					_click(_grabber._pointer_screen)
+					_next()
+		13:
+			if _until(InventoryStore.instance.find_count(&"amethyst") > 0, 3.0):
+				_check(InventoryStore.instance.find_count(&"amethyst") == 1, "the gem is stored under Finds")
+				var jar: Vessel3D = InventoryStore.instance.take("mat:calcite_powder") as Vessel3D
+				_check(jar != null, "a scoop of the stored powder can be taken out")
+				var left: float = InventoryStore.instance.material_kg(&"calcite_powder")
+				_check(absf(_powder_kg - left - minf(_powder_kg, InventoryStore.MATERIAL_PORTION_KG)) < 1e-6, "taking a scoop out leaves the rest stored (%.0f g left)" % (left * 1000.0))
+				var gem: Rock3D = InventoryStore.instance.take(InventoryStore.instance.get_items(InventoryStore.Category.FINDS)[0]["id"]) as Rock3D
+				_check(gem != null and gem.mineral.mineral_id == &"amethyst", "the stored gem can be taken back out")
+				_next()
+		14:
 			print("SMOKE MACHINES %s (%d failures)" % ["PASS" if _failures.is_empty() else "FAIL", _failures.size()])
 			quit(0 if _failures.is_empty() else 1)
 	return false
