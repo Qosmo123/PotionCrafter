@@ -55,9 +55,10 @@ func _process(delta: float) -> void:
 		return
 	var n: float = float(SAMPLE_FRAMES)
 	var p: Vector2i = _plan[_step]
-	print("FPS %-5s station %d: frame %.2f ms (%.0f fps)  gpu %.2f ms  draws %.0f  tris %.0fk  process %.2f ms  physics %.2f ms" % [
+	print("FPS %-5s station %d: frame %.2f ms (%.0f fps)  gpu %.2f ms  draws %.0f  tris %.0fk  process %.2f ms  physics %.2f ms  vram %.0f MB" % [
 		GraphicsProfile.PRESET_NAMES[p.x], p.y, _cpu_ms / n, 1000.0 / (_cpu_ms / n), _gpu_ms / n, _draws / n, _prims / n / 1000.0,
-		Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0, Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0])
+		Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0, Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0,
+		Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED) / 1048576.0])
 	_step += 1
 	if _step >= _plan.size():
 		get_tree().quit()

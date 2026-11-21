@@ -39,6 +39,9 @@ func _ready() -> void:
 
 func _collect_shadow_lights() -> void:
 	var root: Node = get_tree().current_scene if get_tree().current_scene != null else get_parent()
+	# Props placed straight in the scene get the same glass fix-ups and 4K
+	# surface textures as props spawned by code.
+	PropMaterials.apply(root)
 	for n: Node in root.find_children("*", "OmniLight3D", true, false):
 		var l: OmniLight3D = n as OmniLight3D
 		if l.shadow_enabled:

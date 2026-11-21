@@ -44,13 +44,8 @@ func _ready() -> void:
 	contact_monitor = true
 	max_contacts_reported = 4
 	body_entered.connect(_on_body_entered)
-	var wood: StandardMaterial3D = StandardMaterial3D.new()
-	wood.albedo_color = Color(0.5, 0.32, 0.17)
-	wood.roughness = 0.6
-	var iron: StandardMaterial3D = StandardMaterial3D.new()
-	iron.albedo_color = Color(0.25, 0.25, 0.27)
-	iron.metallic = 0.9
-	iron.roughness = 0.35
+	var wood: StandardMaterial3D = PropMaterials.textured("wood", Color(0.62, 0.42, 0.24), 0.12)
+	var iron: StandardMaterial3D = PropMaterials.textured("iron", Color(0.42, 0.42, 0.45), 0.08, 0.9)
 	var handle: CylinderMesh = CylinderMesh.new()
 	handle.top_radius = 0.009
 	handle.bottom_radius = 0.011
