@@ -59,9 +59,15 @@ void fragment() {
 	refracted.b = textureLod(screen_texture, SCREEN_UV - offset * (1.0 - chromatic_spread), 0.0).b;
 
 	float edge = 1.0 - transmit.g;
+	// Crisp silhouette: thick glass seen edge-on goes dark (total internal
+	// reflection) with a thin bright line just inside; plus a soft vertical
+	// studio-light streak on cylinders. Reads clearly in the side view.
+	float rim = smoothstep(0.34, 0.05, n_dot_v);
+	float rim_line = exp(-pow((n_dot_v - 0.19) / 0.035, 2.0));
+	float streak = smoothstep(0.1, 0.0, abs(n.x - 0.52)) * smoothstep(-0.6, 0.2, n.y);
 	ALBEDO = edge_tint * 0.06;
-	EMISSION = refracted * transmit * 0.35;
-	ALPHA = clamp(0.05 + edge * 3.0 + fresnel * 0.9, 0.0, 0.95);
+	EMISSION = refracted * transmit * 0.35 * (1.0 - rim * 0.6) + vec3(rim_line * 0.1 + streak * 0.16);
+	ALPHA = clamp(0.05 + edge * 3.0 + fresnel * 0.9 + rim * 0.2 + streak * 0.25, 0.0, 0.95);
 	NORMAL = n;
 	ROUGHNESS = glass_roughness * (0.6 + vnoise(wp * 3.0) * 0.8);
 	METALLIC = 0.0;

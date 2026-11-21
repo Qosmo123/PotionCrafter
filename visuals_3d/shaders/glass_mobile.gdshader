@@ -16,8 +16,13 @@ void fragment() {
 	float fresnel = f0 + (1.0 - f0) * pow(1.0 - n_dot_v, 5.0);
 	float path_m = wall_thickness_meters / max(n_dot_v, 0.08);
 	float edge = 1.0 - exp(-(1.0 - edge_tint.g) * absorption_per_meter * path_m);
-	ALBEDO = edge_tint * 0.08;
-	ALPHA = clamp(0.04 + edge * 3.0 + fresnel * 0.9, 0.0, 0.95);
+	// Crisp silhouette (dark edge + inner line) and a vertical studio streak.
+	float rim = smoothstep(0.34, 0.05, n_dot_v);
+	float rim_line = exp(-pow((n_dot_v - 0.19) / 0.035, 2.0));
+	float streak = smoothstep(0.1, 0.0, abs(NORMAL.x - 0.52)) * smoothstep(-0.6, 0.2, NORMAL.y);
+	ALBEDO = edge_tint * 0.08 * (1.0 - rim * 0.7);
+	EMISSION = vec3(rim_line * 0.1 + streak * 0.16);
+	ALPHA = clamp(0.04 + edge * 3.0 + fresnel * 0.9 + rim * 0.25 + streak * 0.25, 0.0, 0.95);
 	ROUGHNESS = glass_roughness;
 	METALLIC = 0.0;
 	SPECULAR = 0.5 + fresnel * 0.5;

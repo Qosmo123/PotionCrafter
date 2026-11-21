@@ -93,6 +93,11 @@ var _history_timer: float = 0.0
 var _cork: MeshInstance3D
 var _label: Label3D
 var _label_card: MeshInstance3D
+## Hand-written contents tag on any vessel holding something (the full name +
+## grade label replaces it when the vessel is corked).
+@export var show_contents_tag: bool = true
+var _tag_timer: float = 0.0
+static var _parchment_tex: ImageTexture = null
 
 var _profile_r: PackedFloat64Array = PackedFloat64Array()
 var _profile_y: PackedFloat64Array = PackedFloat64Array()
@@ -186,6 +191,10 @@ func _process(delta: float) -> void:
 	if mixture == null:
 		return
 	_update_liquid_visual()
+	_tag_timer -= delta
+	if _tag_timer <= 0.0:
+		_tag_timer = 0.6
+		_update_contents_tag()
 	_history_timer -= delta
 	if _history_timer <= 0.0:
 		_history_timer = HISTORY_INTERVAL_S
@@ -205,6 +214,82 @@ func get_temperature_history_celsius() -> PackedFloat32Array:
 	return out
 
 
+## Contents tag: the main ingredient's name (or the potion's name for a real
+## mixture), refreshed a couple of times a second while the vessel is open.
+func _update_contents_tag() -> void:
+	if sealed:
+		return
+	var has: bool = show_contents_tag and mixture.get_liquid_volume_m3() + mixture.get_solid_volume_m3() > 2e-6
+	if profile != null and profile.vessel_name.contains("tray"):
+		has = false
+	if not has:
+		if _label_card != null:
+			_label_card.visible = false
+			_label.visible = false
+		return
+	if _cork == null:
+		_build_cork_and_label()
+		_cork.visible = false
+	var text: String = contents_tag_text(mixture, foam_height_meters)
+	if _label.text != text:
+		_label.text = text
+	_label_card.visible = true
+	_label.visible = true
+
+
+## Short tag text: the dominant species when it makes up most of the mass,
+## otherwise the potion's name (without the grade).
+static func contents_tag_text(m: MixtureContainer, foam_m: float) -> String:
+	var total: float = maxf(m.get_total_mass_kg(), 1e-12)
+	var water: int = SubstanceRegistry.index_of_id(&"water")
+	var best: int = -1
+	var best_mass: float = 0.0
+	var water_mass: float = 0.0
+	for k: int in m.active_count():
+		var i: int = m.active_index(k)
+		var mass: float = m.moles[i] * SubstanceRegistry.get_substance(i).molar_mass_kg_mol
+		if i == water:
+			water_mass = mass
+		elif mass > best_mass:
+			best_mass = mass
+			best = i
+	if best < 0 or best_mass / total < 0.02:
+		return SubstanceRegistry.get_substance(water).display_name if water >= 0 and water_mass > 0.0 else "Empty"
+	# Water is the solvent: name what's dissolved in it (diluted if mostly water).
+	if best_mass / maxf(total - water_mass, 1e-12) > 0.7:
+		var label: String = SubstanceRegistry.get_substance(best).display_name
+		return label + (" (diluted)" if water_mass / total > 0.6 and not label.to_lower().contains("water") else "")
+	return PotionNamer.name_for(m, foam_m).get_slice(" [", 0)
+
+
+## Aged parchment: warm fibres, a few blotches and darker, singed edges.
+static func parchment_texture() -> ImageTexture:
+	if _parchment_tex != null:
+		return _parchment_tex
+	var w: int = 128
+	var h: int = 64
+	var img: Image = Image.create(w, h, false, Image.FORMAT_RGBA8)
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 7
+	var noise: FastNoiseLite = FastNoiseLite.new()
+	noise.seed = 11
+	noise.frequency = 0.06
+	for y: int in h:
+		for x: int in w:
+			var u: float = float(x) / float(w - 1)
+			var v: float = float(y) / float(h - 1)
+			var fibre: float = noise.get_noise_2d(float(x) * 0.6, float(y) * 3.0) * 0.06
+			var blotch: float = maxf(noise.get_noise_2d(float(x) + 300.0, float(y) + 120.0), 0.0) * 0.12
+			var edge: float = minf(minf(u, 1.0 - u) * 2.0, minf(v, 1.0 - v) * 4.0)
+			var singe: float = 1.0 - smoothstep(0.0, 0.18, edge + noise.get_noise_2d(float(x) * 2.0, float(y) * 2.0) * 0.05)
+			var c: Color = Color(0.93, 0.85, 0.66) * (1.0 + fibre - blotch)
+			c = c.lerp(Color(0.55, 0.36, 0.18), singe * 0.7)
+			c.a = 1.0
+			img.set_pixel(x, y, c)
+	_parchment_tex = ImageTexture.create_from_image(img)
+	return _parchment_tex
+
+
 ## Cork the vessel and stick a parchment label on it (name + grade). Returns
 ## true if it is now sealed. Calling again uncorks it.
 func toggle_seal() -> bool:
@@ -218,6 +303,7 @@ func toggle_seal() -> bool:
 	if mixture == null or mixture.get_liquid_volume_m3() < 1e-7:
 		return false
 	sealed = true
+	_tag_timer = 0.0
 	open_top = false
 	if _cork == null:
 		_build_cork_and_label()
@@ -243,11 +329,14 @@ func _build_cork_and_label() -> void:
 	_cork.position.y = _lip_local_y + 0.006
 	add_child(_cork)
 	var outer_r: float = profile.outer_radius_meters if profile != null else inner_radius_meters + wall_thickness_meters
-	var mid_y: float = (_profile_y[0] + _lip_local_y) * 0.5
+	# Low on the body (the widest part of round flasks), not up on the neck.
+	var mid_y: float = lerpf(_profile_y[0], _lip_local_y, 0.36)
 	var card_mesh: QuadMesh = QuadMesh.new()
-	card_mesh.size = Vector2(minf(outer_r * 1.5, 0.07), 0.034)
+	# Card sized to the vessel: a slim tag on a vial, a broad label on a flask.
+	card_mesh.size = Vector2(minf(outer_r * 1.5, 0.07), clampf(outer_r * 0.95, 0.014, 0.034))
 	var card_mat: StandardMaterial3D = StandardMaterial3D.new()
-	card_mat.albedo_color = Color(0.9, 0.82, 0.62)
+	card_mat.albedo_color = Color(1.0, 0.96, 0.86)
+	card_mat.albedo_texture = parchment_texture()
 	card_mat.roughness = 0.9
 	card_mesh.material = card_mat
 	_label_card = MeshInstance3D.new()
@@ -255,10 +344,11 @@ func _build_cork_and_label() -> void:
 	_label_card.position = Vector3(0.0, mid_y, outer_r + 0.0015)
 	add_child(_label_card)
 	_label = Label3D.new()
-	_label.font_size = 28
+	_label.font_size = 44
+	_label.font = CosmicTheme.display_font()
 	_label.outline_size = 0
-	_label.pixel_size = 0.00012
-	_label.modulate = Color(0.22, 0.12, 0.06)
+	_label.pixel_size = 0.00011 * clampf(card_mesh.size.x / 0.05, 0.4, 1.0)
+	_label.modulate = Color(0.16, 0.08, 0.03)
 	_label.width = card_mesh.size.x / _label.pixel_size * 0.92
 	_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
