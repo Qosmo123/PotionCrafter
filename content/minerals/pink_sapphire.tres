@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/corundum_grit.tres" id="c0"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"pink_sapphire"
+display_name = "Pink Sapphire"
+formula = "Al₂O₃ (Cr)"
+kind = 3
+rarity = 3
+hardness_mohs = 9
+density_kg_m3 = 4000
+typical_mass_kg = 0.012
+color = Color(0.95, 0.4, 0.65, 1)
+luster = 1
+shape = 1
+emission = Color(0, 0, 0, 1)
+value_coins = 130
+can_facet = true
+fun_fact = "Just a little less chromium than a ruby. Where pink sapphire ends and ruby begins is argued about by gem labs."
+crush_products = Array[Resource]([ExtResource("c0")])
+crush_fractions = PackedFloat32Array(1)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Oxide"
+crystal_system = "Trigonal"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 0
+fracture = "conchoidal"
+diaphaneity = 0
+refractive_index = 1.77
+dispersion = 0.018
+phenomenon = 7
+colors_text = "baby pink to hot pink"
+localities = "Madagascar, Sri Lanka, Myanmar"
+uses = "jewellery"
+birthstone = "September"

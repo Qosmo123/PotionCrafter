@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/beryl_powder.tres" id="c0"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"chrysoberyl"
+display_name = "Chrysoberyl"
+formula = "BeAl₂O₄"
+kind = 3
+rarity = 2
+hardness_mohs = 8.5
+density_kg_m3 = 3720
+typical_mass_kg = 0.012
+color = Color(0.85, 0.85, 0.3, 1)
+luster = 1
+shape = 1
+emission = Color(0, 0, 0, 1)
+value_coins = 70
+can_facet = true
+fun_fact = "Third hardest common gem after diamond and corundum. Its rare relatives are cat's eye and alexandrite."
+crush_products = Array[Resource]([ExtResource("c0")])
+crush_fractions = PackedFloat32Array(1)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Oxide"
+crystal_system = "Orthorhombic"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 1
+fracture = "conchoidal"
+diaphaneity = 0
+refractive_index = 1.75
+dispersion = 0.015
+phenomenon = 0
+colors_text = "yellow, yellow-green, golden"
+localities = "Sri Lanka, Brazil, Madagascar"
+uses = "jewellery"
+birthstone = ""

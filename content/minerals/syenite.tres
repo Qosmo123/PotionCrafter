@@ -1,0 +1,43 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/feldspar_powder.tres" id="c0"]
+[ext_resource type="Resource" path="res://content/substances/silicate_dust.tres" id="c1"]
+[ext_resource type="Resource" path="res://content/minerals/tugtupite.tres" id="i0"]
+[ext_resource type="Resource" path="res://content/minerals/sodalite.tres" id="i1"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"syenite"
+display_name = "Sodalite Syenite"
+formula = "feldspar + sodalite"
+kind = 0
+rarity = 1
+hardness_mohs = 6
+density_kg_m3 = 2600
+typical_mass_kg = 0.12
+color = Color(0.55, 0.6, 0.75, 1)
+luster = 1
+shape = 0
+emission = Color(0, 0, 0, 1)
+value_coins = 7
+can_facet = false
+fun_fact = "Like granite without the quartz. In Greenland it hides rose-red tugtupite that blushes in sunlight."
+crush_products = Array[Resource]([ExtResource("c0"), ExtResource("c1")])
+crush_fractions = PackedFloat32Array(0.7, 0.3)
+inclusions = Array[Resource]([ExtResource("i0"), ExtResource("i1")])
+inclusion_chances = PackedFloat32Array(0.06, 0.35)
+mineral_class = "Igneous (plutonic)"
+crystal_system = "—"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 0
+fracture = "uneven"
+diaphaneity = 2
+refractive_index = 0
+dispersion = 0
+phenomenon = 0
+colors_text = "grey with blue patches"
+localities = "Greenland, Ontario, Namibia"
+uses = "decorative stone"
+birthstone = ""

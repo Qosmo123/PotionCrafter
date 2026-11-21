@@ -1,0 +1,44 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/olivine_sand.tres" id="c0"]
+[ext_resource type="Resource" path="res://content/substances/silicate_dust.tres" id="c1"]
+[ext_resource type="Resource" path="res://content/minerals/peridot.tres" id="i0"]
+[ext_resource type="Resource" path="res://content/minerals/chrome_diopside.tres" id="i1"]
+[ext_resource type="Resource" path="res://content/minerals/clinohumite.tres" id="i2"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"peridotite"
+display_name = "Peridotite"
+formula = "olivine + pyroxene"
+kind = 0
+rarity = 1
+hardness_mohs = 6.5
+density_kg_m3 = 3300
+typical_mass_kg = 0.12
+color = Color(0.4, 0.5, 0.3, 1)
+luster = 1
+shape = 0
+emission = Color(0, 0, 0, 1)
+value_coins = 6
+can_facet = false
+fun_fact = "The Earth's mantle itself, brought to the surface. Most of the planet below the crust is made of this."
+crush_products = Array[Resource]([ExtResource("c0"), ExtResource("c1")])
+crush_fractions = PackedFloat32Array(0.8, 0.2)
+inclusions = Array[Resource]([ExtResource("i0"), ExtResource("i1"), ExtResource("i2")])
+inclusion_chances = PackedFloat32Array(0.3, 0.15, 0.02)
+mineral_class = "Igneous (ultramafic)"
+crystal_system = "—"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 0
+fracture = "uneven"
+diaphaneity = 2
+refractive_index = 0
+dispersion = 0
+phenomenon = 0
+colors_text = "olive green"
+localities = "Oman, Arizona (San Carlos), Hawaii"
+uses = "collecting, peridot"
+birthstone = ""

@@ -1,0 +1,44 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/silicate_dust.tres" id="c0"]
+[ext_resource type="Resource" path="res://content/substances/feldspar_powder.tres" id="c1"]
+[ext_resource type="Resource" path="res://content/minerals/prehnite.tres" id="i0"]
+[ext_resource type="Resource" path="res://content/minerals/agate.tres" id="i1"]
+[ext_resource type="Resource" path="res://content/minerals/native_copper.tres" id="i2"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"amygdaloidal_basalt"
+display_name = "Amygdaloidal Basalt"
+formula = "basalt with filled gas holes"
+kind = 0
+rarity = 0
+hardness_mohs = 6
+density_kg_m3 = 2900
+typical_mass_kg = 0.12
+color = Color(0.3, 0.3, 0.32, 1)
+luster = 0
+shape = 0
+emission = Color(0, 0, 0, 1)
+value_coins = 5
+can_facet = false
+fun_fact = "Gas bubbles in old lava filled up with minerals, leaving almond-shaped surprises."
+crush_products = Array[Resource]([ExtResource("c0"), ExtResource("c1")])
+crush_fractions = PackedFloat32Array(0.7, 0.3)
+inclusions = Array[Resource]([ExtResource("i0"), ExtResource("i1"), ExtResource("i2")])
+inclusion_chances = PackedFloat32Array(0.25, 0.2, 0.05)
+mineral_class = "Igneous (volcanic)"
+crystal_system = "—"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 0
+fracture = "uneven"
+diaphaneity = 2
+refractive_index = 0
+dispersion = 0
+phenomenon = 0
+colors_text = "dark grey with pale almond-shaped spots"
+localities = "Lake Superior (USA), India, Scotland"
+uses = "collecting"
+birthstone = ""

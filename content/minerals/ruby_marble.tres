@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/calcite_powder.tres" id="c0"]
+[ext_resource type="Resource" path="res://content/substances/corundum_grit.tres" id="c1"]
+[ext_resource type="Resource" path="res://content/minerals/ruby.tres" id="i0"]
+[ext_resource type="Resource" path="res://content/minerals/spinel.tres" id="i1"]
+[ext_resource type="Resource" path="res://content/minerals/pink_sapphire.tres" id="i2"]
+[ext_resource type="Resource" path="res://content/minerals/clinohumite.tres" id="i3"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"ruby_marble"
+display_name = "Ruby Marble"
+formula = "CaCO₃ with corundum"
+kind = 0
+rarity = 2
+hardness_mohs = 3.5
+density_kg_m3 = 2750
+typical_mass_kg = 0.12
+color = Color(0.92, 0.9, 0.86, 1)
+luster = 1
+shape = 0
+emission = Color(0, 0, 0, 1)
+value_coins = 14
+can_facet = false
+fun_fact = "The finest rubies grew in white marble, which has almost no iron, so they glow their brightest red."
+crush_products = Array[Resource]([ExtResource("c0"), ExtResource("c1")])
+crush_fractions = PackedFloat32Array(0.9, 0.1)
+inclusions = Array[Resource]([ExtResource("i0"), ExtResource("i1"), ExtResource("i2"), ExtResource("i3")])
+inclusion_chances = PackedFloat32Array(0.1, 0.12, 0.06, 0.03)
+mineral_class = "Metamorphic"
+crystal_system = "—"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 4
+fracture = "uneven"
+diaphaneity = 2
+refractive_index = 0
+dispersion = 0
+phenomenon = 0
+colors_text = "snow white with red specks"
+localities = "Mogok (Myanmar), Luc Yen (Vietnam), Afghanistan"
+uses = "ruby mining"
+birthstone = ""

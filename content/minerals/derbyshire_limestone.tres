@@ -1,0 +1,43 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/calcite_powder.tres" id="c0"]
+[ext_resource type="Resource" path="res://content/substances/fluorite_powder.tres" id="c1"]
+[ext_resource type="Resource" path="res://content/minerals/blue_john.tres" id="i0"]
+[ext_resource type="Resource" path="res://content/minerals/fluorite_cube.tres" id="i1"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"derbyshire_limestone"
+display_name = "Derbyshire Limestone"
+formula = "CaCO₃ with fluorite veins"
+kind = 0
+rarity = 1
+hardness_mohs = 3.5
+density_kg_m3 = 2700
+typical_mass_kg = 0.12
+color = Color(0.75, 0.72, 0.68, 1)
+luster = 0
+shape = 0
+emission = Color(0, 0, 0, 1)
+value_coins = 6
+can_facet = false
+fun_fact = "Grey limestone threaded with purple fluorite veins: home of the rare banded Blue John."
+crush_products = Array[Resource]([ExtResource("c0"), ExtResource("c1")])
+crush_fractions = PackedFloat32Array(0.8, 0.2)
+inclusions = Array[Resource]([ExtResource("i0"), ExtResource("i1")])
+inclusion_chances = PackedFloat32Array(0.15, 0.2)
+mineral_class = "Sedimentary (limestone)"
+crystal_system = "—"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 4
+fracture = "uneven"
+diaphaneity = 2
+refractive_index = 0
+dispersion = 0
+phenomenon = 0
+colors_text = "grey with purple veins"
+localities = "Peak District (England)"
+uses = "building stone, Blue John mining"
+birthstone = ""

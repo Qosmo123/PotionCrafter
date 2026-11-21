@@ -1,0 +1,50 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=13 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/quartz_sand_coarse.tres" id="c0"]
+[ext_resource type="Resource" path="res://content/substances/corundum_grit.tres" id="c1"]
+[ext_resource type="Resource" path="res://content/substances/zircon_sand.tres" id="c2"]
+[ext_resource type="Resource" path="res://content/minerals/yellow_sapphire.tres" id="i0"]
+[ext_resource type="Resource" path="res://content/minerals/pink_sapphire.tres" id="i1"]
+[ext_resource type="Resource" path="res://content/minerals/sapphire.tres" id="i2"]
+[ext_resource type="Resource" path="res://content/minerals/spinel.tres" id="i3"]
+[ext_resource type="Resource" path="res://content/minerals/chrysoberyl.tres" id="i4"]
+[ext_resource type="Resource" path="res://content/minerals/sinhalite.tres" id="i5"]
+[ext_resource type="Resource" path="res://content/minerals/taaffeite.tres" id="i6"]
+[ext_resource type="Resource" path="res://content/minerals/zircon.tres" id="i7"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"gem_gravel"
+display_name = "Gem Gravel"
+formula = "river-worn gravel"
+kind = 0
+rarity = 2
+hardness_mohs = 7
+density_kg_m3 = 2900
+typical_mass_kg = 0.12
+color = Color(0.6, 0.55, 0.45, 1)
+luster = 0
+shape = 2
+emission = Color(0, 0, 0, 1)
+value_coins = 15
+can_facet = false
+fun_fact = "Rivers wash gems out of the mountains and drop them with the gravel. In Sri Lanka it is dug from pits and washed in baskets."
+crush_products = Array[Resource]([ExtResource("c0"), ExtResource("c1"), ExtResource("c2")])
+crush_fractions = PackedFloat32Array(0.6, 0.2, 0.2)
+inclusions = Array[Resource]([ExtResource("i0"), ExtResource("i1"), ExtResource("i2"), ExtResource("i3"), ExtResource("i4"), ExtResource("i5"), ExtResource("i6"), ExtResource("i7")])
+inclusion_chances = PackedFloat32Array(0.12, 0.08, 0.06, 0.1, 0.1, 0.04, 0.015, 0.2)
+mineral_class = "Sedimentary (alluvial)"
+crystal_system = "—"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 0
+fracture = "uneven"
+diaphaneity = 2
+refractive_index = 0
+dispersion = 0
+phenomenon = 0
+colors_text = "rounded pebbles of every colour"
+localities = "Sri Lanka (Ratnapura), Myanmar, Madagascar"
+uses = "gem mining"
+birthstone = ""

@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/malachite_powder.tres" id="c0"]
+[ext_resource type="Resource" path="res://content/substances/silicate_dust.tres" id="c1"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"chrysocolla"
+display_name = "Chrysocolla"
+formula = "(Cu,Al)₂H₂Si₂O₅(OH)₄·nH₂O"
+kind = 3
+rarity = 1
+hardness_mohs = 2.5
+density_kg_m3 = 2200
+typical_mass_kg = 0.012
+color = Color(0.1, 0.65, 0.7, 1)
+luster = 3
+shape = 0
+emission = Color(0, 0, 0, 1)
+value_coins = 16
+can_facet = true
+fun_fact = "A soft copper mineral the colour of a tropical lagoon. Ancient Greek goldsmiths used it to solder gold."
+crush_products = Array[Resource]([ExtResource("c0"), ExtResource("c1")])
+crush_fractions = PackedFloat32Array(0.7, 0.3)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Silicate (copper)"
+crystal_system = "Orthorhombic"
+streak_name = "pale blue-green"
+streak_color = Color(0.6, 0.85, 0.85, 1)
+cleavage = 0
+fracture = "conchoidal"
+diaphaneity = 2
+refractive_index = 1.5
+dispersion = 0
+phenomenon = 0
+colors_text = "sky blue to turquoise green"
+localities = "Arizona, Peru, DR Congo"
+uses = "cabochons, carvings"
+birthstone = ""

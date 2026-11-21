@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/quartz_sand_fine.tres" id="c0"]
+[ext_resource type="Resource" path="res://content/substances/iron_oxide.tres" id="c1"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"boulder_opal"
+display_name = "Boulder Opal"
+formula = "SiO₂·nH₂O on ironstone"
+kind = 3
+rarity = 3
+hardness_mohs = 6
+density_kg_m3 = 2300
+typical_mass_kg = 0.012
+color = Color(0.15, 0.4, 0.75, 1)
+luster = 1
+shape = 9
+emission = Color(0, 0, 0, 1)
+value_coins = 170
+can_facet = true
+fun_fact = "Thin veins of opal grow inside cracks in ironstone boulders, so cutters leave the brown rock on as a natural backing."
+crush_products = Array[Resource]([ExtResource("c0"), ExtResource("c1")])
+crush_fractions = PackedFloat32Array(0.7, 0.3)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Mineraloid"
+crystal_system = "Amorphous"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 0
+fracture = "conchoidal"
+diaphaneity = 2
+refractive_index = 1.45
+dispersion = 0
+phenomenon = 3
+colors_text = "blue-green fire on brown ironstone"
+localities = "Queensland (Australia)"
+uses = "jewellery"
+birthstone = ""

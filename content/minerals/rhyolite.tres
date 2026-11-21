@@ -1,0 +1,44 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/quartz_sand_fine.tres" id="c0"]
+[ext_resource type="Resource" path="res://content/substances/feldspar_powder.tres" id="c1"]
+[ext_resource type="Resource" path="res://content/minerals/red_beryl.tres" id="i0"]
+[ext_resource type="Resource" path="res://content/minerals/blue_topaz.tres" id="i1"]
+[ext_resource type="Resource" path="res://content/minerals/volcanic_obsidian.tres" id="i2"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"rhyolite"
+display_name = "Rhyolite"
+formula = "SiO₂-rich lava"
+kind = 0
+rarity = 0
+hardness_mohs = 6
+density_kg_m3 = 2500
+typical_mass_kg = 0.12
+color = Color(0.82, 0.6, 0.55, 1)
+luster = 0
+shape = 0
+emission = Color(0, 0, 0, 1)
+value_coins = 4
+can_facet = false
+fun_fact = "Granite's volcanic twin: the same recipe, cooled fast at the surface. Rare red beryl grows in its gas pockets in Utah."
+crush_products = Array[Resource]([ExtResource("c0"), ExtResource("c1")])
+crush_fractions = PackedFloat32Array(0.5, 0.5)
+inclusions = Array[Resource]([ExtResource("i0"), ExtResource("i1"), ExtResource("i2")])
+inclusion_chances = PackedFloat32Array(0.03, 0.08, 0.2)
+mineral_class = "Igneous (volcanic)"
+crystal_system = "—"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 0
+fracture = "conchoidal"
+diaphaneity = 2
+refractive_index = 0
+dispersion = 0
+phenomenon = 0
+colors_text = "pink to grey with flow bands"
+localities = "Utah, Yellowstone, Iceland"
+uses = "building stone"
+birthstone = ""

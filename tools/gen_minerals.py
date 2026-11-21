@@ -216,11 +216,14 @@ def main():
     import sys
     sys.path.insert(0, os.path.dirname(__file__))
     import minerals_encyclopedia as enc
+    import minerals_more
     for group in (FINDS, ROCKS):
         for mid, extra in enc.ENRICH.items():
             if mid in group:
                 group[mid].update(extra)
-    for mid, d in enc.ENTRIES.items():
+    entries = dict(enc.ENTRIES)
+    entries.update(minerals_more.ENTRIES)
+    for mid, d in entries.items():
         # Keep hand-tuned emission glow of originals when an entry replaces them.
         old = FINDS.get(mid) or ROCKS.get(mid)
         if old and "emission" in old and "emission" not in d:

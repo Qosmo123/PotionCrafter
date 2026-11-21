@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/olivine_sand.tres" id="c0"]
+[ext_resource type="Resource" path="res://content/substances/silicate_dust.tres" id="c1"]
+[ext_resource type="Resource" path="res://content/minerals/diamond.tres" id="i0"]
+[ext_resource type="Resource" path="res://content/minerals/chrome_diopside.tres" id="i1"]
+[ext_resource type="Resource" path="res://content/minerals/pyrope.tres" id="i2"]
+[ext_resource type="Resource" path="res://content/minerals/olivine.tres" id="i3"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"kimberlite"
+display_name = "Kimberlite"
+formula = "volcanic pipe rock"
+kind = 0
+rarity = 2
+hardness_mohs = 6
+density_kg_m3 = 3000
+typical_mass_kg = 0.12
+color = Color(0.35, 0.4, 0.36, 1)
+luster = 0
+shape = 0
+emission = Color(0, 0, 0, 1)
+value_coins = 12
+can_facet = false
+fun_fact = "It shot up from 150 km down faster than a car on a motorway, carrying diamonds before they could turn to graphite."
+crush_products = Array[Resource]([ExtResource("c0"), ExtResource("c1")])
+crush_fractions = PackedFloat32Array(0.6, 0.4)
+inclusions = Array[Resource]([ExtResource("i0"), ExtResource("i1"), ExtResource("i2"), ExtResource("i3")])
+inclusion_chances = PackedFloat32Array(0.05, 0.25, 0.3, 0.35)
+mineral_class = "Igneous (ultramafic)"
+crystal_system = "—"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 0
+fracture = "uneven"
+diaphaneity = 2
+refractive_index = 0
+dispersion = 0
+phenomenon = 0
+colors_text = "blue-green 'blueground'"
+localities = "South Africa, Botswana, Siberia, Canada"
+uses = "diamond mining"
+birthstone = ""

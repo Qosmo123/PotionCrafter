@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/corundum_grit.tres" id="c0"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"taaffeite"
+display_name = "Taaffeite"
+formula = "BeMgAl₄O₈"
+kind = 3
+rarity = 4
+hardness_mohs = 8.5
+density_kg_m3 = 3600
+typical_mass_kg = 0.012
+color = Color(0.8, 0.55, 0.8, 1)
+luster = 1
+shape = 1
+emission = Color(0, 0, 0, 1)
+value_coins = 420
+can_facet = true
+fun_fact = "The only gem first found already cut: Count Taaffe spotted it in a box of spinels in a Dublin jeweller's shop in 1945."
+crush_products = Array[Resource]([ExtResource("c0")])
+crush_fractions = PackedFloat32Array(1)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Oxide"
+crystal_system = "Hexagonal"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 0
+fracture = "conchoidal"
+diaphaneity = 0
+refractive_index = 1.72
+dispersion = 0.019
+phenomenon = 0
+colors_text = "mauve, lilac, pink"
+localities = "Sri Lanka, Tanzania, Myanmar"
+uses = "extremely rare collector gem"
+birthstone = ""

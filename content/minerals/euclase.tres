@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/beryl_powder.tres" id="c0"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"euclase"
+display_name = "Euclase"
+formula = "BeAlSiO₄(OH)"
+kind = 3
+rarity = 3
+hardness_mohs = 7.5
+density_kg_m3 = 3040
+typical_mass_kg = 0.012
+color = Color(0.45, 0.7, 0.95, 1)
+luster = 1
+shape = 10
+emission = Color(0, 0, 0, 1)
+value_coins = 110
+can_facet = true
+fun_fact = "So easy to split along its cleavage that its name comes from Greek for 'breaks well'. Cutters handle it like glass."
+crush_products = Array[Resource]([ExtResource("c0")])
+crush_fractions = PackedFloat32Array(1)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Silicate"
+crystal_system = "Monoclinic"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 2
+fracture = "conchoidal"
+diaphaneity = 0
+refractive_index = 1.66
+dispersion = 0.016
+phenomenon = 0
+colors_text = "colourless to ice blue"
+localities = "Brazil, Colombia, Zimbabwe"
+uses = "collector gem"
+birthstone = ""

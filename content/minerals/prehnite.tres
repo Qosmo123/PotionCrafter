@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/silicate_dust.tres" id="c0"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"prehnite"
+display_name = "Prehnite"
+formula = "Ca₂Al₂Si₃O₁₀(OH)₂"
+kind = 3
+rarity = 1
+hardness_mohs = 6.25
+density_kg_m3 = 2870
+typical_mass_kg = 0.012
+color = Color(0.7, 0.85, 0.45, 1)
+luster = 4
+shape = 2
+emission = Color(0, 0, 0, 1)
+value_coins = 18
+can_facet = true
+fun_fact = "The first mineral named after a person: Dutch colonel Hendrik von Prehn, who brought it back from South Africa."
+crush_products = Array[Resource]([ExtResource("c0")])
+crush_fractions = PackedFloat32Array(1)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Silicate"
+crystal_system = "Orthorhombic"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 2
+fracture = "uneven"
+diaphaneity = 1
+refractive_index = 1.63
+dispersion = 0
+phenomenon = 0
+colors_text = "translucent apple green"
+localities = "Australia, South Africa, New Jersey"
+uses = "cabochons, beads"
+birthstone = ""

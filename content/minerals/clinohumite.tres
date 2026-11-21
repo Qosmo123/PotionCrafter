@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/olivine_sand.tres" id="c0"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"clinohumite"
+display_name = "Clinohumite"
+formula = "(Mg,Fe)₉(SiO₄)₄(F,OH)₂"
+kind = 3
+rarity = 4
+hardness_mohs = 6
+density_kg_m3 = 3260
+typical_mass_kg = 0.012
+color = Color(1, 0.55, 0.1, 1)
+luster = 1
+shape = 1
+emission = Color(0, 0, 0, 1)
+value_coins = 260
+can_facet = true
+fun_fact = "Gem-quality crystals were unknown until 1983. Bright orange, and rarely bigger than a fingernail."
+crush_products = Array[Resource]([ExtResource("c0")])
+crush_fractions = PackedFloat32Array(1)
+inclusions = Array[Resource]([])
+inclusion_chances = PackedFloat32Array()
+mineral_class = "Silicate"
+crystal_system = "Monoclinic"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 0
+fracture = "conchoidal"
+diaphaneity = 0
+refractive_index = 1.65
+dispersion = 0
+phenomenon = 0
+colors_text = "fiery orange"
+localities = "Pamir mountains (Tajikistan), Siberia"
+uses = "rare collector gem"
+birthstone = ""

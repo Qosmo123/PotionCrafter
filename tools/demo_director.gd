@@ -371,6 +371,9 @@ func _rocks_demo(bench: Node) -> void:
 		return
 	var ids: Array = ["granite", "basalt", "sandstone", "shale", "gneiss", "pyrite_cluster", "galena",
 		"amethyst", "emerald", "ruby", "trilobite", "malachite_ore", "river_sand"]
+	if _args.has("newgems"):
+		ids = ["pegmatite", "kimberlite", "eclogite", "ruby_marble", "copper_gossan", "gem_gravel", "travertine",
+			"hiddenite", "taaffeite", "hauyne", "tugtupite", "clinohumite", "pink_sapphire", "chrysocolla"]
 	for i: int in ids.size():
 		var m: MineralData = Rock3D.get_mineral(ids[i])
 		if m == null:

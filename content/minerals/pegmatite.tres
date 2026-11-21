@@ -1,0 +1,48 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/feldspar_powder.tres" id="c0"]
+[ext_resource type="Resource" path="res://content/substances/quartz_sand_coarse.tres" id="c1"]
+[ext_resource type="Resource" path="res://content/substances/mica_flakes.tres" id="c2"]
+[ext_resource type="Resource" path="res://content/minerals/hiddenite.tres" id="i0"]
+[ext_resource type="Resource" path="res://content/minerals/euclase.tres" id="i1"]
+[ext_resource type="Resource" path="res://content/minerals/jeremejevite.tres" id="i2"]
+[ext_resource type="Resource" path="res://content/minerals/aquamarine.tres" id="i3"]
+[ext_resource type="Resource" path="res://content/minerals/morganite.tres" id="i4"]
+[ext_resource type="Resource" path="res://content/minerals/muscovite.tres" id="i5"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"pegmatite"
+display_name = "Pegmatite"
+formula = "giant-crystal granite"
+kind = 0
+rarity = 1
+hardness_mohs = 6.5
+density_kg_m3 = 2600
+typical_mass_kg = 0.12
+color = Color(0.88, 0.8, 0.72, 1)
+luster = 1
+shape = 0
+emission = Color(0, 0, 0, 1)
+value_coins = 8
+can_facet = false
+fun_fact = "The last, wettest drops of a granite magma, where crystals grow as big as a door. Most of the world's beryl and tourmaline comes from it."
+crush_products = Array[Resource]([ExtResource("c0"), ExtResource("c1"), ExtResource("c2")])
+crush_fractions = PackedFloat32Array(0.55, 0.3, 0.15)
+inclusions = Array[Resource]([ExtResource("i0"), ExtResource("i1"), ExtResource("i2"), ExtResource("i3"), ExtResource("i4"), ExtResource("i5")])
+inclusion_chances = PackedFloat32Array(0.1, 0.06, 0.03, 0.12, 0.1, 0.4)
+mineral_class = "Igneous (pegmatite)"
+crystal_system = "—"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 0
+fracture = "uneven"
+diaphaneity = 2
+refractive_index = 0
+dispersion = 0
+phenomenon = 0
+colors_text = "huge pink feldspar, quartz and mica crystals"
+localities = "Brazil, Madagascar, Namibia, Maine (USA)"
+uses = "gem mining, lithium ore"
+birthstone = ""
