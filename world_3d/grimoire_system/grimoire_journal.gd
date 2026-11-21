@@ -30,6 +30,8 @@ var collection: Dictionary = {}
 ## Grimoire entries the player has opened ("recipe:<id>", "mineral:<id>" -> true),
 ## so newly unlocked pages can wear a NEW badge. Additive save key.
 var seen: Dictionary = {}
+## Recipe pinned to the bench as a floating formula card ("" = none). Additive save key.
+var pinned_recipe: String = ""
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 
 
@@ -244,6 +246,16 @@ func mark_seen(key: String) -> void:
 	_save()
 
 
+func pin(recipe_id: String) -> void:
+	pinned_recipe = "" if pinned_recipe == recipe_id else recipe_id
+	_save()
+	changed.emit()
+
+
+func pinned() -> RecipeData:
+	return _recipe(StringName(pinned_recipe)) if pinned_recipe != "" else null
+
+
 # --- Persistence ------------------------------------------------------------------------
 
 func _save() -> void:
@@ -257,6 +269,7 @@ func _save() -> void:
 	cfg.set_value("journal", "commissions", commissions)
 	cfg.set_value("journal", "collection", collection)
 	cfg.set_value("journal", "seen", seen)
+	cfg.set_value("journal", "pinned", pinned_recipe)
 	cfg.save(SAVE_PATH)
 
 
@@ -273,6 +286,7 @@ func _load() -> void:
 	coins = cfg.get_value("journal", "coins", 0)
 	collection = cfg.get_value("journal", "collection", {})
 	seen = cfg.get_value("journal", "seen", {})
+	pinned_recipe = cfg.get_value("journal", "pinned", "")
 	var saved_orders: Array = cfg.get_value("journal", "commissions", [])
 	for o: Variant in saved_orders:
 		commissions.append(o as Dictionary)

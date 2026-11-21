@@ -47,6 +47,9 @@ var _coins: Label
 var _strike: Button
 var _station_buttons: Array[Button] = []
 var _shell: Control
+var _pin_card: PanelContainer
+var _pin_body: VBoxContainer
+var _pin_shown: String = "?"
 
 
 func _ready() -> void:
@@ -114,12 +117,15 @@ func _ready() -> void:
 	_strike.pressed.connect(_slam_held)
 	_shell.add_child(_strike)
 	_coins = Label.new()
+	# Coin purse sits in the top bar, left of the Help button.
 	_coins.anchor_left = 1.0
 	_coins.anchor_right = 1.0
-	_coins.offset_left = -200
-	_coins.offset_right = -24
-	_coins.offset_top = 74
-	_coins.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_coins.offset_left = -620
+	_coins.offset_right = -484
+	_coins.offset_top = 16
+	_coins.offset_bottom = 64
+	_coins.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_coins.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_coins.add_theme_color_override(&"font_color", CosmicTheme.STARLIGHT_GOLD)
 	_coins.add_theme_color_override(&"font_shadow_color", Color(CosmicTheme.STARLIGHT_GOLD, 0.45))
 	_coins.add_theme_constant_override(&"shadow_outline_size", 8)
@@ -130,7 +136,6 @@ func _ready() -> void:
 	purse.content_margin_left = 14
 	purse.content_margin_right = 14
 	_coins.add_theme_stylebox_override(&"normal", purse)
-	_coins.offset_left = -150
 	_coins.tooltip_text = "Coins earned from commissions and specimens"
 	_coins.mouse_filter = Control.MOUSE_FILTER_PASS
 	_shell.add_child(_coins)
@@ -170,9 +175,23 @@ func _ready() -> void:
 	_help.add_child(help_label)
 	_shell.add_child(_help)
 
+	_pin_card = PanelContainer.new()
+	_pin_card.position = Vector2(CosmicTheme.GUTTER, 84)
+	_pin_card.custom_minimum_size = Vector2(340, 0)
+	_pin_card.size = Vector2(340, 0)
+	_pin_card.add_theme_stylebox_override(&"panel", CosmicTheme.glass(CosmicTheme.PRISM_PINK, 14, 1, Color(CosmicTheme.DEEP, 0.72)))
+	CosmicTheme.frost(_pin_card)
+	_pin_card.visible = false
+	_shell.add_child(_pin_card)
+	_pin_body = VBoxContainer.new()
+	_pin_body.add_theme_constant_override(&"separation", 4)
+	_pin_card.add_child(_pin_body)
+
 	var journal: GrimoireJournal = GrimoireJournal.instance
 	if journal != null:
 		journal.toast.connect(show_toast)
+		journal.changed.connect(_refresh_pin)
+		_refresh_pin.call_deferred()
 	show_toast.call_deferred("Welcome to the lab. Press H for controls, G for your Grimoire.", &"info")
 
 
@@ -187,6 +206,62 @@ func _corner_button(text: String, offset_left: float, action: Callable, width: f
 	b.offset_bottom = 64
 	b.pressed.connect(action)
 	_shell.add_child(b)
+
+
+## The pinned formula, floating like a ghostly page beside the bench.
+func _refresh_pin() -> void:
+	var journal: GrimoireJournal = GrimoireJournal.instance
+	var r: RecipeData = journal.pinned() if journal != null else null
+	var id: String = String(r.recipe_id) if r != null else ""
+	if id == _pin_shown:
+		return
+	_pin_shown = id
+	for c: Node in _pin_body.get_children():
+		c.queue_free()
+	_pin_card.visible = r != null
+	if r == null:
+		return
+	var head: HBoxContainer = HBoxContainer.new()
+	_pin_body.add_child(head)
+	var t: Label = CosmicTheme.title("✦ " + r.title, 18, CosmicTheme.STARLIGHT_GOLD)
+	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	t.custom_minimum_size = Vector2(240, 0)
+	head.add_child(t)
+	var unpin: Button = Button.new()
+	unpin.text = "✕"
+	unpin.tooltip_text = "Unpin"
+	unpin.flat = true
+	unpin.custom_minimum_size = Vector2(36, 32)
+	unpin.pressed.connect(func() -> void: journal.pin(id))
+	head.add_child(unpin)
+	var f: Label = CosmicTheme.label(r.formula, 13, CosmicTheme.PRISM_CYAN, CosmicTheme.mono_font())
+	f.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_pin_body.add_child(f)
+	var ing: Label = CosmicTheme.label("Ingredients:  " + ", ".join(r.ingredients), 13, CosmicTheme.TEXT)
+	ing.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_pin_body.add_child(ing)
+	for k: int in r.method_steps.size():
+		var step: Label = CosmicTheme.label("%d.  %s" % [k + 1, r.method_steps[k]], 13, CosmicTheme.TEXT_DIM)
+		step.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		_pin_body.add_child(step)
+	var gather: Button = Button.new()
+	gather.text = "☿  Gather ingredients"
+	gather.custom_minimum_size = Vector2(0, 36)
+	CosmicTheme.style_button(gather, CosmicTheme.PRISM_CYAN)
+	gather.pressed.connect(func() -> void:
+		if InventoryStore.instance == null:
+			return
+		var missing: PackedStringArray = InventoryStore.instance.gather(r)
+		if missing.size() == r.ingredients.size():
+			CosmicTheme.shake(_pin_card)
+		show_toast(InventoryStore.instance.last_message, &"info" if missing.is_empty() else &"warning"))
+	_pin_body.add_child(gather)
+	for n: Node in _pin_body.get_children():
+		if n is Label:
+			(n as Label).custom_minimum_size.x = 310.0
+	_pin_card.reset_size.call_deferred()
+	CosmicTheme.reveal(_pin_card)
 
 
 func toggle_help() -> void:
@@ -235,17 +310,21 @@ func _unhandled_input(event: InputEvent) -> void:
 		_slam_held()
 	elif key.keycode == KEY_B and grabber != null and grabber.held_body is Vessel3D:
 		bottle(grabber.held_body as Vessel3D)
+	elif key.keycode == KEY_B:
+		show_toast("Pick up a vessel first, then press B to cork and label it", &"warning")
 	elif key.keycode == KEY_S and SafetySheetUI.instance != null and not SafetySheetUI.instance.is_open():
 		var target: Object = grabber.held_body if grabber != null and grabber.held_body != null else (_pick(get_viewport().get_mouse_position()) if camera != null else null)
 		if target is Vessel3D and (target as Vessel3D).mixture != null and (target as Vessel3D).mixture.get_total_mass_kg() > 1e-6:
 			SafetySheetUI.instance.open_for_vessel(target as Vessel3D)
 		else:
-			show_toast("Hold or point at a filled vessel, then press S for its safety data sheet", &"info")
+			show_toast("Hold or point at a filled vessel, then press S for its safety data sheet", &"warning")
 
 
 func _slam_held() -> void:
 	if grabber != null and grabber.held_body != null and grabber.held_body.has_method(&"slam"):
 		grabber.held_body.call(&"slam")
+	elif _strike.visible:
+		CosmicTheme.shake(_strike)
 
 
 ## Cork + label the vessel and record it, or uncork it if already sealed.
@@ -257,7 +336,7 @@ func bottle(vessel: Vessel3D) -> void:
 		if GrimoireJournal.instance != null:
 			GrimoireJournal.instance.record_bottle(vessel)
 	else:
-		show_toast("Nothing to bottle: the vessel is empty", &"info")
+		show_toast("Nothing to bottle: the vessel is empty", &"warning")
 
 
 func _process(_delta: float) -> void:
@@ -323,9 +402,14 @@ static func describe(target: Object) -> String:
 			MineralData.Kind.SAND: hint = "Drop it into the sand sifter and shake"
 			MineralData.Kind.GEM, MineralData.Kind.MINERAL, MineralData.Kind.FOSSIL:
 				hint = ("Facet it on the faceting machine" if m.can_facet and rock.polish >= 0.3 else "Polish it on the gem polisher") if rock.cut == RockMeshes.Cut.NONE else "A finished gem! Worth %d ◉" % rock.value()
-		return "[b]%s[/b]   [color=#%s]%s %s[/color]\n[color=#5CE1E6]%s  ·  Mohs %.1f  ·  %.0f g  ·  %d ◉[/color]\n[color=#D9D3F5][i]%s[/i][/color]\n[color=#B3ADD6]%s[/color]" % [
-			rock.describe_name(), m.rarity_color().to_html(false), "★".repeat(m.rarity + 1), m.rarity_name(), m.formula, m.hardness_mohs,
-			rock.mass_kg * 1000.0, rock.value(), m.fun_fact.get_slice(".", 0) + ".", hint]
+		var finish: String = ""
+		if rock.polish > 0.01 or rock.cut != RockMeshes.Cut.NONE:
+			finish = "\n[color=#B3ADD6]Polish[/color] [color=#F4D06F]%s[/color]" % _meter(rock.polish)
+			if rock.cut != RockMeshes.Cut.NONE:
+				finish += "   [color=#B3ADD6]Cut quality[/color] [color=#FF6B9D]%s[/color] %d%%" % [_meter(rock.cut_quality), int(rock.cut_quality * 100.0)]
+		return "[b]%s[/b]   [color=#%s]%s %s[/color]\n[color=#5CE1E6]%s  ·  Mohs %.1f  ·  %.0f g  ·  %d ◉[/color]%s\n[color=#D9D3F5][i]%s[/i][/color]\n[color=#B3ADD6]%s[/color]" % [
+			rock.describe_name(), CosmicTheme.rarity_aura(m.rarity).to_html(false), "★".repeat(m.rarity + 1), m.rarity_name(), m.formula, m.hardness_mohs,
+			rock.mass_kg * 1000.0, rock.value(), finish, m.fun_fact.get_slice(".", 0) + ".", hint]
 	if target is Hammer3D:
 		return "[b]Geologist's Hammer[/b]\n[color=#B3ADD6]Hold it over a rock and press Space (or Strike) to smash it open.[/color]"
 	if target is MachineHandle3D:
@@ -338,6 +422,12 @@ static func describe(target: Object) -> String:
 		var berry: Berry3D = target as Berry3D
 		return "[b]%s[/b]  [color=#F4D06F]%s[/color]\n[color=#B3ADD6]Drop it into a vessel to burst it.[/color]" % [berry.juice.display_name.replace(" Juice", ""), berry.juice.chemical_formula]
 	return ""
+
+
+## Ten-pip text meter, e.g. ◆◆◆◆◆◆◇◇◇◇ for 0.6.
+static func _meter(fraction: float) -> String:
+	var n: int = clampi(int(round(fraction * 10.0)), 0, 10)
+	return "◆".repeat(n) + "◇".repeat(10 - n)
 
 
 static func _vessel_kind(v: Vessel3D) -> String:

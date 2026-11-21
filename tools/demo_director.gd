@@ -32,6 +32,27 @@ func _process(_delta: float) -> void:
 		var tabs: TabContainer = panel.find_children("*", "TabContainer", true, false)[0] as TabContainer
 		tabs.current_tab = 7 if _args.has("recipes") else (4 if _args.has("rocks") else (5 if _args.has("chem") else (6 if _args.has("fun") else 0)))
 		panel.call(&"refresh")
+		if _args.has("compact"):
+			panel.call(&"set_compact", true)
+	if _frames == 6 and _args.has("pin") and GrimoireJournal.instance != null and RecipeBook.instance != null:
+		GrimoireJournal.instance.pin(String(RecipeBook.instance.recipes[0].recipe_id))
+	if _frames == SHOT_FRAME - 10 and _args.has("satchel") and (_args.has("drag") or _args.has("card")):
+		# Phase 2 showcase: a row mid-drag over the bench, or its hover card.
+		var panel: CanvasLayer = bench.get_node("InventoryPanel") as CanvasLayer
+		var rows: Array = panel.find_children("*", "SatchelItemButton", true, false).filter(func(n: Node) -> bool: return (n as Control).is_visible_in_tree())
+		var row: SatchelItemButton = rows[3 if rows.size() > 3 else 0] as SatchelItemButton
+		if _args.has("drag"):
+			row.dragging = true
+			panel.call(&"_on_drag_started", row)
+			var screen: Vector2 = get_viewport().get_visible_rect().size * Vector2(0.36, 0.62)
+			panel.call(&"_on_drag_moved", row, screen)
+		else:
+			var tip: PanelContainer = PanelContainer.new()
+			tip.add_theme_stylebox_override(&"panel", CosmicTheme.theme().get_stylebox(&"panel", &"TooltipPanel"))
+			tip.theme = CosmicTheme.theme()
+			tip.add_child(SatchelItemButton.build_card(row.item))
+			tip.position = row.get_global_rect().position + Vector2(-420.0, 0.0)
+			(panel.get_child(0) as Control).add_child(tip)
 	if _frames == SHOT_FRAME - 8 and _args.has("book"):
 		var book: GrimoireBookUI = bench.get_node("GrimoireBookUI") as GrimoireBookUI
 		book.open(1 if _args.has("formulas") else 0)

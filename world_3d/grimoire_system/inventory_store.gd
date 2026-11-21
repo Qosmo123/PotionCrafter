@@ -147,8 +147,83 @@ func find_item(id: String) -> Dictionary:
 	return {}
 
 
-## Take an item out of storage and drop it onto the bench. Returns the body.
-func take(id: String) -> RigidBody3D:
+## Where a satchel item would land if dropped at `screen`: the bench surface
+## under the pointer, within arm's reach. {valid, position, reason}
+func drop_point(camera: Camera3D, screen: Vector2) -> Dictionary:
+	if camera == null:
+		return {"valid": false, "position": Vector3.ZERO, "reason": "No camera"}
+	var origin: Vector3 = camera.project_ray_origin(screen)
+	var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(origin, origin + camera.project_ray_normal(screen) * 8.0, SimConstants.LAYER_STATIC_BENCH)
+	var hit: Dictionary = get_world_3d().direct_space_state.intersect_ray(query)
+	if hit.is_empty():
+		return {"valid": false, "position": Vector3.ZERO, "reason": "Drop it onto the bench top"}
+	var pos: Vector3 = hit["position"]
+	var normal: Vector3 = hit["normal"]
+	if normal.y < 0.6:
+		return {"valid": false, "position": pos, "reason": "That surface is too steep: drop it onto the bench top"}
+	if grabber != null:
+		var flat: Vector2 = Vector2(pos.x - grabber.global_position.x, pos.z - grabber.global_position.z)
+		if flat.length() > grabber.reach_radius_meters:
+			return {"valid": false, "position": pos, "reason": "Out of reach: drop it closer, or switch station"}
+	return {"valid": true, "position": pos, "reason": ""}
+
+
+## Take an item and put it straight into the hand (Shift-click / Shift+Enter).
+func take_to_hand(id: String) -> RigidBody3D:
+	var body: RigidBody3D = take(id, grabber.global_position + Vector3(0.0, grabber.hover_plane_y_meters - grabber.global_position.y, 0.15) if grabber != null else Vector3.INF)
+	if body != null and grabber != null:
+		grabber.grab(body)
+		last_message = "In hand: %s" % find_item(id).get("label", "")
+		changed.emit()
+	return body
+
+
+## Gather a recipe's ingredients from the shelves onto the bench (auto-fill).
+## Only dispenses the containers: the player still mixes, heats and stirs, and
+## the chemistry decides the result. Returns the labels that could not be
+## found in storage (heat, stirring, products of other reactions...).
+func gather(recipe: RecipeData) -> PackedStringArray:
+	var missing: PackedStringArray = PackedStringArray()
+	var taken: PackedStringArray = PackedStringArray()
+	for ing: String in recipe.ingredients:
+		var id: String = match_ingredient(ing)
+		if id == "" or take(id) == null:
+			missing.append(ing)
+		else:
+			taken.append(String(find_item(id)["label"]))
+	last_message = ("Gathered: %s" % ", ".join(taken)) if not taken.is_empty() else "Nothing to gather from storage"
+	if not missing.is_empty():
+		last_message += "   ·   still needed: %s" % ", ".join(missing)
+	changed.emit()
+	return missing
+
+
+## Best storage item for an ingredient written in words ("Two scoops of
+## Baking Soda" -> the baking-soda vial). Longest label match wins.
+func match_ingredient(words: String) -> String:
+	var w: String = words.to_lower().get_slice("(", 0).strip_edges()
+	var best: String = ""
+	var best_len: int = 0
+	for item: Dictionary in items:
+		if not (item["category"] in [Category.REAGENTS, Category.CHEMICALS, Category.FUN, Category.BERRIES]):
+			continue
+		var names: PackedStringArray = PackedStringArray([String(item["label"]).to_lower()])
+		for sid: Variant in item.get("substances", []):
+			var idx: int = SubstanceRegistry.index_of_id(StringName(sid))
+			if idx >= 0:
+				names.append(SubstanceRegistry.get_substance(idx).display_name.to_lower())
+		for n: String in names:
+			var core: String = n.get_slice("(", 0).replace(" juice", "").strip_edges()
+			if core.length() > best_len and core.length() >= 3 and (w.contains(core) or (core.contains(w) and w.length() >= 4)):
+				best = item["id"]
+				best_len = core.length()
+	return best
+
+
+## Take an item out of storage and drop it onto the bench (or at `drop_at`,
+## e.g. where it was dragged to). Returns the body, or null with last_message
+## explaining why.
+func take(id: String, drop_at: Vector3 = Vector3.INF) -> RigidBody3D:
 	var item: Dictionary = find_item(id)
 	if item.is_empty():
 		return null
@@ -184,12 +259,14 @@ func take(id: String) -> RigidBody3D:
 	body.name = "%s_%d" % [String(item["label"]).replace(" ", ""), _spawn_index]
 	var column: int = _spawn_index % 5
 	body.position = global_position + Vector3((float(column) - 2.0) * spawn_spacing_meters, 0.0, 0.0)
+	if drop_at.is_finite():
+		body.position = drop_at + Vector3(0.0, 0.12, 0.0)
 	if body is StirTool3D:
 		body.rotation.z = PI * 0.5
 	_spawn_index += 1
 	var host: Node = get_tree().current_scene if get_tree().current_scene != null else get_parent()
 	host.add_child(body)
-	if body is StirTool3D:
+	if body is StirTool3D and not drop_at.is_finite():
 		for crock: ToolCrock3D in ToolCrock3D.all_crocks:
 			if crock.has_free_slot() and crock.place_tool(body as StirTool3D):
 				break

@@ -165,6 +165,18 @@ func _request_pick(is_touch: bool) -> void:
 	_pick_is_touch = is_touch
 
 
+## Put a body straight into the hand (Shift-click from the satchel). It then
+## follows the pointer through the same spring-damper as a normal pick.
+func grab(body: RigidBody3D) -> void:
+	if body == null or body.freeze:
+		return
+	held_body = body
+	held_body.sleeping = false
+	_hold_yaw_rad = body.global_basis.get_euler().y
+	pour_roll_rad = 0.0
+	_target_world = body.global_position
+
+
 func release() -> void:
 	held_body = null
 	_mouse_tilting = false

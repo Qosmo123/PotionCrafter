@@ -512,6 +512,7 @@ func _detail_recipe(r: RecipeData, known: bool) -> void:
 		sub += "   ·   not yet brewed"
 	_text(sub, 13, FADED_INK)
 	_tags(_affinity_tags(r))
+	_recipe_actions(r)
 	_rule()
 	_mono(r.formula, 18, CosmicTheme.PRISM_CYAN)
 	_text(r.description, 16, INK)
@@ -556,6 +557,41 @@ func _detail_recipe(r: RecipeData, known: bool) -> void:
 		sigil.set_seed(GrimoireJournal.sigil_seed(values))
 	else:
 		radar.set_values(PackedFloat32Array())
+
+
+## Pin the formula to the bench, or gather its ingredients from the shelves.
+## Gathering only dispenses the containers: the player still brews it.
+func _recipe_actions(r: RecipeData) -> void:
+	var journal: GrimoireJournal = GrimoireJournal.instance
+	var row: HBoxContainer = HBoxContainer.new()
+	row.add_theme_constant_override(&"separation", 8)
+	_detail.add_child(row)
+	var pinned: bool = journal != null and journal.pinned_recipe == String(r.recipe_id)
+	var pin: Button = Button.new()
+	pin.text = "✦  Unpin from bench" if pinned else "✦  Pin to bench"
+	pin.tooltip_text = "Show this formula as a floating card while you work"
+	pin.custom_minimum_size = Vector2(0, 40)
+	CosmicTheme.style_button(pin, CosmicTheme.PRISM_PINK, pinned)
+	pin.pressed.connect(func() -> void:
+		if journal != null:
+			journal.pin(String(r.recipe_id)))
+	row.add_child(pin)
+	var gather: Button = Button.new()
+	gather.text = "☿  Gather ingredients"
+	gather.tooltip_text = "Take every ingredient you have in storage and set it on the bench"
+	gather.custom_minimum_size = Vector2(0, 40)
+	CosmicTheme.style_button(gather, CosmicTheme.PRISM_CYAN)
+	gather.pressed.connect(func() -> void:
+		if InventoryStore.instance == null:
+			return
+		var missing: PackedStringArray = InventoryStore.instance.gather(r)
+		if missing.size() == r.ingredients.size():
+			CosmicTheme.shake(gather)
+			GrimoireJournal.instance.toast.emit("None of these are on the shelves: " + ", ".join(missing), &"warning")
+			return
+		close()
+		GrimoireJournal.instance.toast.emit(InventoryStore.instance.last_message, &"info" if missing.is_empty() else &"warning"))
+	row.add_child(gather)
 
 
 func _signature_text(r: RecipeData) -> String:

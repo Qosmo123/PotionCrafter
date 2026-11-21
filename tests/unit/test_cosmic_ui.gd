@@ -66,3 +66,52 @@ func test_seen_pages_round_trip() -> void:
 	j.mark_seen("recipe:x")
 	check(j.is_seen("recipe:x"), "marking a page seen sticks")
 	j.free()
+
+
+func _store() -> InventoryStore:
+	var store: InventoryStore = InventoryStore.new()
+	store._build_catalog()
+	return store
+
+
+func test_gather_matches_ingredients_by_longest_name() -> void:
+	var store: InventoryStore = _store()
+	var moon: String = store.match_ingredient("Moonwater")
+	check(moon != "" and String(store.find_item(moon)["label"]).to_lower().contains("moon"), "Moonwater beats plain Water (%s)" % moon)
+	check(store.match_ingredient("Heat") == "", "heat is not a shelf item")
+	check(store.match_ingredient("A stirrer") == "", "tools are not gathered as ingredients")
+	store.free()
+
+
+func test_item_card_shows_hazards_and_rarity() -> void:
+	var store: InventoryStore = _store()
+	var acid: Dictionary = store.find_item("chem:sulfuric_acid")
+	check(not acid.is_empty(), "sulfuric acid is on a shelf")
+	var card: Control = SatchelItemButton.build_card(acid)
+	var text: String = _all_text(card)
+	check(text.contains("DANGER") and text.contains("Corrosive"), "acid card warns DANGER: corrosive")
+	check(text.contains("Shift-click"), "card teaches the quick gestures")
+	card.free()
+	var water_card: Control = SatchelItemButton.build_card(store.find_item("chem:acetone") if not store.find_item("chem:acetone").is_empty() else acid)
+	check(_all_text(water_card).contains("boils"), "card lists physical properties")
+	water_card.free()
+	store.free()
+
+
+func _all_text(n: Node) -> String:
+	var out: String = ""
+	if n is Label:
+		out += (n as Label).text + "\n"
+	for c: Node in n.get_children():
+		out += _all_text(c)
+	return out
+
+
+func test_pinned_recipe_toggles() -> void:
+	var j: GrimoireJournal = GrimoireJournal.new()
+	j.persist = false
+	j.pin("levitation")
+	check(j.pinned_recipe == "levitation", "pinning remembers the recipe")
+	j.pin("levitation")
+	check(j.pinned_recipe == "", "pinning the same recipe again unpins it")
+	j.free()
