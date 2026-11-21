@@ -62,13 +62,13 @@ func _ready() -> void:
 	head_mi.mesh = head
 	head_mi.position.y = -0.085
 	add_child(head_mi)
-	var pick: BoxMesh = BoxMesh.new()
-	pick.size = Vector3(0.04, 0.02, 0.02)
-	pick.material = iron
+	# Chisel end: tapers from the head to a cutting edge.
 	var pick_mi: MeshInstance3D = MeshInstance3D.new()
-	pick_mi.mesh = pick
-	pick_mi.position = Vector3(0.07, -0.085, 0.0)
+	pick_mi.mesh = _wedge_mesh(0.045, 0.014, 0.0012, 0.015)
+	pick_mi.material_override = iron
+	pick_mi.position = Vector3(0.05, -0.085, 0.0)
 	add_child(pick_mi)
+	_add_fittings(wood)
 	var handle_shape: CapsuleShape3D = CapsuleShape3D.new()
 	handle_shape.radius = 0.012
 	handle_shape.height = 0.24
@@ -82,6 +82,95 @@ func _ready() -> void:
 	hd.shape = head_shape
 	hd.position.y = -0.085
 	add_child(hd)
+
+
+## Finishing touches: a polished striking face, the steel wedge that locks the
+## head on, a brass ferrule, a leather-wrapped grip and a rounded pommel.
+func _add_fittings(wood: StandardMaterial3D) -> void:
+	var steel: StandardMaterial3D = PropMaterials.textured("metal", Color(0.8, 0.81, 0.84), 0.08, 1.0)
+	var brass: StandardMaterial3D = PropMaterials.textured("metal", Color(0.95, 0.72, 0.34), 0.08, 0.9)
+	var leather: StandardMaterial3D = PropMaterials.textured("leather", Color(0.22, 0.13, 0.08), 0.06)
+	var face: CylinderMesh = CylinderMesh.new()
+	face.top_radius = 0.0205
+	face.bottom_radius = 0.022
+	face.height = 0.014
+	face.radial_segments = 24
+	face.material = steel
+	var face_mi: MeshInstance3D = MeshInstance3D.new()
+	face_mi.mesh = face
+	face_mi.rotation.z = PI * 0.5  # crowned face points along -X
+	face_mi.position = Vector3(-0.058, -0.085, 0.0)
+	add_child(face_mi)
+	var wedge: BoxMesh = BoxMesh.new()
+	wedge.size = Vector3(0.016, 0.003, 0.004)
+	wedge.material = steel
+	var wedge_mi: MeshInstance3D = MeshInstance3D.new()
+	wedge_mi.mesh = wedge
+	wedge_mi.position = Vector3(0.0, -0.1035, 0.0)
+	add_child(wedge_mi)
+	var eye: CylinderMesh = CylinderMesh.new()
+	eye.top_radius = 0.0115
+	eye.bottom_radius = 0.0115
+	eye.height = 0.004
+	eye.material = wood
+	var eye_mi: MeshInstance3D = MeshInstance3D.new()
+	eye_mi.mesh = eye
+	eye_mi.position = Vector3(0.0, -0.1025, 0.0)
+	add_child(eye_mi)
+	var ferrule: CylinderMesh = CylinderMesh.new()
+	ferrule.top_radius = 0.0122
+	ferrule.bottom_radius = 0.013
+	ferrule.height = 0.012
+	ferrule.material = brass
+	var ferrule_mi: MeshInstance3D = MeshInstance3D.new()
+	ferrule_mi.mesh = ferrule
+	ferrule_mi.position = Vector3(0.0, -0.0615, 0.0)
+	add_child(ferrule_mi)
+	var grip: CylinderMesh = CylinderMesh.new()
+	grip.top_radius = 0.0102
+	grip.bottom_radius = 0.0108
+	grip.height = 0.075
+	grip.material = leather
+	var grip_mi: MeshInstance3D = MeshInstance3D.new()
+	grip_mi.mesh = grip
+	grip_mi.position = Vector3(0.0, 0.112, 0.0)
+	add_child(grip_mi)
+	for ring_y: float in [0.073, 0.151]:
+		var band: CylinderMesh = CylinderMesh.new()
+		band.top_radius = 0.0112
+		band.bottom_radius = 0.0112
+		band.height = 0.003
+		band.material = brass
+		var band_mi: MeshInstance3D = MeshInstance3D.new()
+		band_mi.mesh = band
+		band_mi.position = Vector3(0.0, ring_y, 0.0)
+		add_child(band_mi)
+	var pommel: SphereMesh = SphereMesh.new()
+	pommel.radius = 0.0115
+	pommel.height = 0.016
+	pommel.material = wood
+	var pommel_mi: MeshInstance3D = MeshInstance3D.new()
+	pommel_mi.mesh = pommel
+	pommel_mi.position = Vector3(0.0, 0.161, 0.0)
+	add_child(pommel_mi)
+
+
+## Wedge from a (2*half_y by 2*half_z) base at x = 0 to an edge of height
+## 2*tip_y at x = length. Faces have their own vertices (hard edges).
+static func _wedge_mesh(length: float, half_y: float, tip_y: float, half_z: float) -> ArrayMesh:
+	var b: Array[Vector3] = [Vector3(0.0, -half_y, -half_z), Vector3(0.0, half_y, -half_z), Vector3(0.0, half_y, half_z), Vector3(0.0, -half_y, half_z)]
+	var t: Array[Vector3] = [Vector3(length, -tip_y, -half_z), Vector3(length, tip_y, -half_z), Vector3(length, tip_y, half_z), Vector3(length, -tip_y, half_z)]
+	var quads: Array = [[b[0], b[1], b[2], b[3]], [t[0], t[1], t[2], t[3]], [b[1], t[1], t[2], b[2]], [b[0], t[0], t[3], b[3]], [b[0], b[1], t[1], t[0]], [b[3], b[2], t[2], t[3]]]
+	var verts: PackedVector3Array = PackedVector3Array()
+	var uvs: PackedVector2Array = PackedVector2Array()
+	var idx: PackedInt32Array = PackedInt32Array()
+	for q: Array in quads:
+		var base: int = verts.size()
+		for p: Vector3 in q:
+			verts.append(p)
+			uvs.append(Vector2(p.x, p.y + p.z))
+		idx.append_array([base, base + 1, base + 2, base, base + 2, base + 3])
+	return MeshUtil.finish(verts, idx, uvs, Vector3(length * 0.5, 0.0, 0.0), false)
 
 
 func slam() -> void:

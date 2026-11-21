@@ -12,9 +12,23 @@ extends Node3D
 ## prop if it is moved in the scene.
 
 @export var seed_value: int = 31
+## Front face of the back wall, and the bench top, in world space.
+@export var wall_z_meters: float = -0.825
+@export var bench_top_y_meters: float = 0.8
+
+## Mohs scale reference minerals with their typical colours.
+const MOHS: Array = [
+	["Talc", Color(0.78, 0.84, 0.76)], ["Gypsum", Color(0.92, 0.9, 0.84)], ["Calcite", Color(0.95, 0.88, 0.7)],
+	["Fluorite", Color(0.52, 0.36, 0.72)], ["Apatite", Color(0.3, 0.62, 0.6)], ["Orthoclase", Color(0.86, 0.62, 0.5)],
+	["Quartz", Color(0.88, 0.9, 0.93)], ["Topaz", Color(0.93, 0.68, 0.3)], ["Corundum", Color(0.7, 0.12, 0.2)],
+	["Diamond", Color(0.8, 0.93, 0.98)],
+]
 
 var _boxes: Dictionary = {}  # material key -> Array[Transform3D]
 var _domes: Dictionary = {}  # material key -> Array[Transform3D]
+var _cyls: Dictionary = {}  # material key -> Array[Transform3D]
+var _tints: Array[Transform3D] = []  # flat-coloured boxes (chart swatches, ink)
+var _tint_colors: PackedColorArray = PackedColorArray()
 var _lab: Node3D
 
 
@@ -34,6 +48,11 @@ func _dress() -> void:
 	_dress_polisher(_lab.get_node_or_null("Polisher") as Node3D)
 	_dress_faceter(_lab.get_node_or_null("Faceter") as Node3D)
 	_dress_sifter(_lab.get_node_or_null("SandSifter") as Node3D)
+	var bench: Node3D = _lab.get_node_or_null("LabBench") as Node3D
+	if bench != null:
+		_hang_mohs_chart(Vector3(bench.global_position.x - 0.325, 0.945, wall_z_meters))
+		_hang_tool_rack(Vector3(bench.global_position.x + 0.255, 1.085, wall_z_meters))
+		_lay_sorting_mat(Vector3(bench.global_position.x - 0.14, bench_top_y_meters, 0.51))
 	_build_batches()
 	_scatter_chips()
 
@@ -142,7 +161,142 @@ func _dress_sifter(sifter: Node3D) -> void:
 			_dome(&"brass", Vector3(o.x + sx * 0.0225, y, front + 0.0012), Vector3.BACK, 0.0013)
 
 
+# --- Wall and bench extras -----------------------------------------------------------
+
+## A parchment reference chart pinned to the wall: the ten Mohs minerals, each
+## with a colour swatch and a bar as long as its hardness.
+func _hang_mohs_chart(at: Vector3) -> void:
+	var sheet: QuadMesh = QuadMesh.new()
+	sheet.size = Vector2(0.22, 0.31)
+	var paper: StandardMaterial3D = PropMaterials.textured("parchment", Color(0.88, 0.8, 0.62), 0.25).duplicate() as StandardMaterial3D
+	paper.uv1_world_triplanar = true
+	sheet.material = paper
+	var mi: MeshInstance3D = MeshInstance3D.new()
+	mi.name = "MohsChart"
+	mi.mesh = sheet
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(mi)
+	mi.global_position = at + Vector3(0.0, 0.0, 0.002)
+	var z: float = at.z + 0.0032
+	var ink: Color = Color(0.17, 0.09, 0.05)
+	for sx: float in [-1.0, 1.0]:
+		_dome(&"brass", Vector3(at.x + sx * 0.098, at.y + 0.143, z), Vector3.BACK, 0.0035)
+	_text("MOHS SCALE", Vector3(at.x, at.y + 0.127, z), 0.16, 0.02, ink)
+	_tint(Vector3(at.x, at.y + 0.111, z), Vector3(0.18, 0.0012, 0.0004), ink)
+	for i: int in MOHS.size():
+		var y: float = at.y + 0.09 - 0.0235 * float(i)
+		_tint(Vector3(at.x - 0.09, y, z), Vector3(0.017, 0.017, 0.0006), ink)
+		_tint(Vector3(at.x - 0.09, y, z + 0.0004), Vector3(0.014, 0.014, 0.0006), MOHS[i][1])
+		_text("%d  %s" % [i + 1, MOHS[i][0]], Vector3(at.x - 0.035, y, z), 0.085, 0.0098, ink)
+		var bar: float = 0.0085 * float(i + 1)
+		_tint(Vector3(at.x + 0.012 + bar * 0.5, y, z), Vector3(bar, 0.0045, 0.0004), ink.lerp(MOHS[i][1], 0.35))
+
+
+## A wooden rail with pegs, and the small tools of the trade hanging from it.
+func _hang_tool_rack(at: Vector3) -> void:
+	var z: float = at.z
+	_box(&"wood", Vector3(at.x, at.y, z + 0.009), Vector3(0.25, 0.034, 0.018))
+	for sx: float in [-1.0, 1.0]:
+		_dome(&"iron", Vector3(at.x + sx * 0.112, at.y, z + 0.018), Vector3.BACK, 0.004)
+	var hang_z: float = z + 0.036
+	for i: int in 4:
+		var x: float = at.x - 0.09 + 0.06 * float(i)
+		_cyl(&"wood", Vector3(x, at.y - 0.004, z + 0.016), Vector3(x, at.y, z + 0.05), 0.0042)
+		# Leather thong looped over the peg.
+		_cyl(&"dark", Vector3(x, at.y, hang_z), Vector3(x, at.y - 0.03, hang_z), 0.0012)
+		var top: Vector3 = Vector3(x, at.y - 0.03, hang_z)
+		match i:
+			0:  # flat cold chisel
+				_cyl(&"iron", top, top + Vector3(0.0, -0.012, 0.0), 0.0085)
+				_cyl(&"iron", top + Vector3(0.0, -0.012, 0.0), top + Vector3(0.0, -0.11, 0.0), 0.006)
+				_box(&"iron", top + Vector3(0.0, -0.122, 0.0), Vector3(0.016, 0.026, 0.004))
+			1:  # point chisel
+				_cyl(&"iron", top, top + Vector3(0.0, -0.01, 0.0), 0.007)
+				_cyl(&"iron", top + Vector3(0.0, -0.01, 0.0), top + Vector3(0.0, -0.13, 0.0), 0.0045)
+				_cyl(&"iron", top + Vector3(0.0, -0.13, 0.0), top + Vector3(0.0, -0.15, 0.0), 0.002)
+			2:  # dusting brush
+				_cyl(&"wood", top, top + Vector3(0.0, -0.085, 0.0), 0.0065)
+				_cyl(&"brass", top + Vector3(0.0, -0.085, 0.0), top + Vector3(0.0, -0.1, 0.0), 0.0085)
+				_box(&"bristle", top + Vector3(0.0, -0.12, 0.0), Vector3(0.022, 0.04, 0.009))
+			3:  # small pick hammer
+				_cyl(&"wood", top, top + Vector3(0.0, -0.14, 0.0), 0.005)
+				_box(&"iron", top + Vector3(0.0, -0.135, 0.0), Vector3(0.05, 0.014, 0.012))
+				_box(&"iron", top + Vector3(0.031, -0.135, 0.0), Vector3(0.014, 0.006, 0.006))
+			4:  # steel rule
+				_box(&"iron", top + Vector3(0.0, -0.085, 0.0), Vector3(0.016, 0.17, 0.0012))
+				for k: int in 14:
+					_tint(top + Vector3(-0.004 if k % 2 == 0 else -0.0055, -0.01 - 0.0115 * float(k), 0.0008), Vector3(0.008 if k % 2 == 0 else 0.005, 0.0008, 0.0003), Color(0.05, 0.05, 0.05))
+
+
+## A stitched leather mat for sorting finds, with a loupe and tweezers left on it.
+func _lay_sorting_mat(at: Vector3) -> void:
+	var w: float = 0.4
+	var d: float = 0.14
+	_box(&"leather", at + Vector3(0.0, 0.0006, 0.0), Vector3(w, 0.0012, d))
+	var inset: float = 0.007
+	var pitch: float = 0.011
+	for i: int in int((w - inset * 2.0) / pitch) + 1:
+		var x: float = at.x - w * 0.5 + inset + pitch * float(i)
+		for sz: float in [-1.0, 1.0]:
+			_box(&"bristle", Vector3(x, at.y + 0.0013, at.z + sz * (d * 0.5 - inset)), Vector3(0.0055, 0.0004, 0.0011))
+	for i: int in int((d - inset * 2.0) / pitch):
+		var zz: float = at.z - d * 0.5 + inset + pitch * (float(i) + 0.5)
+		for sx: float in [-1.0, 1.0]:
+			_box(&"bristle", Vector3(at.x + sx * (w * 0.5 - inset), at.y + 0.0013, zz), Vector3(0.0011, 0.0004, 0.0055))
+	# Loupe: brass ring, glass, short handle.
+	var loupe_at: Vector3 = at + Vector3(0.14, 0.004, 0.02)
+	var ring: TorusMesh = TorusMesh.new()
+	ring.inner_radius = 0.016
+	ring.outer_radius = 0.02
+	ring.rings = 28
+	ring.ring_segments = 8
+	var ring_mi: MeshInstance3D = MeshInstance3D.new()
+	ring_mi.name = "Loupe"
+	ring_mi.mesh = ring
+	ring_mi.material_override = PropMaterials.textured("metal", Color(0.95, 0.72, 0.34), 0.12, 0.85)
+	add_child(ring_mi)
+	ring_mi.global_position = loupe_at
+	var lens: CylinderMesh = CylinderMesh.new()
+	lens.top_radius = 0.0165
+	lens.bottom_radius = 0.0165
+	lens.height = 0.0015
+	lens.radial_segments = 24
+	var lens_mi: MeshInstance3D = MeshInstance3D.new()
+	lens_mi.mesh = lens
+	lens_mi.material_override = QualityTier.pick_material(PropMaterials.GLASS_PC_MATERIAL, PropMaterials.GLASS_MOBILE_MATERIAL)
+	lens_mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	ring_mi.add_child(lens_mi)
+	_cyl(&"brass", loupe_at + Vector3(0.019, 0.0, 0.0), loupe_at + Vector3(0.026, 0.0, 0.0), 0.003)
+	_cyl(&"wood", loupe_at + Vector3(0.026, 0.0, 0.0), loupe_at + Vector3(0.07, -0.001, 0.004), 0.0045)
+	# Tweezers: two springy steel blades meeting at the tips.
+	var tw: Vector3 = at + Vector3(-0.12, 0.0022, 0.01)
+	for s: float in [-1.0, 1.0]:
+		var blade: Transform3D = Transform3D(Basis(Vector3.UP, 0.35 + s * 0.035).scaled(Vector3(0.075, 0.0009, 0.0035)), tw + Vector3(0.0, 0.0, s * 0.0016))
+		if not _boxes.has(&"iron"):
+			_boxes[&"iron"] = []
+		(_boxes[&"iron"] as Array).append(blade)
+
+
 # --- Batching -----------------------------------------------------------------------
+
+## A rod between two points (peg, shaft, handle).
+func _cyl(material: StringName, from: Vector3, to: Vector3, radius: float) -> void:
+	if not _cyls.has(material):
+		_cyls[material] = []
+	var axis: Vector3 = to - from
+	var length: float = axis.length()
+	var y: Vector3 = axis / maxf(length, 1e-6)
+	var x: Vector3 = y.cross(Vector3.RIGHT if absf(y.x) < 0.9 else Vector3.UP).normalized()
+	var basis: Basis = Basis(x * radius, y * length, x.cross(y) * radius)
+	(_cyls[material] as Array).append(Transform3D(basis, (from + to) * 0.5))
+
+
+## A flat-coloured box (ink, paint, swatches).
+func _tint(center: Vector3, size: Vector3, color: Color) -> void:
+	_tints.append(Transform3D(Basis.from_scale(size), center))
+	# MultiMesh instance colours are read as linear light.
+	_tint_colors.append((color * 0.72).srgb_to_linear())
+
 
 func _box(material: StringName, center: Vector3, size: Vector3) -> void:
 	if not _boxes.has(material):
@@ -167,6 +321,15 @@ func _material(key: StringName) -> Material:
 			m = PropMaterials.textured("iron", Color(0.5, 0.5, 0.53), 0.12, 0.6).duplicate() as StandardMaterial3D
 		&"brass":
 			m = PropMaterials.textured("metal", Color(0.95, 0.72, 0.34), 0.12, 0.85).duplicate() as StandardMaterial3D
+		&"wood":
+			m = PropMaterials.textured("wood", Color(0.5, 0.33, 0.19), 0.2).duplicate() as StandardMaterial3D
+		&"leather":
+			m = PropMaterials.textured("leather", Color(0.2, 0.3, 0.2), 0.1).duplicate() as StandardMaterial3D
+		&"bristle":
+			m = StandardMaterial3D.new()
+			m.albedo_color = Color(0.82, 0.74, 0.56)
+			m.roughness = 0.95
+			return m
 		_:
 			m = StandardMaterial3D.new()
 			m.albedo_color = Color(0.035, 0.03, 0.028)
@@ -186,7 +349,34 @@ func _build_batches() -> void:
 	dome.is_hemisphere = true
 	dome.radial_segments = 10
 	dome.rings = 3
-	for pair: Array in [[_boxes, cube, "Boxes"], [_domes, dome, "Heads"]]:
+	var rod: CylinderMesh = CylinderMesh.new()
+	rod.top_radius = 1.0
+	rod.bottom_radius = 1.0
+	rod.height = 1.0
+	rod.radial_segments = 12
+	rod.rings = 1
+	if not _tints.is_empty():
+		var tm: MultiMesh = MultiMesh.new()
+		tm.transform_format = MultiMesh.TRANSFORM_3D
+		tm.use_colors = true
+		tm.mesh = cube
+		tm.instance_count = _tints.size()
+		var inv: Transform3D = global_transform.affine_inverse()
+		for i: int in _tints.size():
+			tm.set_instance_transform(i, inv * _tints[i])
+			tm.set_instance_color(i, _tint_colors[i])
+		var paint: StandardMaterial3D = StandardMaterial3D.new()
+		paint.vertex_color_use_as_albedo = true
+		paint.roughness = 0.85
+		# Ink and paint keep their colour in the bright window light.
+		paint.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		var tmi: MultiMeshInstance3D = MultiMeshInstance3D.new()
+		tmi.name = "Paint"
+		tmi.multimesh = tm
+		tmi.material_override = paint
+		tmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		add_child(tmi)
+	for pair: Array in [[_boxes, cube, "Boxes"], [_domes, dome, "Heads"], [_cyls, rod, "Rods"]]:
 		var groups: Dictionary = pair[0]
 		for key: StringName in groups:
 			var list: Array = groups[key]
@@ -265,7 +455,7 @@ func _scatter_chips() -> void:
 			var basis: Basis = Basis.from_euler(Vector3(rng.randf() * TAU, rng.randf() * TAU, rng.randf() * TAU)).scaled(Vector3(size, size * rng.randf_range(0.45, 0.8), size))
 			var at: Vector3 = Vector3(centre.x + cos(a) * r, centre.y + size * 0.3, centre.z + sin(a) * r * 0.8)
 			mm.set_instance_transform(index, to_local * Transform3D(basis, at))
-			mm.set_instance_color(index, palette[rng.randi_range(0, palette.size() - 1)] * rng.randf_range(0.8, 1.15))
+			mm.set_instance_color(index, (palette[rng.randi_range(0, palette.size() - 1)] * rng.randf_range(0.8, 1.15)).srgb_to_linear())
 			index += 1
 	var mat: StandardMaterial3D = StandardMaterial3D.new()
 	mat.vertex_color_use_as_albedo = true

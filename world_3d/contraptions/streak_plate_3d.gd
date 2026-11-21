@@ -42,6 +42,22 @@ func _ready() -> void:
 	mi.mesh = tile
 	mi.position.y = thickness_meters * 0.5
 	add_child(mi)
+	# The unglazed tile sits in a low wooden tray.
+	var wood: StandardMaterial3D = PropMaterials.textured("wood", Color(0.36, 0.23, 0.13), 0.15)
+	var rim: float = 0.007
+	var rail_h: float = thickness_meters + 0.003
+	for side: Array in [
+			[Vector3(size_meters.x + rim * 2.0, rail_h, rim), Vector3(0.0, rail_h * 0.5, size_meters.y * 0.5 + rim * 0.5)],
+			[Vector3(size_meters.x + rim * 2.0, rail_h, rim), Vector3(0.0, rail_h * 0.5, -size_meters.y * 0.5 - rim * 0.5)],
+			[Vector3(rim, rail_h, size_meters.y), Vector3(size_meters.x * 0.5 + rim * 0.5, rail_h * 0.5, 0.0)],
+			[Vector3(rim, rail_h, size_meters.y), Vector3(-size_meters.x * 0.5 - rim * 0.5, rail_h * 0.5, 0.0)]]:
+		var rail: BoxMesh = BoxMesh.new()
+		rail.size = side[0]
+		rail.material = wood
+		var rail_mi: MeshInstance3D = MeshInstance3D.new()
+		rail_mi.mesh = rail
+		rail_mi.position = side[1]
+		add_child(rail_mi)
 	var shape: BoxShape3D = BoxShape3D.new()
 	shape.size = tile.size
 	var cs: CollisionShape3D = CollisionShape3D.new()
