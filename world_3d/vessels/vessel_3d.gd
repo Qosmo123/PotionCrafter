@@ -100,6 +100,13 @@ var _was_flashing: bool = false
 var _was_pouring: bool = false
 var _label: Label3D
 var _label_card: MeshInstance3D
+var _label_strip: MeshInstance3D
+var _label_icon: MeshInstance3D
+var _label_category: int = -1
+const LABEL_ICON_SHADER: Shader = preload("res://visuals_3d/shaders/label_icon.gdshader")
+## Label categories (icon index in label_icon.gdshader) and their colours.
+enum LabelCategory { LIQUID, POWDER, HAZARD, ARCANE, BERRY }
+const LABEL_COLORS: Array[Color] = [Color(0.16, 0.5, 0.58), Color(0.42, 0.45, 0.55), Color(0.78, 0.25, 0.12), Color(0.5, 0.28, 0.75), Color(0.72, 0.16, 0.42)]
 ## Hand-written contents tag on any vessel holding something (the full name +
 ## grade label replaces it when the vessel is corked).
 @export var show_contents_tag: bool = true
@@ -236,16 +243,16 @@ func _update_contents_tag() -> void:
 		has = false
 	if not has:
 		if _label_card != null:
-			_label_card.visible = false
-			_label.visible = false
+			_set_label_visible(false)
 		return
 	if _label == null:
 		_build_label()
-	var text: String = contents_tag_text(mixture, foam_height_meters)
+	var text: String = contents_tag_text(mixture, foam_height_meters).get_slice(" (", 0)
 	if _label.text != text:
 		_label.text = text
-	_label_card.visible = true
-	_label.visible = true
+		_fit_label()
+		_set_label_category(label_category(mixture))
+	_set_label_visible(true)
 
 
 ## Short tag text: the dominant species when it makes up most of the mass,
@@ -309,8 +316,7 @@ func toggle_seal() -> bool:
 		open_top = true
 		if _seal != null:
 			_seal.pop()
-		_label.visible = false
-		_label_card.visible = false
+		_set_label_visible(false)
 		return false
 	if mixture == null or mixture.get_liquid_volume_m3() < 1e-7:
 		return false
@@ -325,9 +331,10 @@ func toggle_seal() -> bool:
 		add_child(_seal)
 	var potion_name: String = PotionNamer.name_for(mixture, foam_height_meters)
 	_seal.seal(PotionNamer.grade_for(mixture), BottleSeal3D.points_for_name(potion_name), not is_inside_tree())
-	_label.visible = true
-	_label_card.visible = true
+	_set_label_visible(true)
 	_label.text = "%s\n%s" % [potion_name, PotionNamer.formula_for(mixture, 2)]
+	_fit_label()
+	_set_label_category(label_category(mixture))
 	return true
 
 
@@ -337,9 +344,9 @@ func _build_label() -> void:
 	var mid_y: float = lerpf(_profile_y[0], _lip_local_y, 0.36)
 	var card_mesh: QuadMesh = QuadMesh.new()
 	# Card sized to the vessel: a slim tag on a vial, a broad label on a flask.
-	card_mesh.size = Vector2(minf(outer_r * 1.5, 0.07), clampf(outer_r * 0.95, 0.014, 0.034))
+	card_mesh.size = Vector2(minf(outer_r * 1.6, 0.075), clampf(outer_r * 1.0, 0.016, 0.036))
 	var card_mat: StandardMaterial3D = StandardMaterial3D.new()
-	card_mat.albedo_color = Color(1.0, 0.96, 0.86)
+	card_mat.albedo_color = Color(0.95, 0.9, 0.82)  # warm cream #F2E6D0
 	card_mat.albedo_texture = parchment_texture()
 	card_mat.roughness = 0.9
 	card_mesh.material = card_mat
@@ -347,18 +354,132 @@ func _build_label() -> void:
 	_label_card.mesh = card_mesh
 	_label_card.position = Vector3(0.0, mid_y, outer_r + 0.0015)
 	add_child(_label_card)
+	var w: float = card_mesh.size.x
+	var h: float = card_mesh.size.y
+	# Colour strip down the left edge and a round category stamp on it.
+	var strip_mesh: QuadMesh = QuadMesh.new()
+	strip_mesh.size = Vector2(w * 0.07, h)
+	var strip_mat: StandardMaterial3D = StandardMaterial3D.new()
+	strip_mat.roughness = 0.8
+	strip_mesh.material = strip_mat
+	_label_strip = MeshInstance3D.new()
+	_label_strip.mesh = strip_mesh
+	_label_strip.position = Vector3(-w * 0.5 + w * 0.035, mid_y, outer_r + 0.0018)
+	add_child(_label_strip)
+	var icon_size: float = minf(h * 0.78, w * 0.28)
+	var icon_mesh: QuadMesh = QuadMesh.new()
+	icon_mesh.size = Vector2(icon_size, icon_size)
+	var icon_mat: ShaderMaterial = ShaderMaterial.new()
+	icon_mat.shader = LABEL_ICON_SHADER
+	icon_mesh.material = icon_mat
+	_label_icon = MeshInstance3D.new()
+	_label_icon.mesh = icon_mesh
+	_label_icon.position = Vector3(-w * 0.5 + w * 0.07 + icon_size * 0.55, mid_y, outer_r + 0.002)
+	add_child(_label_icon)
+	# Bold dark ink, as large as two lines allow, right of the stamp.
+	var text_left: float = -w * 0.5 + w * 0.07 + icon_size * 1.1
+	var text_w: float = w * 0.5 - text_left - w * 0.03
 	_label = Label3D.new()
-	_label.font_size = 44
-	_label.font = CosmicTheme.display_font()
+	_label.font = CosmicTheme.world_font()
+	_label.font_size = 48
 	_label.outline_size = 0
-	_label.pixel_size = 0.00011 * clampf(card_mesh.size.x / 0.05, 0.4, 1.0)
-	_label.modulate = Color(0.16, 0.08, 0.03)
-	_label.width = card_mesh.size.x / _label.pixel_size * 0.92
-	_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_label.position = Vector3(0.0, mid_y, outer_r + 0.0022)
+	_label.pixel_size = (h * 0.4) / 48.0
+	_label.modulate = Color(0.118, 0.086, 0.063)  # espresso #1E1610
+	_label.width = text_w / _label.pixel_size
+	_label.autowrap_mode = TextServer.AUTOWRAP_WORD
+	_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_label.line_spacing = -6.0
+	_label.position = Vector3(text_left + text_w * 0.5, mid_y, outer_r + 0.0022)
 	_label.double_sided = false
+	_label.set_meta(&"text_w", text_w)
+	_label.set_meta(&"max_pixel", _label.pixel_size)
 	add_child(_label)
+	_label_category = -1
+	_set_label_category(LabelCategory.LIQUID)
+
+
+## Shrink the label text until whole words fit in at most two lines.
+func _fit_label() -> void:
+	var f: Font = _label.font
+	var text_w: float = float(_label.get_meta(&"text_w", 0.03))
+	var pix: float = float(_label.get_meta(&"max_pixel", _label.pixel_size))
+	var words: PackedStringArray = _label.text.replace("\n", " ").split(" ", false)
+	var longest: float = 0.0
+	for word: String in words:
+		longest = maxf(longest, f.get_string_size(word, HORIZONTAL_ALIGNMENT_LEFT, -1, _label.font_size).x)
+	for k: int in 8:
+		var width_px: float = text_w / pix
+		if longest <= width_px and _wrapped_lines(f, width_px) <= 2:
+			break
+		pix *= 0.86
+	_label.pixel_size = pix
+	_label.width = text_w / pix
+
+
+## Lines the label text takes when wrapped at whole words to `width_px`.
+func _wrapped_lines(f: Font, width_px: float) -> int:
+	var lines: int = 0
+	var space: float = f.get_string_size(" ", HORIZONTAL_ALIGNMENT_LEFT, -1, _label.font_size).x
+	for part: String in _label.text.split("\n"):
+		var x: float = 0.0
+		lines += 1
+		for word: String in part.split(" ", false):
+			var w: float = f.get_string_size(word, HORIZONTAL_ALIGNMENT_LEFT, -1, _label.font_size).x
+			if x > 0.0 and x + space + w > width_px:
+				lines += 1
+				x = w
+			else:
+				x += (space if x > 0.0 else 0.0) + w
+	return lines
+
+
+func _set_label_visible(on: bool) -> void:
+	if _label_card == null:
+		return
+	_label_card.visible = on
+	_label.visible = on
+	_label_strip.visible = on
+	_label_icon.visible = on
+
+
+func _set_label_category(category: int) -> void:
+	if category == _label_category or _label_icon == null:
+		return
+	_label_category = category
+	var tint: Color = LABEL_COLORS[category]
+	((_label_strip.mesh as QuadMesh).material as StandardMaterial3D).albedo_color = tint
+	var mat: ShaderMaterial = (_label_icon.mesh as QuadMesh).material as ShaderMaterial
+	mat.set_shader_parameter(&"icon", category)
+	mat.set_shader_parameter(&"tint", tint)
+
+
+## What kind of thing is in the vessel, for the label stamp: strong acids or
+## bases get a warning, then arcane brews, berry juices, powders, liquids.
+static func label_category(m: MixtureContainer) -> int:
+	var liquid: float = m.get_liquid_volume_m3()
+	if liquid > 1e-7:
+		var ph: float = m.get_ph()
+		if ph < 3.0 or ph > 11.0:
+			return LabelCategory.HAZARD
+	var moles: float = maxf(m.get_total_moles(), 1e-12)
+	var aura: Color = m.get_emission_hdr()
+	if m.get_total_thaums() / moles > 15.0 or aura.r + aura.g + aura.b > 0.6:
+		return LabelCategory.ARCANE
+	var best: int = -1
+	var best_mass: float = 0.0
+	for k: int in m.active_count():
+		var i: int = m.active_index(k)
+		var s: SubstanceData = SubstanceRegistry.get_substance(i)
+		var kg: float = m.moles[i] * s.molar_mass_kg_mol
+		if kg > best_mass:
+			best_mass = kg
+			best = i
+	if best >= 0 and String(SubstanceRegistry.get_substance(best).substance_id).contains("berry"):
+		return LabelCategory.BERRY
+	if m.get_solid_volume_m3() > liquid:
+		return LabelCategory.POWDER
+	return LabelCategory.LIQUID
 
 
 func _exit_tree() -> void:

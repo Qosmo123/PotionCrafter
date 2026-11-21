@@ -77,7 +77,7 @@ func _ready() -> void:
 	close.custom_minimum_size = Vector2(40, 36)
 	close.pressed.connect(func() -> void: set_open(false))
 	head.add_child(close)
-	_stone_label = CosmicTheme.label("", 14, CosmicTheme.TEXT_DIM)
+	_stone_label = CosmicTheme.label("", 15, CosmicTheme.TEXT_DIM)
 	_stone_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_stone_label.custom_minimum_size.x = PANEL_WIDTH - 40.0
 	col.add_child(_stone_label)
@@ -93,7 +93,7 @@ func _ready() -> void:
 	scroll.add_child(_grid)
 	for cut: int in range(1, RockMeshes.CUT_NAMES.size()):
 		_grid.add_child(_make_card(cut))
-	_info = CosmicTheme.label("", 13, CosmicTheme.TEXT)
+	_info = CosmicTheme.label("", 15, CosmicTheme.TEXT)
 	_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_info.custom_minimum_size.x = PANEL_WIDTH - 40.0
 	col.add_child(_info)
@@ -109,9 +109,9 @@ func _ready() -> void:
 	_progress = _meter(col, "Facets cut", CosmicTheme.PRISM_CYAN)
 	_steady = _meter(col, "Steady hand", CosmicTheme.SUCCESS)
 	_quality = _meter(col, "Projected clarity", CosmicTheme.STARLIGHT_GOLD)
-	_quality_label = CosmicTheme.label("", 13, CosmicTheme.STARLIGHT_GOLD, CosmicTheme.mono_font())
+	_quality_label = CosmicTheme.label("", 15, CosmicTheme.STARLIGHT_GOLD, CosmicTheme.mono_font())
 	col.add_child(_quality_label)
-	var hint: Label = CosmicTheme.label("Hold a polished gem on the running lap and keep it inside the ring.  [ / ] change cut  ·  F close", 11, CosmicTheme.TEXT_FAINT)
+	var hint: Label = CosmicTheme.label("Hold a polished gem on the running lap and keep it inside the ring.  [ / ] change cut  ·  F close", 14, CosmicTheme.TEXT_FAINT)
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hint.custom_minimum_size.x = PANEL_WIDTH - 40.0
 	col.add_child(hint)

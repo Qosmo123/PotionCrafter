@@ -645,12 +645,12 @@ func _detail_substance(s: SubstanceData) -> void:
 		var k: Label = Label.new()
 		k.text = row[0]
 		k.add_theme_color_override(&"font_color", FADED_INK)
-		k.add_theme_font_size_override(&"font_size", 14)
+		k.add_theme_font_size_override(&"font_size", 15)
 		grid.add_child(k)
 		var v: Label = Label.new()
 		v.text = row[1]
 		v.add_theme_color_override(&"font_color", INK)
-		v.add_theme_font_size_override(&"font_size", 14)
+		v.add_theme_font_size_override(&"font_size", 15)
 		grid.add_child(v)
 	_text("How it behaves", 17, ACCENT)
 	for line: String in behaviour_notes(s):
@@ -780,14 +780,14 @@ func _detail_mineral(m: MineralData, found: bool) -> void:
 			var k: Label = Label.new()
 			k.text = row[0]
 			k.add_theme_color_override(&"font_color", FADED_INK)
-			k.add_theme_font_size_override(&"font_size", 14)
+			k.add_theme_font_size_override(&"font_size", 15)
 			grid.add_child(k)
 			var v: Label = Label.new()
 			v.text = row[1]
 			v.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			v.custom_minimum_size = Vector2(380, 0)
 			v.add_theme_color_override(&"font_color", INK)
-			v.add_theme_font_size_override(&"font_size", 14)
+			v.add_theme_font_size_override(&"font_size", 15)
 			grid.add_child(v)
 	_text("Did you know?", 18, ACCENT)
 	_text(m.fun_fact, 17, INK, true)

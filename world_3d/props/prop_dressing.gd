@@ -149,10 +149,10 @@ func _build_batches() -> void:
 
 
 ## Painted or engraved lettering, scaled to fit `width_m` and capped at `height_m`.
-func _text(text: String, at: Vector3, width_m: float, height_m: float, color: Color) -> void:
+func _text(text: String, at: Vector3, width_m: float, height_m: float, color: Color, text_font: Font = null) -> void:
 	var label: Label3D = Label3D.new()
 	label.text = text
-	label.font = CosmicTheme.display_font()
+	label.font = text_font if text_font != null else CosmicTheme.display_font()
 	label.font_size = 64
 	label.outline_size = 0
 	label.modulate = color

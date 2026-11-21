@@ -44,7 +44,7 @@ const TOUCH_MIN: int = 48
 const GUTTER: int = 16
 
 # --- Type scale ---------------------------------------------------------------------------
-const SIZE_CAPTION: int = 13
+const SIZE_CAPTION: int = 15
 const SIZE_BODY: int = 16
 const SIZE_SUBHEAD: int = 19
 const SIZE_TITLE: int = 26
@@ -61,32 +61,66 @@ static var _glass_material: ShaderMaterial = null
 
 
 # --- Fonts ------------------------------------------------------------------------------
-# System fonts with graceful fallbacks: no font files to ship or download.
+# Bundled OFL fonts (res://assets/fonts, licences alongside), each with system
+# fallbacks in case a file is missing:
+#   display  Fraunces SemiBold: titles, grimoire headings
+#   body     Atkinson Hyperlegible: UI text, tooltips (Bold for labels)
+#   mono     JetBrains Mono: formulas, live numbers (fixed-width digits)
+#   chalk    Caveat: hand lettering on the chalkboard and notes
+#   world    Atkinson Hyperlegible Bold, MSDF: 3D labels, sharp at any zoom
+
+const FONT_DIR: String = "res://assets/fonts/"
+
 
 ## Engraved display serif for titles and tome headings.
 static func display_font() -> Font:
-	return _font(&"display", ["Cinzel", "Cormorant Garamond", "Palatino Linotype", "Book Antiqua", "Constantia", "Georgia", "Noto Serif", "serif"], 600)
+	return _font(&"display", "Fraunces.ttf", 600, ["Cinzel", "Palatino Linotype", "Georgia", "serif"])
 
 
-## Crisp humanist sans for body copy.
+## Highly legible sans for body copy.
 static func body_font() -> Font:
-	return _font(&"body", ["Inter", "Segoe UI", "Roboto", "Noto Sans", "Helvetica Neue", "Arial", "sans-serif"], 400)
+	return _font(&"body", "AtkinsonHyperlegible-Regular.ttf", 0, ["Segoe UI", "Roboto", "Arial", "sans-serif"])
 
 
 ## Monospace for numbers, carats, ratios and formulas.
 static func mono_font() -> Font:
-	return _font(&"mono", ["JetBrains Mono", "Cascadia Mono", "Consolas", "Roboto Mono", "Menlo", "monospace"], 400)
+	return _font(&"mono", "JetBrainsMono.ttf", 450, ["Cascadia Mono", "Consolas", "monospace"])
 
 
-static func _font(key: StringName, names: PackedStringArray, weight: int) -> Font:
+## Hand lettering (chalkboard, notes).
+static func chalk_font() -> Font:
+	return _font(&"chalk", "Caveat.ttf", 600, ["Segoe Print", "Comic Sans MS", "cursive"])
+
+
+## Bold, MSDF-rendered sans for Label3D text in the world.
+static func world_font() -> Font:
+	return _font(&"world", "AtkinsonHyperlegible-Bold.ttf", 0, ["Segoe UI", "Arial", "sans-serif"])
+
+
+## Load a bundled font (optionally at a variable-font weight); fall back to
+## system fonts if the file is missing.
+static func _font(key: StringName, file: String, weight: int, fallback_names: PackedStringArray) -> Font:
 	if _fonts.has(key):
 		return _fonts[key]
-	var f: SystemFont = SystemFont.new()
-	f.font_names = names
-	f.font_weight = weight
-	f.antialiasing = TextServer.FONT_ANTIALIASING_GRAY
-	f.hinting = TextServer.HINTING_LIGHT
-	f.allow_system_fallback = true
+	var f: Font = null
+	if ResourceLoader.exists(FONT_DIR + file):
+		var data: FontFile = load(FONT_DIR + file) as FontFile
+		if data != null:
+			if weight > 0:
+				var v: FontVariation = FontVariation.new()
+				v.base_font = data
+				v.variation_opentype = {TextServerManager.get_primary_interface().name_to_tag("wght"): weight}
+				f = v
+			else:
+				f = data
+	if f == null:
+		var sys: SystemFont = SystemFont.new()
+		sys.font_names = fallback_names
+		sys.font_weight = weight if weight > 0 else 400
+		sys.antialiasing = TextServer.FONT_ANTIALIASING_GRAY
+		sys.hinting = TextServer.HINTING_LIGHT
+		sys.allow_system_fallback = true
+		f = sys
 	_fonts[key] = f
 	return f
 
@@ -239,7 +273,7 @@ static func theme() -> Theme:
 
 
 static func _bold_body() -> Font:
-	return _font(&"body_bold", ["Inter", "Segoe UI", "Roboto", "Noto Sans", "Helvetica Neue", "Arial", "sans-serif"], 650)
+	return _font(&"body_bold", "AtkinsonHyperlegible-Bold.ttf", 0, ["Segoe UI", "Arial", "sans-serif"])
 
 
 ## Give a top-level control (direct child of a CanvasLayer) the cosmic theme.

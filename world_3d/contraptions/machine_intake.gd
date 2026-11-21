@@ -53,7 +53,9 @@ func _ready() -> void:
 	_marker.visible = false
 	_marker.position = drop_local + Vector3(0.0, 0.15, 0.1)
 	add_child(_marker)
-	_marker_label = ClickSwitch.make_caption(self, _marker.position + Vector3(0.0, 0.055, 0.0))
+	var pill: WorldPill = ClickSwitch.make_caption(self, _marker.position + Vector3(0.0, 0.055, 0.0))
+	pill.auto_hide = false  # shown while a fitting item is carried
+	_marker_label = pill
 	_marker_label.text = "drop it here"
 	_marker_label.modulate = Color(1.0, 0.85, 0.5)
 	_marker_label.visible = false

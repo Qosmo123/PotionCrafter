@@ -124,10 +124,13 @@ func _hang_chalkboard(at: Vector3) -> void:
 	_box(&"wood", Vector3(at.x + 0.11, ledge_y + 0.011, z + 0.028), Vector3(0.07, 0.01, 0.026))
 	_box(&"dark", Vector3(at.x + 0.11, ledge_y + 0.003, z + 0.028), Vector3(0.07, 0.006, 0.026))
 	var fz: float = z + 0.0086
-	_text("PV = nRT", Vector3(at.x - 0.075, at.y + 0.05, fz), 0.17, 0.03, CHALK)
+	# Hand lettering in chalk (Caveat), slightly see-through like chalk dust.
+	var chalk: Font = CosmicTheme.chalk_font()
+	var dust: Color = Color(CHALK, 0.86)
+	_text("PV = nRT", Vector3(at.x - 0.075, at.y + 0.05, fz), 0.17, 0.034, dust, chalk)
 	_tint(Vector3(at.x - 0.075, at.y + 0.028, fz), Vector3(0.17, 0.0014, 0.0003), CHALK)
-	_text("pH = -log [H+]", Vector3(at.x - 0.06, at.y + 0.002, fz), 0.2, 0.02, CHALK)
-	_text("fall time ~ viscosity", Vector3(at.x - 0.035, at.y - 0.04, fz), 0.25, 0.018, CHALK)
+	_text("pH = -log [H+]", Vector3(at.x - 0.06, at.y + 0.002, fz), 0.2, 0.024, dust, chalk)
+	_text("fall time ~ viscosity", Vector3(at.x - 0.035, at.y - 0.04, fz), 0.25, 0.022, dust, chalk)
 	# A little sketch: a ball falling through a tube.
 	var sx0: float = at.x + 0.14
 	_tint(Vector3(sx0 - 0.011, at.y + 0.02, fz), Vector3(0.0014, 0.09, 0.0003), CHALK)

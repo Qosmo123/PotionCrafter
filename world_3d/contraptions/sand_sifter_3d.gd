@@ -76,11 +76,10 @@ func _ready() -> void:
 	_rain.draw_pass_1 = quad
 	_rain.position.y = deck_height_meters - 0.01
 	add_child(_rain)
-	_status = Label3D.new()
+	_status = WorldPill.new()
+	_status.busy = func() -> bool: return _charge_total_kg > 0.0
 	_status.font_size = 32
 	_status.pixel_size = 0.00045
-	_status.outline_size = 8
-	_status.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	_status.position = Vector3(0.0, 0.17, 0.15)
 	_status.text = IDLE_TEXT
 	add_child(_status)

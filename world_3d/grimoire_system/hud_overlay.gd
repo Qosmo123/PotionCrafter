@@ -95,12 +95,19 @@ func _ready() -> void:
 	CosmicTheme.apply(shell)
 	add_child(shell)
 	_shell = shell
+	# Notifications stack in the bottom-right corner (newest at the bottom),
+	# leaving the top of the screen to the bench, prompts and hover labels.
 	_toasts = VBoxContainer.new()
-	_toasts.anchor_left = 0.5
-	_toasts.anchor_right = 0.5
-	_toasts.offset_left = -300
-	_toasts.offset_right = 300
-	_toasts.offset_top = 18
+	_toasts.anchor_left = 1.0
+	_toasts.anchor_right = 1.0
+	_toasts.anchor_top = 1.0
+	_toasts.anchor_bottom = 1.0
+	_toasts.offset_left = -TOAST_WIDTH - 24.0
+	_toasts.offset_right = -24.0
+	_toasts.offset_bottom = -28.0
+	_toasts.offset_top = -28.0
+	_toasts.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_toasts.alignment = BoxContainer.ALIGNMENT_END
 	_toasts.add_theme_constant_override(&"separation", 6)
 	_toasts.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_shell.add_child(_toasts)
@@ -246,10 +253,10 @@ func _ready() -> void:
 	_inspector_label.scroll_active = false
 	_inspector_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	_inspector_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_inspector_label.add_theme_font_size_override(&"normal_font_size", 13)
+	_inspector_label.add_theme_font_size_override(&"normal_font_size", 15)
 	_inspector_label.add_theme_color_override(&"default_color", CosmicTheme.TEXT)
 	_inspector_label.add_theme_font_override(&"bold_font", CosmicTheme.display_font())
-	_inspector_label.add_theme_font_size_override(&"bold_font_size", 14)
+	_inspector_label.add_theme_font_size_override(&"bold_font_size", 16)
 	_inspector.add_child(_inspector_label)
 
 	_help = PanelContainer.new()
@@ -343,14 +350,14 @@ func _refresh_pin() -> void:
 	unpin.custom_minimum_size = Vector2(36, 32)
 	unpin.pressed.connect(func() -> void: journal.pin(id))
 	head.add_child(unpin)
-	var f: Label = CosmicTheme.label(r.formula, 13, CosmicTheme.PRISM_CYAN, CosmicTheme.mono_font())
+	var f: Label = CosmicTheme.label(r.formula, 15, CosmicTheme.PRISM_CYAN, CosmicTheme.mono_font())
 	f.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_pin_body.add_child(f)
-	var ing: Label = CosmicTheme.label("Ingredients:  " + ", ".join(r.ingredients), 13, ink)
+	var ing: Label = CosmicTheme.label("Ingredients:  " + ", ".join(r.ingredients), 15, ink)
 	ing.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_pin_body.add_child(ing)
 	for k: int in r.method_steps.size():
-		var step: Label = CosmicTheme.label("%d.  %s" % [k + 1, r.method_steps[k]], 13, Color(ink, 0.8))
+		var step: Label = CosmicTheme.label("%d.  %s" % [k + 1, r.method_steps[k]], 15, Color(ink, 0.8))
 		step.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		_pin_body.add_child(step)
 	_pin_body.add_child(CosmicTheme.label("Signature check", 12, CosmicTheme.TEXT_DIM, CosmicTheme.display_font()))
@@ -490,31 +497,42 @@ func toggle_help() -> void:
 		CosmicTheme.reveal(_help)
 
 
+const TOAST_WIDTH: float = 380.0
+
+
 func show_toast(text: String, kind: StringName = &"info") -> void:
+	var slot: MarginContainer = MarginContainer.new()
+	slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var panel: PanelContainer = PanelContainer.new()
 	var accent: Color = CosmicTheme.toast_color(kind)
 	panel.add_theme_stylebox_override(&"panel", CosmicTheme.glow(accent, 12, 8 if kind != &"info" else 0, Color(CosmicTheme.DEEP, 0.9), 0))
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var label: Label = Label.new()
 	label.text = ("✦  " if kind == &"discovery" or kind == &"secret" else "") + text
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.custom_minimum_size = Vector2(TOAST_WIDTH - 40.0, 0.0)
 	label.add_theme_color_override(&"font_color", accent.lerp(CosmicTheme.TEXT, 0.25))
-	label.add_theme_font_size_override(&"font_size", 18)
+	label.add_theme_font_size_override(&"font_size", 16)
 	if kind != &"info":
 		label.add_theme_font_override(&"font", CosmicTheme.display_font())
 	panel.add_child(label)
-	_toasts.add_child(panel)
+	slot.add_child(panel)
+	_toasts.add_child(slot)
 	while _toasts.get_child_count() > 4:
 		var oldest: Node = _toasts.get_child(0)
 		_toasts.remove_child(oldest)
 		oldest.queue_free()
-	panel.modulate.a = 0.0
-	var tween: Tween = panel.create_tween()
-	tween.tween_property(panel, "modulate:a", 1.0, 0.25)
-	tween.tween_interval(TOAST_SECONDS)
-	tween.tween_property(panel, "modulate:a", 0.0, 0.5)
-	tween.tween_callback(panel.queue_free)
+	# Slide in from the right edge and fade; fade out at the end.
+	slot.modulate.a = 0.0
+	slot.add_theme_constant_override(&"margin_left", 60)
+	var tween: Tween = slot.create_tween()
+	tween.set_parallel(true).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tween.tween_property(slot, "modulate:a", 1.0, 0.25)
+	tween.tween_method(func(m: int) -> void: slot.add_theme_constant_override(&"margin_left", m), 60, 0, 0.3 if not CosmicTheme.reduced_motion else 0.01)
+	tween.chain().tween_interval(TOAST_SECONDS)
+	tween.chain().tween_property(slot, "modulate:a", 0.0, 0.5)
+	tween.chain().tween_callback(slot.queue_free)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -630,6 +648,7 @@ func bottle(vessel: Vessel3D) -> void:
 
 
 func _process(delta: float) -> void:
+	_place_toasts()
 	if GrimoireJournal.instance != null:
 		_coins.text = "◉ %d" % GrimoireJournal.instance.coins
 	var hint: String = grabber.assist_hint() if grabber != null else ""
@@ -801,3 +820,19 @@ static func _meter(fraction: float) -> String:
 
 static func _vessel_kind(v: Vessel3D) -> String:
 	return v.profile.vessel_name.replace("_", " ") if v.profile != null else "vessel"
+
+
+
+## Toasts sit in the bottom-right corner, or just left of the satchel while
+## it is open.
+func _place_toasts() -> void:
+	var right: float = -24.0
+	var satchel: Node = get_node_or_null("../InventoryPanel")
+	if satchel != null:
+		var root: Control = satchel.get("_root") as Control
+		if root != null and root.visible:
+			var vp_w: float = get_viewport().get_visible_rect().size.x
+			right = minf(right, root.get_global_rect().position.x - vp_w - 16.0)
+	if _toasts.offset_right != right:
+		_toasts.offset_right = right
+		_toasts.offset_left = right - TOAST_WIDTH

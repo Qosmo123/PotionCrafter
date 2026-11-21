@@ -75,12 +75,11 @@ func _ready() -> void:
 	_area.add_child(pc)
 	_area.position.y = thickness_meters + 0.006
 	add_child(_area)
-	var label: Label3D = Label3D.new()
+	var label: WorldPill = WorldPill.new()
+	label.busy = func() -> bool: return _last_rock != null
 	label.text = "Streak Plate\nrub a mineral across it"
 	label.font_size = 28
 	label.pixel_size = 0.0004
-	label.outline_size = 8
-	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	label.position = Vector3(0.0, 0.06, 0.0)
 	add_child(label)
 

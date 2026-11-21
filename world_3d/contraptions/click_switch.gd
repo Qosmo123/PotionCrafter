@@ -34,14 +34,7 @@ static func make_button(parent: Node3D, size: Vector3, at: Vector3) -> StaticBod
 	return body
 
 
-## Small floating caption under a control.
-static func make_caption(parent: Node3D, at: Vector3) -> Label3D:
-	var label: Label3D = Label3D.new()
-	label.font_size = 26
-	label.pixel_size = 0.00042
-	label.outline_size = 8
-	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	label.position = at
-	label.modulate = Color(1.0, 0.95, 0.85)
-	parent.add_child(label)
-	return label
+## Small caption by a control: a dark pill that shows for a few seconds
+## after it changes (see WorldPill).
+static func make_caption(parent: Node3D, at: Vector3) -> WorldPill:
+	return WorldPill.make(parent, at, 26, 0.00042)

@@ -112,11 +112,10 @@ func _build_base() -> void:
 	_pad.add_child(pc)
 	_pad.position = Vector3(0.0, 0.06, 0.06)
 	add_child(_pad)
-	_readout = Label3D.new()
+	_readout = WorldPill.new()
+	_readout.busy = func() -> bool: return _vessel != null
 	_readout.font_size = 30
 	_readout.pixel_size = 0.00042
-	_readout.outline_size = 8
-	_readout.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	_readout.position = Vector3(0.0, 0.36, -0.02)
 	_readout.width = 900.0
 	_readout.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

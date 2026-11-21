@@ -73,11 +73,10 @@ func _ready() -> void:
 	_dust.draw_pass_1 = quad
 	_dust.position = Vector3(0.0, 0.07, 0.09)
 	add_child(_dust)
-	_status = Label3D.new()
+	_status = WorldPill.new()
+	_status.busy = func() -> bool: return _current != null
 	_status.font_size = 32
 	_status.pixel_size = 0.00045
-	_status.outline_size = 8
-	_status.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	_status.position = Vector3(0.0, 0.235, 0.1)  # on the dark upper housing
 	_status.text = IDLE_TEXT
 	add_child(_status)
