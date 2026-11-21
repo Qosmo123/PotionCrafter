@@ -14,10 +14,16 @@ instance uniform float start_width = 0.006;
 instance uniform vec4 liquid_color : source_color = vec4(0.6, 0.75, 0.9, 0.6);
 instance uniform float viscosity = 0.0;
 instance uniform float glow = 0.0;
+// 0..1: how much a thin, slow stream necks and breaks into beads near the
+// bottom (Rayleigh-Plateau). Set from viscosity and flow by PourStream3D.
+instance uniform float breakup = 0.0;
+// 0..1: how much a syrup coils like a rope where it lands.
+instance uniform float coiling = 0.0;
 uniform float gravity = 9.81;
 
 varying float side_v;
 varying float along;
+varying float bead;
 
 void vertex() {
 	float t = UV.y;
@@ -34,8 +40,16 @@ void vertex() {
 	float narrowing = sqrt(max(length(start_velocity), 0.05) / speed);
 	float w = start_width * max(narrowing, mix(0.8, 0.45, runny));
 	w *= 1.0 + runny * 0.05 * sin(t * 18.0 - TIME * 22.0);
-	// Rounded start at the lip, slight taper at the end.
-	w *= smoothstep(0.0, 0.035, t) * 0.75 + 0.25;
+	// A small bulge where the liquid leaves the lip (it clings to the glass).
+	w *= 1.0 + 0.45 * (1.0 - smoothstep(0.0, 0.06, t));
+	// Thin, slow streams neck into travelling beads toward the bottom.
+	float pinch_zone = breakup * smoothstep(0.45, 0.9, t);
+	float wave = 0.5 + 0.5 * sin(t * 46.0 - TIME * 34.0);
+	bead = pinch_zone * (1.0 - wave);
+	w *= 1.0 - pinch_zone * 0.85 * (1.0 - pow(wave, 0.6));
+	// Syrup coils in a small helix just above where it lands.
+	float coil = coiling * smoothstep(0.82, 1.0, t);
+	p += vec3(cos(TIME * 9.0), 0.0, sin(TIME * 9.0)) * start_width * 1.1 * coil;
 	vec3 tangent = normalize(vel);
 	vec3 view_fwd = -normalize(INV_VIEW_MATRIX[2].xyz);
 	vec3 side_dir = normalize(cross(tangent, view_fwd));
@@ -62,6 +76,8 @@ void fragment() {
 	float body = max(clamp(liquid_color.a, 0.0, 1.0), 0.42);
 	ALPHA = clamp(mix(body * 0.75 + 0.12, body + 0.32, smoothstep(0.5, 1.0, edge)) + glint * 0.25, 0.0, 0.95);
 	ALPHA *= smoothstep(1.0, 0.985, along) * smoothstep(0.0, 0.01, along);
+	// Gaps between beads let the bench show through.
+	ALPHA *= 1.0 - smoothstep(0.55, 0.9, bead);
 	ROUGHNESS = mix(0.04, 0.2, clamp(viscosity, 0.0, 1.0));
 	SPECULAR = 0.85;
 	METALLIC = 0.0;

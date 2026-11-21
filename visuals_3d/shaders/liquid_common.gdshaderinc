@@ -60,6 +60,10 @@ uniform float scatter_per_m = 420.0;
 // Idle surface wobble (metres) and meniscus climb at the glass (metres).
 uniform float idle_wave_meters = 0.0007;
 uniform float meniscus_climb_meters = 0.0018;
+// Where a pour stream lands on this liquid and how hard (0..1): a dimple,
+// rings running outward and a column of plunge bubbles.
+uniform vec3 pour_hit_world = vec3(0.0);
+uniform float pour_intensity = 0.0;
 
 #ifdef LIQUID_SCREEN_REFRACTION
 uniform sampler2D screen_tex : hint_screen_texture, filter_linear_mipmap;
@@ -125,6 +129,11 @@ void fragment() {
 	float wave = (sin(world_pos.x * 190.0 + TIME * 3.1) * 0.6 + sin(world_pos.x * 330.0 - world_pos.z * 140.0 - TIME * 4.7) * 0.4) * wave_amp;
 	float climb = meniscus_climb_meters * smoothstep(0.78, 1.0, clamp(r / max(R, 1e-4), 0.0, 1.0));
 	surface_offset -= wave + climb;
+	// Pour impact: a Gaussian dimple under the stream and rings running out.
+	float hit_d = length((world_pos - pour_hit_world).xz);
+	float dimple = pour_intensity * 0.0035 * exp(-hit_d * hit_d / 0.00002);
+	float rings_h = pour_intensity * 0.0009 * sin(hit_d * 280.0 - TIME * 16.0) * exp(-hit_d * 45.0);
+	surface_offset += dimple - rings_h;
 	float signed_dist = dot(rel, surface_normal_world) - surface_offset;
 	if (fill_fraction <= 0.0005 || signed_dist > foam_thickness_meters) {
 		discard;
@@ -186,7 +195,12 @@ void fragment() {
 		vec3 bcell = floor(bp);
 		vec3 bf = fract(bp) - 0.5;
 		float bubble_rate = 0.0015 + effervescence * 0.08;
+		// Plunge bubbles: a column under the stream that rises back up.
+		float col_d = length((world_pos - pour_hit_world).xz);
+		float column = pour_intensity * (1.0 - smoothstep(0.002, 0.008, col_d));
+		float rise = fract(world_pos.y * 120.0 - TIME * 3.0 + vnoise(world_pos.xz * 900.0) * 3.0);
 		float bubble = step(1.0 - bubble_rate, hash13(bcell)) * smoothstep(0.32, 0.22, length(bf.xy));
+		bubble += column * smoothstep(0.85, 1.0, rise) * (1.0 - smoothstep(0.0, 0.04, depth_m * 0.5));
 		vec3 aura = emission_hdr.rgb * (0.8 + 0.2 * sin(TIME * 1.7 + depth_m * 90.0 + ang * 2.0));
 		vec3 flake_cell = floor(world_pos * 700.0 + vec3(0.0, TIME * 0.4, 0.0));
 		float flake = step(1.0 - glitter * 0.035, hash13(flake_cell)) * (0.5 + 0.5 * sin(TIME * 9.0 + hash13(flake_cell + 7.0) * 40.0));

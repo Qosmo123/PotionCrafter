@@ -41,6 +41,10 @@ func show_arc(from: Vector3, velocity: Vector3, land_y: float, width_m: float, c
 	set_instance_shader_parameter(&"liquid_color", color)
 	set_instance_shader_parameter(&"viscosity", clampf(viscosity_pas, 0.0, 5.0))
 	set_instance_shader_parameter(&"glow", glow)
+	# Thin, slow streams of runny liquid break into beads; syrups coil.
+	var runny: float = 1.0 - clampf(viscosity_pas / 0.05, 0.0, 1.0)
+	set_instance_shader_parameter(&"breakup", runny * (1.0 - smoothstep(0.0025, 0.0045, _width_smoothed)))
+	set_instance_shader_parameter(&"coiling", smoothstep(0.5, 3.0, viscosity_pas))
 	visible = true
 
 

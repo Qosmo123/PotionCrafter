@@ -103,6 +103,8 @@ var _label_card: MeshInstance3D
 var _label_strip: MeshInstance3D
 var _label_icon: MeshInstance3D
 var _label_category: int = -1
+var _pour_hit_world: Vector3 = Vector3.ZERO
+var _pour_intensity: float = 0.0
 const LABEL_ICON_SHADER: Shader = preload("res://visuals_3d/shaders/label_icon.gdshader")
 ## Label categories (icon index in label_icon.gdshader) and their colours.
 enum LabelCategory { LIQUID, POWDER, HAZARD, ARCANE, BERRY }
@@ -553,6 +555,12 @@ func add_agitation(amount: float) -> void:
 	agitation = clampf(agitation + amount, 0.0, 1.0)
 
 
+## A pour stream is landing on this liquid at `at` (world) this tick.
+func note_pour_impact(at: Vector3, intensity: float) -> void:
+	_pour_hit_world = at
+	_pour_intensity = maxf(_pour_intensity, clampf(intensity, 0.0, 1.0))
+
+
 # --- Build ------------------------------------------------------------------------
 
 func _build_from_profile() -> void:
@@ -948,6 +956,8 @@ func _update_pouring(delta: float) -> void:
 		_splash.emitting = splashiness > 0.02
 		if receiver != null:
 			receiver.add_agitation(splashiness * impact_speed * delta * 3.0)
+			if dst != null:
+				receiver.note_pour_impact(Vector3(landing.x, land_y, landing.z), clampf(flow_m3_s / 2e-5, 0.25, 1.0) / (1.0 + viscosity_pas * 2.0))
 	else:
 		_splash.emitting = false
 
@@ -1048,6 +1058,11 @@ func _update_liquid_visual() -> void:
 	_liquid_material.set_shader_parameter(&"turbidity", clampf(mixture.get_liquid_turbidity() + emulsion_level * 0.6 + suspension_level * 0.8, 0.0, 1.0))
 	_liquid_material.set_shader_parameter(&"swirl_rad_s", mixture.swirl_rad_s)
 	_liquid_material.set_shader_parameter(&"agitation", agitation)
+	_liquid_material.set_shader_parameter(&"pour_hit_world", _pour_hit_world)
+	_liquid_material.set_shader_parameter(&"pour_intensity", _pour_intensity)
+	_pour_intensity = move_toward(_pour_intensity, 0.0, 0.08)  # rings settle once the pour stops
+	# Wetting liquids climb the glass; liquid metals curve down at the wall.
+	_liquid_material.set_shader_parameter(&"meniscus_climb_meters", -0.0016 if mixture.get_liquid_density_kg_m3() > 6000.0 else 0.0018)
 	var fizz: float = clampf(mixture.gas_generation_mol_s * 40.0, 0.0, 1.0)
 	_liquid_material.set_shader_parameter(&"effervescence", maxf(maxf(gas_ratio, fizz), 1.0 if is_boiling else 0.0))
 
