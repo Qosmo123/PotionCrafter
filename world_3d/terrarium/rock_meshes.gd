@@ -464,8 +464,93 @@ static func conchoidal_shard(radius: float, seed_value: int) -> Mesh:
 	return tb.commit(Vector3.ZERO, false)
 
 
+## Tied burlap sand sack: a slumped, bottom-heavy body gathered into folds
+## toward a twine-tied neck, with a ruffled tuft of cloth above the tie.
+## Built as a lathe (rings x segments, poles as zero-radius rings) so the
+## folds can vary around the bag; normals are smooth with no seam.
 static func sack(radius: float) -> Mesh:
-	return natural_rock(radius, 3, RockForm.ROUND, 0.05)
+	const RINGS: int = 56
+	const SEGS: int = 56
+	var height: float = radius * 1.75
+	var y0: float = -height * 0.42
+	var noise: FastNoiseLite = FastNoiseLite.new()
+	noise.seed = 77
+	noise.frequency = 1.3
+	var verts: PackedVector3Array = PackedVector3Array()
+	verts.resize((RINGS + 1) * SEGS)
+	for i: int in RINGS + 1:
+		var t: float = float(i) / float(RINGS)  # 0 bottom .. 1 top
+		var prof: float = _sack_profile(t)
+		# Gathered folds: faint on the belly, deep near the neck and tuft.
+		var fold_amp: float = 0.025 + 0.13 * smoothstep(0.35, 0.68, t) * (1.0 - smoothstep(0.69, 0.76, t)) + 0.28 * smoothstep(0.78, 0.92, t)
+		for j: int in SEGS:
+			var a: float = TAU * float(j) / float(SEGS)
+			var dir: Vector3 = Vector3(cos(a), 0.0, sin(a))
+			var folds: float = sin(a * 9.0 + noise.get_noise_2d(a * 2.0, t * 3.0) * 2.5) * 0.6 + sin(a * 14.0 + 1.3) * 0.4
+			var lump: float = noise.get_noise_3d(dir.x * 1.5, t * 2.0, dir.z * 1.5) * 0.06
+			var r: float = prof * (1.0 + folds * fold_amp + lump) * radius
+			var y: float = y0 + t * height
+			# The tuft's ruffled rim rises and falls with the folds.
+			if t > 0.9:
+				y += folds * 0.05 * radius * smoothstep(0.9, 1.0, t)
+			verts[i * SEGS + j] = Vector3(dir.x * r * 1.04, y, dir.z * r * 0.96)
+	var idx: PackedInt32Array = PackedInt32Array()
+	for i: int in RINGS:
+		for j: int in SEGS:
+			var a2: int = i * SEGS + j
+			var b2: int = i * SEGS + (j + 1) % SEGS
+			var c2: int = (i + 1) * SEGS + j
+			var d2: int = (i + 1) * SEGS + (j + 1) % SEGS
+			# (b-a)x(c-a) points inward here, which is Godot's front face.
+			idx.append_array([a2, b2, c2, b2, d2, c2])
+	var nrm: PackedVector3Array = PackedVector3Array()
+	nrm.resize(verts.size())
+	for k: int in range(0, idx.size(), 3):
+		var fn: Vector3 = (verts[idx[k + 2]] - verts[idx[k]]).cross(verts[idx[k + 1]] - verts[idx[k]])
+		nrm[idx[k]] += fn
+		nrm[idx[k + 1]] += fn
+		nrm[idx[k + 2]] += fn
+	var tangents: PackedFloat32Array = PackedFloat32Array()
+	tangents.resize(verts.size() * 4)
+	for k: int in verts.size():
+		var n2: Vector3 = nrm[k]
+		if n2.length_squared() < 1e-20:
+			n2 = Vector3.DOWN if k < SEGS else Vector3.UP
+		n2 = n2.normalized()
+		nrm[k] = n2
+		var t2: Vector3 = Vector3.UP.cross(n2)
+		if t2.length_squared() < 1e-6:
+			t2 = Vector3.RIGHT
+		t2 = t2.normalized()
+		tangents[k * 4] = t2.x
+		tangents[k * 4 + 1] = t2.y
+		tangents[k * 4 + 2] = t2.z
+		tangents[k * 4 + 3] = 1.0
+	var arrays: Array = []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = verts
+	arrays[Mesh.ARRAY_NORMAL] = nrm
+	arrays[Mesh.ARRAY_TANGENT] = tangents
+	arrays[Mesh.ARRAY_INDEX] = idx
+	var mesh: ArrayMesh = ArrayMesh.new()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	return mesh
+
+
+## Sack radius (fraction of the bag radius) at height t (0 bottom, 1 top).
+static func _sack_profile(t: float) -> float:
+	if t <= 0.0 or t >= 1.0:
+		return 0.0
+	var bottom: float = sqrt(clampf(t / 0.06, 0.0, 1.0))  # flat-ish base
+	var belly: float = 0.82 + 0.18 * exp(-pow((t - 0.28) / 0.2, 2.0))  # slumped, widest low
+	var r: float = bottom * belly
+	r = lerpf(r, 0.42, smoothstep(0.42, 0.66, t))  # taper toward the neck
+	r = lerpf(r, 0.17, smoothstep(0.64, 0.72, t))  # pinched by the tie
+	var twine: float = exp(-pow((t - 0.72) / 0.018, 2.0)) * 0.06  # twine wrap
+	r += twine
+	r = lerpf(r, 0.34, smoothstep(0.74, 0.88, t))  # cloth flares above the tie
+	r *= 1.0 - smoothstep(0.93, 1.0, t) * 0.75  # tuft closes in
+	return r
 
 
 static func shell(radius: float) -> Mesh:

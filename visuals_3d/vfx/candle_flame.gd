@@ -56,5 +56,6 @@ func _add_halo() -> void:
 	_halo.mesh = quad
 	_halo.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_halo.extra_cull_margin = 0.1
+	_halo.layers = flame.layers if flame is VisualInstance3D else 1  # kept out of the reflection probe
 	flame.get_parent().add_child.call_deferred(_halo)
 	_halo.position = flame.position + Vector3(0.0, 0.01, 0.0)
