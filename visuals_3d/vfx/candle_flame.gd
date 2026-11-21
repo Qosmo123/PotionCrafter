@@ -12,6 +12,7 @@ extends Node3D
 var _noise: FastNoiseLite = FastNoiseLite.new()
 var _time: float = 0.0
 var _base_flame_scale: Vector3 = Vector3.ONE
+var _halo: MeshInstance3D
 
 
 func _ready() -> void:
@@ -19,6 +20,7 @@ func _ready() -> void:
 	_noise.frequency = 2.2
 	if flame != null:
 		_base_flame_scale = flame.scale
+		_add_halo()
 
 
 func _process(delta: float) -> void:
@@ -27,6 +29,8 @@ func _process(delta: float) -> void:
 	var n2: float = _noise.get_noise_1d(_time * 11.0 + 100.0)
 	if light != null:
 		light.light_energy = base_energy * (1.0 + n1 * 0.25 + n2 * 0.08)
+	if _halo != null:
+		_halo.set_instance_shader_parameter(&"strength", 1.0 + n1 * 0.3 + n2 * 0.1)
 	if flame != null:
 		flame.scale = _base_flame_scale * Vector3(1.0 - n2 * 0.1, 1.0 + n1 * 0.25, 1.0 - n2 * 0.1)
 		flame.rotation.z = n2 * 0.12
@@ -38,3 +42,19 @@ func _physics_process(_delta: float) -> void:
 		var lip: Vector3 = vessel.global_transform * Vector3(0.0, vessel.get_lip_local_y(), 0.0)
 		if lip.distance_to(tip) < ignite_radius_meters:
 			vessel.ignition_source = true
+
+
+## Warm glow disc around the flame (additive billboard, flickers with it).
+func _add_halo() -> void:
+	_halo = MeshInstance3D.new()
+	_halo.name = "Halo"
+	var quad: QuadMesh = QuadMesh.new()
+	quad.size = Vector2(0.22, 0.22)
+	var mat: ShaderMaterial = ShaderMaterial.new()
+	mat.shader = preload("res://visuals_3d/shaders/candle_halo.gdshader")
+	quad.material = mat
+	_halo.mesh = quad
+	_halo.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_halo.extra_cull_margin = 0.1
+	flame.get_parent().add_child.call_deferred(_halo)
+	_halo.position = flame.position + Vector3(0.0, 0.01, 0.0)

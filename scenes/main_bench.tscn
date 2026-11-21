@@ -1,4 +1,4 @@
-[gd_scene load_steps=133 format=3]
+[gd_scene load_steps=135 format=3]
 
 [ext_resource type="PackedScene" path="res://world_3d/vessels/vessel_3d.tscn" id="1_vessel"]
 [ext_resource type="Resource" path="res://content/substances/moonwater.tres" id="2_moon"]
@@ -85,6 +85,8 @@
 [ext_resource type="PackedScene" path="res://world_3d/props/faceting_machine.gltf" id="75_facm"]
 [ext_resource type="PackedScene" path="res://world_3d/props/stone_anvil.gltf" id="76_anvilm"]
 [ext_resource type="PackedScene" path="res://world_3d/props/rock_crate.gltf" id="77_cratem"]
+[ext_resource type="Script" path="res://visuals_3d/vfx/light_shafts_3d.gd" id="98_shafts"]
+[ext_resource type="Script" path="res://visuals_3d/vfx/vignette_overlay.gd" id="99_vignette"]
 [ext_resource type="Texture2D" path="res://content/textures_4k/masonry_wall_albedo.jpg" id="tex_masonry_wall_albedo"]
 [ext_resource type="Texture2D" path="res://content/textures_4k/masonry_wall_normal.jpg" id="tex_masonry_wall_normal"]
 [ext_resource type="Texture2D" path="res://content/textures_4k/masonry_wall_rough.jpg" id="tex_masonry_wall_rough"]
@@ -795,3 +797,20 @@ script = ExtResource("20_abox")
 
 [node name="BenchReadout" type="CanvasLayer" parent="."]
 script = ExtResource("9_readout")
+
+[node name="Atmosphere" type="Node3D" parent="."]
+
+[node name="LightShafts0" type="Node3D" parent="Atmosphere"]
+transform = Transform3D(0.906308, -0.422618, 0, 0.422618, 0.906308, 0, 0, 0, 1, -0.40, 1.5, -0.6)
+script = ExtResource("98_shafts")
+
+[node name="LightShafts1" type="Node3D" parent="Atmosphere"]
+transform = Transform3D(0.906308, -0.422618, 0, 0.422618, 0.906308, 0, 0, 0, 1, 2.60, 1.5, -0.6)
+script = ExtResource("98_shafts")
+
+[node name="LightShafts2" type="Node3D" parent="Atmosphere"]
+transform = Transform3D(0.906308, -0.422618, 0, 0.422618, 0.906308, 0, 0, 0, 1, 5.60, 1.5, -0.6)
+script = ExtResource("98_shafts")
+
+[node name="Vignette" type="CanvasLayer" parent="."]
+script = ExtResource("99_vignette")
