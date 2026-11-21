@@ -126,6 +126,8 @@ func _extend(screen: Vector2) -> void:
 	if (p as Vector2).distance_to(_points[_points.size() - 1]) < MIN_POINT_SPACING_METERS:
 		return
 	_points.append(p as Vector2)
+	# Chalk rasps while it moves; the loop fades as soon as the hand stops.
+	AudioDirector.loop(&"chalk", &"chalk_loop", Vector3((p as Vector2).x, bench_top_y_meters, (p as Vector2).y), 0.8, 1.0, -8.0)
 	_rebuild_stroke()
 
 
@@ -160,6 +162,8 @@ func _finish() -> void:
 	var field: SpellField3D = SpellField3D.new()
 	field.setup(result, bench_top_y_meters)
 	add_child(field)
+	var last: Vector2 = _points[_points.size() - 1]
+	AudioDirector.play(&"spell_cast", Vector3(last.x, bench_top_y_meters, last.y), lerpf(-10.0, -3.0, clampf(result.power, 0.0, 1.0)), lerpf(0.9, 1.15, clampf(result.power, 0.0, 1.0)))
 	var glow: StandardMaterial3D = _current_mesh.material_override as StandardMaterial3D
 	glow.albedo_color = field.get_color()
 	glow.emission_enabled = true

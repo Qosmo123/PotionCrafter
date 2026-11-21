@@ -138,6 +138,7 @@ func _physics_process(delta: float) -> void:
 		remaining += charge_kg[k]
 	var fraction_left: float = remaining / _charge_total_kg
 	_rain.emitting = shake > 0.05
+	AudioDirector.loop(&"sifter", &"sifter_loop", global_position, clampf(shake / 0.5, 0.0, 1.0) * clampf(fraction_left * 3.0 + 0.25, 0.0, 1.0), clampf(0.85 + shake * 0.4, 0.85, 1.3), -4.0)
 	_status.text = "Sifting %s  %d%%" % [_bag_name, int((1.0 - fraction_left) * 100.0)]
 	for t: int in _treasures.size():
 		if _treasure_thresholds[t] > 0.0 and fraction_left < _treasure_thresholds[t]:

@@ -235,6 +235,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		else:
 			cycle_cut(1)
 		AudioHaptics.tick()
+		AudioDirector.play(&"click", global_position, -8.0)
 		_update_status()
 		get_viewport().set_input_as_handled()
 
@@ -305,11 +306,14 @@ func toggle() -> void:
 	_led.emission = Color(0.1, 1.0, 0.3) if running else Color(1.0, 0.1, 0.05)
 	_led.emission_energy_multiplier = 2.0 if running else 0.3
 	AudioHaptics.tick()
+	AudioDirector.play(&"switch", global_position, -6.0)
 	_update_status()
 
 
 func _process(delta: float) -> void:
 	_spin = lerpf(_spin, 40.0 if running else 0.0, 1.0 - exp(-delta * 2.0))
+	# Motor whirr follows the wheel as it spins up and down.
+	AudioDirector.loop(&"wheel", &"wheel_loop", global_position, clampf(_spin / 40.0, 0.0, 1.0) * 0.8, 0.5 + 0.5 * _spin / 40.0, -12.0)
 	_wheel.rotation.y += _spin * delta
 	if mode == Mode.FACET and _ring != null:
 		_update_light_guides(delta)
@@ -379,6 +383,8 @@ func _physics_process(delta: float) -> void:
 		return
 	_sparks.emitting = true
 	var hardness_drag: float = 1.0 + stone.mineral.hardness_mohs * 0.15
+	# Harder stones scream higher against the lap; polishing is gentler.
+	AudioDirector.loop(&"grind", &"grind_loop", stone.global_position, 0.55 if mode == Mode.POLISH else 0.9, 0.8 + stone.mineral.hardness_mohs * 0.05, -9.0)
 	if mode == Mode.POLISH:
 		if stone.polish < 1.0:
 			var before: float = stone.polish
@@ -407,6 +413,7 @@ func _physics_process(delta: float) -> void:
 			# Crystalline chime cue: a glint of sparks each quarter of the way.
 			_milestone = quarter
 			AudioHaptics.tick()
+			AudioDirector.play(&"impact_crystal", stone.global_position, -8.0, 1.0 + 0.12 * float(quarter))
 			var fx: ImpactFx3D = ImpactFx3D.get_pool(self)
 			if fx != null:
 				fx.hit(stone.global_position + Vector3(0.0, 0.015, 0.0), stone.mineral.color, CosmicTheme.STARLIGHT_GOLD, 0.35)

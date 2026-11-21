@@ -160,6 +160,8 @@ func toggle() -> void:
 
 
 func open(tab: int = -1) -> void:
+	if not _root.visible:
+		AudioDirector.play_ui(&"page_turn", -6.0, 0.9)
 	_root.visible = true
 	TactileGrabber3D.input_captured = true
 	_layout()
@@ -170,6 +172,8 @@ func open(tab: int = -1) -> void:
 
 
 func close() -> void:
+	if _root.visible:
+		AudioDirector.play_ui(&"ui_close", -8.0, 0.8)
 	_root.visible = false
 	TactileGrabber3D.input_captured = ChalkDrawing3D.active
 
@@ -445,6 +449,8 @@ func _is_new(e: Dictionary) -> bool:
 func _select(index: int) -> void:
 	if _entries.is_empty():
 		return
+	if _root.visible and index != _selected:
+		AudioDirector.play_ui(&"page_turn", -12.0, 1.1)
 	# Skip headers.
 	var i: int = index
 	while i < _entries.size() and _entries[i].has("header"):

@@ -51,9 +51,13 @@ func _unhandled_input(event: InputEvent) -> void:
 	if key != null and key.pressed and not key.echo and key.keycode == KEY_M:
 		_speed_index = (_speed_index + 1) % SPEEDS_RAD_S.size()
 		target_swirl_rad_s = SPEEDS_RAD_S[_speed_index]
+		AudioDirector.play(&"click", global_position, -8.0)
 
 
 func _physics_process(delta: float) -> void:
+	# Motor hum rises with the speed setting.
+	var speed: float = absf(target_swirl_rad_s)
+	AudioDirector.loop(&"stirrer", &"hotplate_loop", global_position, clampf(speed / 20.0, 0.0, 1.0) * 0.6, 1.4 + speed * 0.03, -20.0)
 	for i: int in MAX_VESSELS:
 		var vessel: Vessel3D = _vessels[i]
 		if vessel == null:

@@ -110,10 +110,14 @@ func seal(grade: String, points: int, instant: bool = false) -> void:
 	_set_flow(_wax_top_y + 0.01)
 	_set_heat(1.0)
 	_medallion.scale = Vector3.ZERO
+	var at: Vector3 = global_transform * Vector3(0.0, _cork_rest_y, 0.0)
+	AudioDirector.play(&"cork_push", at, -4.0)
 	_tween = create_tween()
 	_tween.tween_property(_cork, "position:y", _cork_rest_y, 0.16).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
 	_tween.tween_callback(AudioHaptics.tick)
+	_tween.tween_callback(AudioDirector.play.bind(&"wax_pour", at, -6.0, 1.0))
 	_tween.tween_method(_set_flow, _wax_top_y + 0.002, _wax_bottom_y - 0.002, POUR_SECONDS).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_SINE)
+	_tween.tween_callback(AudioDirector.play.bind(&"stamp", at, -3.0, 1.0))
 	_tween.tween_property(_medallion, "scale", Vector3.ONE, 0.22).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
 	_tween.tween_callback(AudioHaptics.tick)
 	_tween.parallel().tween_method(_set_heat, 1.0, 0.0, COOL_SECONDS).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
@@ -135,6 +139,8 @@ func pop(instant: bool = false) -> void:
 	if fx != null:
 		fx.hit(lip_world, _wax_color.lerp(Color(0.92, 0.9, 0.86), 0.35), _wax_color, 0.05)
 	AudioHaptics.tick()
+	AudioDirector.play(&"wax_crack", lip_world, -8.0)
+	AudioDirector.play(&"cork_pop", lip_world, -1.0)
 	_tween = create_tween()
 	_tween.set_parallel(true)
 	_tween.tween_property(_cork, "position:y", _cork_rest_y + 0.075, 0.38).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)

@@ -79,6 +79,8 @@ func _ready() -> void:
 
 
 func set_heating(enabled: bool) -> void:
+	if enabled != heating_enabled and is_inside_tree():
+		AudioDirector.play(&"switch", global_position, -6.0, 1.0 if enabled else 0.85)
 	heating_enabled = enabled
 	_update_glow()
 
@@ -86,6 +88,7 @@ func set_heating(enabled: bool) -> void:
 func _physics_process(_delta: float) -> void:
 	if not heating_enabled:
 		return
+	AudioDirector.loop(&"hotplate", &"hotplate_loop", global_position, 0.5, 1.0, -22.0)
 	for i: int in MAX_VESSELS:
 		var vessel: Vessel3D = _vessels[i]
 		if vessel == null:

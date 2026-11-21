@@ -130,6 +130,11 @@ func _physics_process(delta: float) -> void:
 				break
 	var omega: float = absf(_handle.angular_velocity.dot(global_basis.y))
 	_dust.emitting = _current != null and omega > 0.8
+	# The crank ratchets freely; with a rock in the jaws it grinds.
+	if _current != null:
+		AudioDirector.loop(&"crusher", &"crusher_loop", global_position, clampf(omega / 5.0, 0.0, 1.0), clampf(0.75 + omega * 0.06, 0.75, 1.3), -3.0)
+	elif omega > 1.0 and randf() < _delta_ratchet(omega):
+		AudioDirector.play(&"ratchet", global_position, -14.0)
 	if _current == null:
 		return
 	_work_joules += omega * CRANK_TORQUE_N_M * delta
@@ -143,7 +148,14 @@ func _physics_process(delta: float) -> void:
 		_finish(_current)
 
 
+## Chance per tick of a ratchet click at this crank speed (about 2 per turn).
+func _delta_ratchet(omega_rad_s: float) -> float:
+	return clampf(omega_rad_s / PI * get_physics_process_delta_time(), 0.0, 1.0)
+
+
 func _finish(rock: Rock3D) -> void:
+	AudioDirector.play(&"rock_crack", global_position, -2.0, 0.85)
+	AudioDirector.play(&"sand_pour", global_position, -6.0)
 	var m: MineralData = rock.mineral
 	var made: PackedStringArray = PackedStringArray()
 	var total: float = 0.0

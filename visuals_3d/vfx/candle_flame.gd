@@ -38,6 +38,7 @@ func _process(delta: float) -> void:
 
 func _physics_process(_delta: float) -> void:
 	var tip: Vector3 = flame.global_position if flame != null else global_position
+	AudioDirector.loop(&"candle", &"candle_loop", tip, 0.6, 1.0, -16.0)
 	for vessel: Vessel3D in Vessel3D.all_vessels:
 		var lip: Vector3 = vessel.global_transform * Vector3(0.0, vessel.get_lip_local_y(), 0.0)
 		if lip.distance_to(tip) < ignite_radius_meters:

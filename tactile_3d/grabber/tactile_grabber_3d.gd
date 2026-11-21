@@ -334,6 +334,7 @@ func is_side_view() -> bool:
 
 
 func _on_new_hold() -> void:
+	AudioDirector.play(&"grab", held_body.global_position, -14.0)
 	_probe.clear_exceptions()
 	_probe.add_exception(held_body)
 	# Measure how far the item's underside sits below its centre.

@@ -181,6 +181,7 @@ func toggle() -> void:
 	if _slide != null and _slide.is_valid():
 		_slide.kill()
 	var open_x: float = -_width() - 20.0
+	AudioDirector.play_ui(&"ui_close" if _root.visible else &"ui_open", -10.0)
 	if not _root.visible:
 		_root.visible = true
 		if LabCamera3D.instance != null and _last_station < STATION_TABS.size():

@@ -121,6 +121,7 @@ func _start_swing(with_charge: float) -> void:
 	_target = find_target()
 	_target_hit_fraction = 0.0
 	_swing_charge = with_charge
+	AudioDirector.play(&"hammer_swing", global_position, lerpf(-12.0, -5.0, clampf(with_charge, 0.0, 1.0)), lerpf(1.1, 0.85, clampf(with_charge, 0.0, 1.0)))
 
 
 ## Guaranteed share of the target's strength for this blow.
@@ -175,8 +176,10 @@ func get_hover_override_y() -> float:
 func _on_body_entered(body: Node) -> void:
 	var rock: Rock3D = body as Rock3D
 	if rock == null:
+		AudioDirector.contact(self, body, linear_velocity.length(), global_position, 0.9)
 		return
 	var v_rel: float = (linear_velocity - rock.linear_velocity).length()
+	AudioDirector.impact(&"iron", v_rel, global_position, 0.9, -6.0)
 	if rock == _target and _slam_timer > 0.0:
 		_finish_swing()
 		return

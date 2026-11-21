@@ -102,6 +102,11 @@ func _stir(vessel: Vessel3D, tip_world: Vector3, tip_velocity: Vector3, r: float
 	var blend: float = 1.0 - exp(-delta * swirl_coupling / (1.0 + viscosity_pas * 2.0))
 	vessel.mixture.swirl_rad_s = clampf(lerpf(vessel.mixture.swirl_rad_s, target_swirl, blend), -40.0, 40.0)
 	vessel.add_agitation(v_rel.length() * agitation_gain * delta * 4.0)
+	# Liquid swirl follows the stirring speed; the rod tings when it runs along the wall.
+	var stir_speed: float = v_rel.length()
+	AudioDirector.loop(&"swirl", &"swirl_loop", tip_world, clampf(stir_speed / 0.6, 0.0, 1.0), clampf(1.0 - viscosity_pas * 0.15, 0.6, 1.0) + stir_speed * 0.2, -10.0)
+	if r > surface_r * 0.82 and stir_speed > 0.12 and randf() < delta * (2.0 + stir_speed * 14.0):
+		AudioDirector.play(&"glass_ting", tip_world, lerpf(-22.0, -9.0, clampf(stir_speed / 0.8, 0.0, 1.0)), AudioDirector.vessel_pitch(surface_r, vessel.get_fill_fraction()))
 	# Viscous drag back on the tool (felt through the spring grabber as weight).
 	var drag: Vector3 = -v_rel * drag_coefficient * (0.05 + viscosity_pas)
 	apply_central_force(drag.limit_length(6.0))

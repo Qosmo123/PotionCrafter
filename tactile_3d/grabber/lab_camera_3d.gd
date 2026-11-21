@@ -55,6 +55,7 @@ func go_to_station(index: int) -> void:
 	if index < 0 or index >= station_offsets.size() or index == station:
 		return
 	station = index
+	AudioDirector.play_ui(&"whoosh", -12.0, 1.0)
 	var tween: Tween = create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
 	tween.tween_property(self, "_station_offset", station_offsets[index], 0.9)
 	if grabber != null:

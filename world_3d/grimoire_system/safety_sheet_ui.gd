@@ -164,6 +164,8 @@ func is_open() -> bool:
 
 
 func close() -> void:
+	if visible:
+		AudioDirector.play_ui(&"ui_close", -10.0)
 	visible = false
 	TactileGrabber3D.input_captured = false
 
@@ -174,6 +176,8 @@ func open_for_vessel(v: Vessel3D) -> void:
 
 func open_for_mixture(m: MixtureContainer, product_name: String = "", foam_m: float = 0.0, assay: Dictionary = {}) -> void:
 	render(SafetySheet.build(m, product_name, foam_m, assay))
+	if not visible:
+		AudioDirector.play_ui(&"ui_open", -10.0)
 	visible = true
 	TactileGrabber3D.input_captured = true
 	_scroll.scroll_vertical = 0

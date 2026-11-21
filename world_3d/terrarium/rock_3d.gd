@@ -55,6 +55,7 @@ func _ready() -> void:
 	contact_monitor = true
 	max_contacts_reported = 4
 	continuous_cd = true
+	body_entered.connect(_on_contact)
 	if mineral == null:
 		return
 	if mass_kg <= 0.0:
@@ -136,6 +137,7 @@ func strike(energy_joules: float) -> void:
 	var effective: float = energy_joules * 10.0 / maxf(mineral.hardness_mohs, 1.0) * cleavage_ease(mineral.cleavage)
 	integrity -= effective
 	AudioHaptics.impact(2.0)
+	AudioDirector.play(&"rock_hit", global_position, -4.0, _size_pitch())
 	_show_hit(effective / maxf(integrity_max, 1e-6))
 	if integrity <= 0.0:
 		crack()
@@ -148,6 +150,7 @@ func strike_fraction(fraction: float) -> void:
 		return
 	integrity -= fraction * integrity_max
 	AudioHaptics.impact(2.0)
+	AudioDirector.play(&"rock_hit", global_position, lerpf(-8.0, 0.0, clampf(fraction * 3.0, 0.0, 1.0)), _size_pitch())
 	_show_hit(fraction)
 	if integrity <= 0.0:
 		crack()
@@ -204,8 +207,25 @@ func _process(delta: float) -> void:
 		set_process(false)
 
 
+## Bigger stones sound lower.
+func _size_pitch() -> float:
+	return clampf(0.03 / maxf(radius_meters(), 0.008), 0.7, 1.6)
+
+
+## Clack, ping or thud on contact, by what the stone and the other body are.
+func _on_contact(body: Node) -> void:
+	var speed: float = linear_velocity.length()
+	var other: RigidBody3D = body as RigidBody3D
+	if other != null:
+		if other is Vessel3D or other is Hammer3D:
+			return  # they voice the contact themselves
+		speed = (linear_velocity - other.linear_velocity).length()
+	AudioDirector.contact(self, body, speed, global_position, _size_pitch())
+
+
 ## Split open: roll inclusions into new finds, leave a couple of smaller fragments.
 func crack() -> void:
+	AudioDirector.play(&"rock_crack", global_position, -1.0, _size_pitch())
 	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 	rng.randomize()
 	var parent: Node = get_parent()
@@ -260,6 +280,7 @@ static func _reveal(find: Rock3D, m: MineralData) -> void:
 	var fx: ImpactFx3D = ImpactFx3D.get_pool(find)
 	if fx != null:
 		fx.reveal(find.global_position - Vector3(0.0, 0.02, 0.0), color)
+	AudioDirector.play(&"gem_reveal", find.global_position, -3.0)
 	if LabCamera3D.instance != null:
 		LabCamera3D.instance.shake(0.8)
 	if HudOverlay.instance != null:

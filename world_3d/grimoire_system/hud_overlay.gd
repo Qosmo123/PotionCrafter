@@ -3,6 +3,9 @@ extends CanvasLayer
 ## Player-facing HUD: hover inspector tooltip, toast banners, help overlay (H),
 ## corner buttons (Grimoire, Help) with the coin purse, and bottling (B).
 
+var _volume_sliders: Dictionary = {}
+var _syncing_volumes: bool = false
+
 const TOAST_SECONDS: float = 3.2
 const STATION_RUNES: PackedStringArray = ["☿", "◆", "⊕"]  # alchemical glyphs with no emoji form
 const STATION_NAMES: PackedStringArray = ["Potion Bench", "Mineral Lab", "Science Bench"]
@@ -76,6 +79,7 @@ func _exit_tree() -> void:
 
 func _ready() -> void:
 	layer = 6
+	AudioDirector.ensure()
 	var shell: Control = Control.new()
 	shell.set_anchors_preset(Control.PRESET_FULL_RECT)
 	shell.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -227,7 +231,11 @@ func _ready() -> void:
 	help_label.add_theme_font_override(&"bold_font", CosmicTheme.display_font())
 	help_label.add_theme_font_size_override(&"bold_font_size", 19)
 	help_label.text = HELP_TEXT
-	_help.add_child(help_label)
+	var help_box: VBoxContainer = VBoxContainer.new()
+	help_box.add_theme_constant_override(&"separation", 14)
+	help_box.add_child(help_label)
+	help_box.add_child(_build_sound_settings())
+	_help.add_child(help_box)
 	_shell.add_child(_help)
 
 	_pin_card = PanelContainer.new()
@@ -391,9 +399,56 @@ func _update_pin_checks() -> void:
 		_pin_checks[i].add_theme_color_override(&"font_color", CosmicTheme.SUCCESS if ok else CosmicTheme.TEXT_DIM)
 
 
+## Volume sliders (overall, effects, ambience, interface), saved as they move.
+func _build_sound_settings() -> Control:
+	var box: VBoxContainer = VBoxContainer.new()
+	box.add_theme_constant_override(&"separation", 6)
+	var title: Label = Label.new()
+	title.text = "Sound"
+	title.add_theme_font_override(&"font", CosmicTheme.display_font())
+	title.add_theme_font_size_override(&"font_size", 19)
+	title.add_theme_color_override(&"font_color", CosmicTheme.STARLIGHT_GOLD)
+	box.add_child(title)
+	var grid: GridContainer = GridContainer.new()
+	grid.columns = 4
+	grid.add_theme_constant_override(&"h_separation", 14)
+	var names: Dictionary = {"Master": "Overall", "SFX": "Effects", "Ambience": "Ambience", "UI": "Interface"}
+	for bus: String in AudioDirector.BUSES:
+		var label: Label = Label.new()
+		label.text = names[bus]
+		label.add_theme_color_override(&"font_color", CosmicTheme.TEXT)
+		grid.add_child(label)
+		var slider: HSlider = HSlider.new()
+		slider.name = "Volume" + bus
+		slider.min_value = 0.0
+		slider.max_value = 1.0
+		slider.step = 0.05
+		slider.custom_minimum_size = Vector2(210, 24)
+		slider.value = float(AudioDirector.DEFAULT_VOLUMES[bus])
+		slider.value_changed.connect(_on_volume_changed.bind(bus))
+		grid.add_child(slider)
+		_volume_sliders[bus] = slider
+	box.add_child(grid)
+	return box
+
+
+func _on_volume_changed(value: float, bus: String) -> void:
+	if _syncing_volumes:
+		return
+	AudioDirector.set_volume(bus, value)
+	if bus != "UI":
+		AudioDirector.play_ui(&"ui_click", -10.0)
+
+
 func toggle_help() -> void:
 	_help.visible = not _help.visible
+	AudioDirector.play_ui(&"ui_open" if _help.visible else &"ui_close", -10.0)
 	if _help.visible:
+		# Show the volumes as they are now (loaded from the saved settings).
+		_syncing_volumes = true
+		for bus: String in _volume_sliders:
+			(_volume_sliders[bus] as HSlider).value = AudioDirector.get_volume(bus)
+		_syncing_volumes = false
 		var vp: Vector2 = get_viewport().get_visible_rect().size
 		_help.reset_size()
 		_help.position = (vp - _help.size) * 0.5
@@ -536,6 +591,7 @@ func bottle(vessel: Vessel3D) -> void:
 			GrimoireJournal.instance.record_bottle(vessel)
 	else:
 		show_toast("Nothing to bottle: the vessel is empty", &"warning")
+		AudioDirector.play_ui(&"ui_error", -8.0)
 
 
 func _process(delta: float) -> void:

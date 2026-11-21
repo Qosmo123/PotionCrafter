@@ -91,6 +91,9 @@ var _history_index: int = 0
 var _history_count: int = 0
 var _history_timer: float = 0.0
 var _seal: BottleSeal3D
+var _was_burning: bool = false
+var _was_flashing: bool = false
+var _was_pouring: bool = false
 var _label: Label3D
 var _label_card: MeshInstance3D
 ## Hand-written contents tag on any vessel holding something (the full name +
@@ -181,6 +184,7 @@ func _physics_process(delta: float) -> void:
 	_update_slosh(delta)
 	_update_foam_and_bubbles(delta)
 	_update_pouring(delta)
+	_update_audio_events()
 	_update_mass_properties()
 	_update_layers_state(delta)
 	_effects.update_effects(self, global_transform * Vector3(0.0, _lip_local_y, 0.0), get_surface_point_world(),
@@ -926,7 +930,31 @@ func _spread_fire() -> void:
 			other.ignition_source = true
 
 
-func _on_body_entered(_body: Node) -> void:
+## One-shot sounds on state changes: catching fire, an arcane flash, and the
+## last drip as a pour stops.
+func _update_audio_events() -> void:
+	if mixture.burning != _was_burning:
+		_was_burning = mixture.burning
+		if _was_burning:
+			AudioDirector.play(&"ignite", global_transform * Vector3(0.0, _lip_local_y, 0.0), -3.0)
+	var flashing: bool = mixture.arcane_flash > 0.25
+	if flashing != _was_flashing:
+		_was_flashing = flashing
+		if flashing:
+			AudioDirector.play(&"arcane_chime", global_position, -6.0)
+	if is_pouring != _was_pouring:
+		_was_pouring = is_pouring
+		if not is_pouring:
+			AudioDirector.play(&"drip", global_transform * Vector3(0.0, _lip_local_y, 0.0), -12.0)
+
+
+func _on_body_entered(body: Node) -> void:
 	var speed: float = linear_velocity.length()
+	var other: RigidBody3D = body as RigidBody3D
+	if other != null:
+		speed = (linear_velocity - other.linear_velocity).length()
 	AudioHaptics.impact(speed)
+	# Glass rings higher on small vessels and duller when full.
+	var outer_r: float = profile.outer_radius_meters if profile != null else inner_radius_meters + wall_thickness_meters
+	AudioDirector.contact(self, body, speed, global_position, AudioDirector.vessel_pitch(outer_r, get_fill_fraction()))
 	add_agitation(speed * 0.5)
