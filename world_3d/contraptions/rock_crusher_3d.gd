@@ -27,6 +27,10 @@ var _gear: Node3D
 var _needle: Node3D
 var _crank_angle: float = 0.0
 var _last_handle_angle: float = NAN
+## Heavy flywheel: the crank keeps turning after you let go and slows down
+## over a few seconds (rad/s, signed).
+var flywheel_rad_s: float = 0.0
+const FLYWHEEL_SPIN_DOWN_S: float = 3.0
 
 
 func _ready() -> void:
@@ -138,6 +142,16 @@ func _physics_process(delta: float) -> void:
 				_current = rock
 				_status.text = "%s loaded\ndrag the red crank in circles" % rock.mineral.display_name
 				break
+	var spin: float = _handle.angular_velocity.dot(global_basis.y)
+	if TactileGrabber3D.current_held == _handle:
+		# Driven by hand: the flywheel picks up the crank's speed.
+		flywheel_rad_s = spin if absf(spin) > absf(flywheel_rad_s) * 0.8 else lerpf(flywheel_rad_s, spin, 0.1)
+	else:
+		flywheel_rad_s *= exp(-delta / FLYWHEEL_SPIN_DOWN_S)
+		if absf(flywheel_rad_s) > 0.3:
+			_handle.angular_velocity = global_basis.y * flywheel_rad_s
+		else:
+			flywheel_rad_s = 0.0
 	var omega: float = absf(_handle.angular_velocity.dot(global_basis.y))
 	_animate()
 	_dust.emitting = _current != null and omega > 0.8

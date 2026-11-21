@@ -174,9 +174,34 @@ func _complete_commissions(traits: Dictionary, grade: String) -> void:
 	_refill_commissions()
 
 
+## Three first commissions that teach the basics, offered once.
+const TUTORIAL_ORDERS: Array = [
+	["volcano_fizz", "The Apprentice's Volcano", "Lesson 1 · pour vinegar onto Salt of Soda, watch it foam, then cork it in the cork & wax dish", 25],
+	["levitation", "Weightless Dew", "Lesson 2 · moonwater whose gravity coupling drops below zero floats: bottle it and see", 35],
+	["hot_ice", "Hot Ice", "Lesson 3 · heat on the burner, cool it slowly, then seed it with a pinch of crystals", 40],
+]
+var tutorials_offered: bool = false
+
+
+func _offer_tutorials() -> void:
+	if tutorials_offered or RecipeBook.instance == null:
+		return
+	tutorials_offered = true
+	for k: int in range(TUTORIAL_ORDERS.size() - 1, -1, -1):  # lesson 1 ends up first
+		var t: Array = TUTORIAL_ORDERS[k]
+		if _recipe(StringName(t[0])) == null:
+			continue
+		commissions.push_front({"recipe_id": String(t[0]), "title": t[1], "min_grade": "D", "reward": int(t[3]),
+			"client": t[2], "tutorial": true})
+	if not commissions.is_empty() and commissions[0].get("tutorial", false):
+		pin(String(commissions[0]["recipe_id"]))
+		toast.emit("First commission: %s. It's pinned on screen; the Grimoire (G) lists all three lessons" % commissions[0]["title"], &"discovery")
+
+
 func _refill_commissions() -> void:
 	if RecipeBook.instance == null:
 		return
+	_offer_tutorials()
 	var pool: Array[RecipeData] = []
 	for recipe: RecipeData in RecipeBook.instance.recipes:
 		var taken: bool = false
@@ -289,6 +314,7 @@ func _save() -> void:
 	cfg.set_value("journal", "cellar", cellar)
 	cfg.set_value("journal", "coins", coins)
 	cfg.set_value("journal", "commissions", commissions)
+	cfg.set_value("journal", "tutorials_offered", tutorials_offered)
 	cfg.set_value("journal", "collection", collection)
 	cfg.set_value("journal", "seen", seen)
 	cfg.set_value("journal", "pinned", pinned_recipe)
@@ -311,6 +337,7 @@ func _load() -> void:
 	seen = cfg.get_value("journal", "seen", {})
 	pinned_recipe = cfg.get_value("journal", "pinned", "")
 	cut_mastery = cfg.get_value("journal", "cut_mastery", {})
+	tutorials_offered = bool(cfg.get_value("journal", "tutorials_offered", false))
 	var saved_orders: Array = cfg.get_value("journal", "commissions", [])
 	for o: Variant in saved_orders:
 		commissions.append(o as Dictionary)

@@ -681,6 +681,37 @@ func _update_target_side() -> void:
 	_target_world = Vector3(cur_xy.x, cur_xy.y, z)
 
 
+## Highest top of anything (other than the held item) along the straight
+## line from `a` to `b` (both x and depth); -INF if the way is clear.
+func _obstacle_top_along(a: Vector3, b: Vector3) -> float:
+	if _path_cast == null:
+		_obstacle_top_between(a.x, a.x + 0.01)  # builds the shared cast
+	var flat: Vector3 = Vector3(b.x - a.x, 0.0, b.z - a.z)
+	var length: float = flat.length()
+	var radius: float = _held_radius()
+	if length < radius + 0.004:
+		return -INF
+	var dir: Vector3 = flat / length
+	# Start past the item's own footprint so it doesn't see itself.
+	var start: Vector3 = a + dir * radius
+	length -= radius
+	_path_box.size = Vector3(radius * 2.0, 0.004, length)
+	var top_y: float = maxf(_target_world.y, held_body.global_position.y) + 0.35
+	var mid: Vector3 = start + dir * (length * 0.5)
+	_path_cast.clear_exceptions()
+	_path_cast.add_exception(held_body)
+	_path_cast.global_transform = Transform3D(Basis.looking_at(dir, Vector3.UP), Vector3(mid.x, top_y, mid.z))
+	_path_cast.target_position = _path_cast.global_transform.basis.inverse() * Vector3(0.0, floor_y_meters - 0.03 - top_y, 0.0)
+	_path_cast.force_shapecast_update()
+	var best: float = -INF
+	for i: int in _path_cast.get_collision_count():
+		var hit: Object = _path_cast.get_collider(i)
+		if hit is MachineHandle3D or hit is StaticBody3D and (hit as StaticBody3D).collision_layer & SimConstants.LAYER_STATIC_BENCH != 0 and _path_cast.get_collision_point(i).y < floor_y_meters + 0.02:
+			continue
+		best = maxf(best, _path_cast.get_collision_point(i).y)
+	return best
+
+
 ## Highest top of anything (other than the held item) in the strip between
 ## two x positions, across all depths; -INF if nothing is there.
 func _obstacle_top_between(x0: float, x1: float) -> float:
@@ -968,6 +999,14 @@ func _update_placing() -> void:
 		var rest_y: float = floor_p.y + _half_height + 0.006
 		var safe_y: float = maxf(rest_y, stand.clear_top_y() + _half_height + 0.012)
 		var horizontal: float = Vector2(p.x - floor_p.x, p.z - floor_p.z).length()
+		if horizontal > 0.004:
+			# Clear anything standing on the way to the seat (other rows too),
+			# and don't move across until the glass is up there.
+			var top: float = _obstacle_top_along(p, floor_p)
+			if top > -INF:
+				safe_y = maxf(safe_y, top + _half_height + 0.015)
+				if p.y < safe_y - 0.01:
+					floor_p = Vector3(p.x, floor_p.y, p.z)
 		# Over the seat at a safe height first, then straight down into it.
 		want = Vector3(floor_p.x, safe_y if horizontal > 0.004 else rest_y, floor_p.z)
 		if horizontal > 0.004 and want.y < _target_world.y:

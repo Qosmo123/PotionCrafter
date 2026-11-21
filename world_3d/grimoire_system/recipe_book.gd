@@ -68,9 +68,21 @@ func _process(delta: float) -> void:
 		if vessel.mixture == null or vessel.mixture.get_liquid_volume_m3() * 1e6 < 1.0:
 			continue
 		var traits: Dictionary = measure(vessel)
+		var best_score: float = 0.0
+		var best_hint: String = ""
 		for recipe: RecipeData in recipes:
-			if not is_discovered(recipe) and matches(recipe, traits):
+			if is_discovered(recipe):
+				continue
+			if matches(recipe, traits):
 				_discover(recipe, vessel)
+				continue
+			if not vessel.player_touched:
+				continue  # untouched stock bottles never "get warm"
+			var p: Array = proximity(recipe, traits)
+			if float(p[0]) > best_score:
+				best_score = float(p[0])
+				best_hint = String(p[1])
+		vessel.set_discovery_warmth(best_score, best_hint)
 
 
 func _discover(recipe: RecipeData, vessel: Vessel3D) -> void:
@@ -148,3 +160,60 @@ static func measure_mixture(m: MixtureContainer, foam_m: float, boiling: bool) -
 		if m.moles[i] > 0.0:
 			traits["fraction:" + String(SubstanceRegistry.get_substance(i).substance_id)] = m.moles[i] / total
 	return traits
+
+
+
+## How close measured `traits` are to a recipe's signature: [score 0..1,
+## hint for the furthest-off condition]. 1 = every condition met. Only a
+## nudge: the chemistry still decides; this just says "warmer".
+static func proximity(recipe: RecipeData, traits: Dictionary) -> Array:
+	var n: int = mini(recipe.condition_traits.size(), mini(recipe.condition_min.size(), recipe.condition_max.size()))
+	if n == 0:
+		return [0.0, ""]
+	var total: float = 0.0
+	var worst: float = -1.0
+	var hint: String = ""
+	for i: int in n:
+		var key: String = recipe.condition_traits[i]
+		var v: float = float(traits.get(key, 0.0))
+		var lo: float = recipe.condition_min[i]
+		var hi: float = recipe.condition_max[i]
+		var span: float = maxf(maxf(hi - lo, 0.25 * maxf(absf(lo), absf(hi))), 0.02)
+		var off: float = 0.0
+		if v < lo:
+			off = (lo - v) / span
+		elif v > hi:
+			off = (v - hi) / span
+		var met: float = clampf(1.0 - off * 1.6, 0.0, 1.0)
+		total += met
+		if off > worst:
+			worst = off
+			hint = _hint(key, v < lo)
+	var score: float = total / float(n)
+	# Recipes that need a specific ingredient that isn't there at all aren't close.
+	for i: int in n:
+		if recipe.condition_traits[i].begins_with("fraction:") and float(traits.get(recipe.condition_traits[i], 0.0)) <= 0.0 and recipe.condition_min[i] > 0.0:
+			score = minf(score, 0.5)
+	return [score, hint if worst > 0.0 else ""]
+
+
+## Plain-language nudge for one unmet condition.
+static func _hint(key: String, needs_more: bool) -> String:
+	if key.begins_with("fraction:"):
+		var idx: int = SubstanceRegistry.index_of_id(StringName(key.get_slice(":", 1)))
+		var name_: String = SubstanceRegistry.get_substance(idx).display_name if idx >= 0 else "of one ingredient"
+		return ("Needs more %s" if needs_more else "Too much %s") % name_
+	match key:
+		"temperature_c": return "Needs more heat" if needs_more else "Needs cooling down"
+		"ph": return "Too acidic: buffer it" if needs_more else "Too alkaline: add a little acid"
+		"swirl": return "Stir or swirl it more"
+		"viscosity_pas", "gel": return "Too runny" if needs_more else "Too thick"
+		"volume_ml": return "Needs more liquid" if needs_more else "Too much liquid"
+		"foam_m", "foaming", "foam_stability": return "Needs more foam" if needs_more else "Too foamy"
+		"gas_rate": return "Needs more fizz" if needs_more else "Too fizzy"
+		"glow", "thaums_per_mol", "flash": return "Needs more arcane power" if needs_more else "Too much arcane power"
+		"gravity_coupling": return "Too light: it wants to sink" if needs_more else "Needs lighter, floatier ingredients"
+		"boiling": return "Bring it to the boil" if needs_more else "Let it stop boiling"
+		"burning": return "Set it alight" if needs_more else "Put the flames out"
+		"precipitate_ml": return "Needs crystals or sediment" if needs_more else "Too much sediment"
+	return "Close: keep adjusting"

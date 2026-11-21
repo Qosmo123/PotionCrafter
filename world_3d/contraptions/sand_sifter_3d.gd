@@ -31,6 +31,9 @@ var _rain_process: ParticleProcessMaterial
 var _status: Label3D
 var _rest_x: float = 0.0
 var _shake_hint_s: float = 0.0
+## Rocking momentum (0..1) that keeps the sieve shaking after you let go.
+var momentum: float = 0.0
+var _rock_phase: float = 0.0
 
 
 func _ready() -> void:
@@ -140,6 +143,7 @@ func _physics_process(delta: float) -> void:
 		return
 	if _deck != null:
 		_deck.position.x = (global_transform.affine_inverse() * _handle.global_position).x - _rest_x
+	_update_momentum(delta)
 	if _charge_total_kg <= 0.0:
 		_rain.emitting = false
 		_load_bag()
@@ -229,3 +233,16 @@ func hover_info() -> String:
 	if _charge_total_kg > 0.0:
 		return "[b]Sand Sifter[/b]  [color=#5CE1E6]%s[/color]  [color=#B3ADD6]shake the blue handle[/color]" % _bag_name
 	return "[b]Sand Sifter[/b]  [color=#B3ADD6]drop a sand bag in the top, shake the handle; grains sort into three beakers[/color]"
+
+
+
+## A good shake keeps the sieve rocking for a few seconds after letting go.
+func _update_momentum(delta: float) -> void:
+	var v_x: float = _handle.linear_velocity.dot(global_basis.x)
+	if TactileGrabber3D.current_held == _handle:
+		momentum = maxf(momentum * exp(-delta * 0.5), clampf(absf(v_x) / 0.5, 0.0, 1.0))
+		return
+	momentum *= exp(-delta / 3.0)
+	if momentum > 0.05:
+		_rock_phase += delta * TAU * 2.2
+		_handle.apply_central_force(global_basis.x * sin(_rock_phase) * 7.0 * momentum)

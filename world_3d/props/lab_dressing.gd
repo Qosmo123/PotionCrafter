@@ -45,7 +45,7 @@ func _dress() -> void:
 	_dress_sifter(_lab.get_node_or_null("SandSifter") as Node3D)
 	var bench: Node3D = _lab.get_node_or_null("LabBench") as Node3D
 	if bench != null:
-		_hang_mohs_chart(Vector3(bench.global_position.x - 0.285, 0.97, wall_z_meters), 0.68)
+		_hang_mohs_chart(Vector3(bench.global_position.x + 0.5, 1.03, wall_z_meters), 0.6)  # clear wall above the polisher
 		_hang_tool_rack(Vector3(bench.global_position.x + 0.255, 1.085, wall_z_meters))
 		_lay_sorting_mat(Vector3(bench.global_position.x - 0.14, bench_top_y_meters, 0.51))
 	_build_batches()

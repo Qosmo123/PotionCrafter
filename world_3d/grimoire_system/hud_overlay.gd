@@ -14,33 +14,36 @@ const STATION_RUNES: PackedStringArray = ["☿", "◆", "⊕"]  # alchemical gly
 const STATION_NAMES: PackedStringArray = ["Potion Bench", "Mineral Lab", "Science Bench"]
 const HELP_TEXT: String = """[b][color=#F4D06F]Hands[/color][/b]
   Click  ·  pick something up, move the mouse, click again to put it down (dragging works too)
-  Pour  ·  hold a vessel over another one: it tips and pours by itself (wheel: faster/slower; move away or click to stop)
+  Pour  ·  hold a vessel over another one (it glows), click to pour (wheel: faster/slower; click or move away to stop)
   Info  ·  rest the cursor on something for its name; hold Alt for the full card
   Stir  ·  hold a rod, spoon or whisk over a vessel, then wiggle or circle the mouse (or hold S)
   Swirl  ·  holding a glass, circle the mouse (or hold S) to swish it round
   Put down  ·  click again: vials glide into the rack, round flasks onto cork rings, glass onto the stove, burner or tap tray
   Water  ·  hold a glass under the tap (or set it on the tray): it fills itself and stops when nearly full
-  Heat  ·  click the stove's knob for off / low / medium / high  ·  click the burner to light it
+  Heat  ·  click the stove's knob for off / low / medium / high  ·  click the burner for more flame
   Shift while moving  ·  slow, precise placement    ·    Wheel while holding  ·  tilt by hand
   Wheel when empty-handed  ·  zoom    ·    Right-drag  ·  move the view, also while carrying (station key re-centres)
   Two fingers  ·  twist to tilt, pinch to zoom
-  E  ·  put the held item back in the satchel (gems go to Finds; a vessel's contents are kept under Materials)
+  Put away  ·  the "Put in satchel" tab on the right edge, or E (gems go to Finds; a vessel's contents to Materials)
+  Lens  ·  pick up the magnifying glass, hold it over a vessel for a quick reading
 
 [b][color=#F4D06F]Brewing[/color][/b]
   Pour vessels into each other  ·  stir with rods, spoons, whisks and the wand
-  Hot plate heats  ·  M cycles the magnetic stirrer  ·  the candle lights spirits
+  Hot plate heats  ·  click the magnetic stirrer (or M) for its speed  ·  the candle lights spirits
   Drop berries into vessels to burst them
-  B  ·  cork and label the held vessel (bottle it) for the cellar and commissions
+  Bottle  ·  set a filled vessel in the cork & wax dish (or B while holding it): corked, sealed, labelled
+  A golden shimmer means you're getting warm; hover the vessel for a hint
 
 [b][color=#F4D06F]Magic[/color][/b]
-  C  ·  pick up chalk, draw a closed shape on the bench  ·  X wipes sigils
+  Chalk  ·  click the chalk stick (or C), draw a closed shape on the bench  ·  click the sponge (or X) to wipe
   ○ ward   △ heat   □ chill   ⬠ levitate   ⬡ stir   ⯃ catalyse
 
 [b][color=#F4D06F]Mineral Lab  (press 2)[/color][/b]
-  Hammer  ·  hold it over a rock and click (or Space) to strike: hold Space to wind up a big swing
-  R  ·  Load Next Rock: toss the next rock from the crate onto the anvil
-  Rock crusher  ·  drop a rock in the hopper, drag the crank handle in circles
-  Sand sifter  ·  drop a sand bag in, drag the shaker handle side to side
+  Hammer  ·  hold it over a rock and click (or Space); hit the glowing seam to split it in one blow
+  Next rock  ·  click the rock crate (or R) to toss the next rock onto the anvil
+  Rock crusher  ·  drop a rock in the hopper, give the crank a good turn: the flywheel keeps it going
+  Sand sifter  ·  drop a sand bag in, shake the handle: it keeps rocking for a while
+  Storage cabinet  ·  drop finds on its tray, set a beaker of powder on its pan
   Polisher / faceting machine  ·  click the brass switch, hold a stone on the wheel
   Faceting: click the grey dial to choose a cut; keep your hand steady!
 
@@ -116,6 +119,8 @@ func _ready() -> void:
 		if GrimoireBookUI.instance != null:
 			GrimoireBookUI.instance.toggle())
 	_corner_button("Help  [H]", -470, toggle_help, 120)
+	_build_satchel_tab()
+	_build_lens_panel()
 	# Navigation bar: one glass strip of glowing rune tabs, one per station.
 	var nav: PanelContainer = PanelContainer.new()
 	nav.position = Vector2(CosmicTheme.GUTTER, CosmicTheme.GUTTER - 4)
@@ -649,6 +654,8 @@ func bottle(vessel: Vessel3D) -> void:
 
 func _process(delta: float) -> void:
 	_place_toasts()
+	_update_satchel_tab()
+	_update_lens_panel()
 	if GrimoireJournal.instance != null:
 		_coins.text = "◉ %d" % GrimoireJournal.instance.coins
 	var hint: String = grabber.assist_hint() if grabber != null else ""
@@ -742,6 +749,10 @@ static func describe_short(target: Object) -> String:
 		if m == null or m.get_liquid_volume_m3() * 1e6 < 0.5:
 			return "Empty %s" % _vessel_kind(v)
 		var tag: String = "  [color=#FF9A5C]burning[/color]" if m.burning else ("  [color=#8FE9FF]boiling[/color]" if v.is_boiling else "")
+		if v.discovery_warmth >= 0.92:
+			tag += "  [color=#F4D06F]✦ Almost there! %s[/color]" % v.discovery_hint
+		elif v.discovery_warmth >= 0.78:
+			tag += "  [color=#F4D06F]✦ Getting warm…[/color]"
 		return "[b]%s[/b]  [color=#5CE1E6]%.0f mL · %.0f °C[/color]%s" % [Vessel3D.contents_tag_text(m, v.foam_height_meters), m.get_liquid_volume_m3() * 1e6, m.temperature_kelvin - 273.15, tag]
 	if target is Rock3D:
 		var rock: Rock3D = target as Rock3D
@@ -836,3 +847,116 @@ func _place_toasts() -> void:
 	if _toasts.offset_right != right:
 		_toasts.offset_right = right
 		_toasts.offset_left = right - TOAST_WIDTH
+
+
+# --- Satchel pocket: drop anything held into storage with the mouse ---------------
+
+var _satchel_tab: Button
+
+
+## A glowing pocket tab on the right edge while something is held: click it
+## to put the item away (same as E).
+func _build_satchel_tab() -> void:
+	_satchel_tab = Button.new()
+	_satchel_tab.text = "⤓\nPut in\nsatchel"
+	_satchel_tab.tooltip_text = "Put the held item in the satchel (E)"
+	_satchel_tab.anchor_left = 1.0
+	_satchel_tab.anchor_right = 1.0
+	_satchel_tab.anchor_top = 0.5
+	_satchel_tab.anchor_bottom = 0.5
+	_satchel_tab.offset_left = -92.0
+	_satchel_tab.offset_right = -8.0
+	_satchel_tab.offset_top = -56.0
+	_satchel_tab.offset_bottom = 56.0
+	_satchel_tab.add_theme_font_size_override(&"font_size", 15)
+	_satchel_tab.add_theme_stylebox_override(&"normal", CosmicTheme.glow(CosmicTheme.STARLIGHT_GOLD, 10, 6, Color(CosmicTheme.DEEP, 0.88), 1))
+	_satchel_tab.add_theme_stylebox_override(&"hover", CosmicTheme.glow(CosmicTheme.STARLIGHT_GOLD, 10, 14, Color(CosmicTheme.NEBULA, 0.95), 2))
+	_satchel_tab.visible = false
+	_satchel_tab.pressed.connect(func() -> void:
+		if grabber != null and grabber.held_body != null and InventoryStore.instance != null:
+			if InventoryStore.instance.stash(grabber.held_body):
+				show_toast(InventoryStore.instance.last_message, &"info")
+				AudioDirector.play_ui(&"ui_close", -8.0))
+	_shell.add_child(_satchel_tab)
+
+
+func _update_satchel_tab() -> void:
+	if _satchel_tab != null:
+		_satchel_tab.visible = grabber != null and grabber.held_body != null and not (grabber.held_body is MachineHandle3D)
+
+
+# --- Alchemist's Lens: quick readings while holding the magnifying glass -----------
+
+var _lens_panel: PanelContainer
+var _lens_title: Label
+var _lens_bars: Dictionary = {}
+
+
+func _build_lens_panel() -> void:
+	_lens_panel = PanelContainer.new()
+	_lens_panel.add_theme_stylebox_override(&"panel", CosmicTheme.glow(CosmicTheme.STARLIGHT_GOLD, 12, 8, Color(0.063, 0.055, 0.11, 0.9), 1))
+	_lens_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_lens_panel.visible = false
+	var col: VBoxContainer = VBoxContainer.new()
+	col.add_theme_constant_override(&"separation", 6)
+	_lens_panel.add_child(col)
+	_lens_title = CosmicTheme.label("Alchemist's Lens", 17, CosmicTheme.STARLIGHT_GOLD, CosmicTheme.display_font())
+	col.add_child(_lens_title)
+	for key: String in ["Temperature", "Acidity", "Thickness", "Arcane aura"]:
+		var row: HBoxContainer = HBoxContainer.new()
+		row.add_theme_constant_override(&"separation", 10)
+		var name_label: Label = CosmicTheme.label(key, 15, CosmicTheme.TEXT)
+		name_label.custom_minimum_size = Vector2(110.0, 0.0)
+		row.add_child(name_label)
+		var bar: ProgressBar = ProgressBar.new()
+		bar.custom_minimum_size = Vector2(150.0, 14.0)
+		bar.show_percentage = false
+		bar.max_value = 1.0
+		bar.step = 0.0
+		row.add_child(bar)
+		var value_label: Label = CosmicTheme.label("", 15, CosmicTheme.PRISM_CYAN, CosmicTheme.mono_font())
+		value_label.custom_minimum_size = Vector2(90.0, 0.0)
+		row.add_child(value_label)
+		col.add_child(row)
+		_lens_bars[key] = [bar, value_label]
+	_shell.add_child(_lens_panel)
+
+
+func _lens_bar(key: String, fraction: float, text: String, color: Color) -> void:
+	var pair: Array = _lens_bars[key]
+	var bar: ProgressBar = pair[0]
+	bar.value = clampf(fraction, 0.0, 1.0)
+	var fill: StyleBoxFlat = StyleBoxFlat.new()
+	fill.bg_color = color
+	fill.set_corner_radius_all(4)
+	bar.add_theme_stylebox_override(&"fill", fill)
+	(pair[1] as Label).text = text
+
+
+func _update_lens_panel() -> void:
+	if _lens_panel == null:
+		return
+	var lens: MagnifyingLens3D = grabber.held_body as MagnifyingLens3D if grabber != null else null
+	var v: Vessel3D = lens.target if lens != null else null
+	_lens_panel.visible = v != null and v.mixture != null and v.mixture.get_total_mass_kg() > 1e-6
+	if not _lens_panel.visible:
+		return
+	var m: MixtureContainer = v.mixture
+	var t_c: float = m.temperature_kelvin - 273.15
+	var ph: float = m.get_ph()
+	var visc: float = m.get_liquid_viscosity_pas()
+	var aura: Color = m.get_emission_hdr()
+	var arcane: float = clampf(m.get_total_thaums() / maxf(m.get_total_moles(), 1e-9) / 60.0 + (aura.r + aura.g + aura.b) * 0.3, 0.0, 1.0)
+	_lens_title.text = "Alchemist's Lens  ·  %s" % Vessel3D.contents_tag_text(m, v.foam_height_meters).get_slice(" (", 0)
+	_lens_bar("Temperature", (t_c + 20.0) / 220.0, "%.0f °C" % t_c, Color(0.35, 0.6, 1.0).lerp(Color(1.0, 0.35, 0.15), clampf((t_c - 10.0) / 120.0, 0.0, 1.0)))
+	var ph_color: Color = Color(1.0, 0.3, 0.2) if ph < 5.0 else (Color(0.4, 0.85, 0.4) if ph <= 9.0 else Color(0.45, 0.4, 1.0))
+	_lens_bar("Acidity", ph / 14.0, "pH %.1f" % ph, ph_color)
+	var thick: float = clampf((log(maxf(visc, 1e-4)) / log(10.0) + 3.0) / 5.0, 0.0, 1.0)
+	_lens_bar("Thickness", thick, "runny" if thick < 0.3 else ("syrupy" if thick < 0.7 else "very thick"), Color(0.85, 0.7, 0.35))
+	_lens_bar("Arcane aura", arcane, "none" if arcane < 0.05 else ("faint" if arcane < 0.35 else ("strong" if arcane < 0.75 else "blazing")), Color(0.7, 0.45, 1.0))
+	if v.discovery_warmth >= 0.78:
+		_lens_title.text += "\n✦ " + ("Almost there! " if v.discovery_warmth >= 0.92 else "Getting warm… ") + v.discovery_hint
+	_lens_panel.reset_size()
+	var vp: Vector2 = get_viewport().get_visible_rect().size
+	var pos: Vector2 = get_viewport().get_mouse_position() + Vector2(24.0, -_lens_panel.size.y - 12.0)
+	_lens_panel.position = Vector2(clampf(pos.x, 8.0, vp.x - _lens_panel.size.x - 8.0), clampf(pos.y, 70.0, vp.y - _lens_panel.size.y - 8.0))

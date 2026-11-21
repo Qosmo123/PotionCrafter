@@ -13,6 +13,7 @@ const MIN_POINT_SPACING_METERS: float = 0.004
 @export var bench_top_y_meters: float = 0.8
 
 static var active: bool = false
+static var instance: ChalkDrawing3D = null
 static var last_result_text: String = ""
 
 var _drawing: bool = false
@@ -20,6 +21,23 @@ var _points: PackedVector2Array = PackedVector2Array()
 var _current_mesh: MeshInstance3D
 var _current_imesh: ImmediateMesh
 var _chalk_material: StandardMaterial3D
+
+
+func _enter_tree() -> void:
+	instance = self
+
+
+## Pick up or put down the chalk (the C key, or clicking the chalk stick).
+func toggle_chalk() -> void:
+	active = not active
+	TactileGrabber3D.input_captured = active
+	last_result_text = "Chalk in hand: draw a closed shape on the bench" if active else ""
+	AudioDirector.play(&"click", global_position, -10.0, 1.3)
+
+
+## Wipe the sigils away (the X key, or clicking the sponge).
+func wipe() -> void:
+	_wipe()
 
 
 func _ready() -> void:
@@ -36,9 +54,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	var key: InputEventKey = event as InputEventKey
 	if key != null and key.pressed and not key.echo:
 		if key.keycode == KEY_C:
-			active = not active
-			TactileGrabber3D.input_captured = active
-			last_result_text = "Chalk in hand: draw a closed shape on the bench" if active else ""
+			toggle_chalk()
 		elif key.keycode == KEY_X:
 			_wipe()
 		return

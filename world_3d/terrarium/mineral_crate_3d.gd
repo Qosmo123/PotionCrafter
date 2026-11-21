@@ -106,3 +106,30 @@ func _physics_process(delta: float) -> void:
 			var m: MineralData = Rock3D.get_mineral(stock[_rng.randi() % stock.size()])
 			if m != null:
 				Rock3D.spawn(get_parent(), m, global_transform * Vector3(0.0, 0.06, 0.0), m.typical_mass_kg)
+
+
+
+## Click the crate (not a stone in it) to toss the next rock onto the anvil.
+func _unhandled_input(event: InputEvent) -> void:
+	if not (name in ["RockCrate", "SpecimenCrate"]):
+		return
+	if LabCamera3D.instance == null or LabCamera3D.instance.station != 1:
+		return
+	var press: InputEventMouseButton = event as InputEventMouseButton
+	if press == null or not press.pressed or press.button_index != MOUSE_BUTTON_LEFT or TactileGrabber3D.current_held != null:
+		return
+	var camera: Camera3D = get_viewport().get_camera_3d()
+	var origin: Vector3 = camera.project_ray_origin(press.position)
+	var to: Vector3 = origin + camera.project_ray_normal(press.position) * 12.0
+	var space: PhysicsDirectSpaceState3D = get_world_3d().direct_space_state
+	# A stone under the pointer is picked up instead.
+	if not space.intersect_ray(PhysicsRayQueryParameters3D.create(origin, to, TactileGrabber3D.PICK_MASK)).is_empty():
+		return
+	if ClickSwitch.clicked(self, event, [self]) != null and HudOverlay.instance != null:
+		HudOverlay.instance.load_next_rock()
+		get_viewport().set_input_as_handled()
+
+
+## Short hover text.
+func hover_info() -> String:
+	return "[b]%s[/b]  [color=#B3ADD6]click the crate to toss the next rock onto the anvil, or pick a stone out[/color]" % String(name).replace("Crate", " crate").capitalize()

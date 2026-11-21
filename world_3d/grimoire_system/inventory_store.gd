@@ -104,6 +104,8 @@ func _build_catalog() -> void:
 	_build_shelf_catalog()
 	items.append({"id": "hammer", "category": Category.ROCKS, "label": "Geologist's Hammer", "detail": "Space to strike",
 		"color": Color(0.4, 0.4, 0.45), "count": 1})
+	items.append({"id": "lens", "category": Category.TOOLS, "label": "Magnifying Lens", "detail": "hold over a vessel for a quick reading",
+		"color": Color(0.9, 0.7, 0.35), "count": 0})
 	for t: Array in tools:
 		items.append({"id": "tool:" + t[0], "category": Category.TOOLS, "label": t[1], "detail": "stirring",
 			"color": Color(0.85, 0.7, 0.45), "count": t[2], "model": "res://world_3d/props/%s.gltf" % t[0], "params": t[3]})
@@ -327,6 +329,8 @@ func take(id: String, drop_at: Vector3 = Vector3.INF) -> RigidBody3D:
 				body = rock
 			else:
 				body = Hammer3D.new()
+		Category.TOOLS when id == "lens":
+			body = MagnifyingLens3D.new()
 		Category.TOOLS:
 			var tool: StirTool3D = STIR_SCRIPT.new() as StirTool3D
 			tool.model = load(item["model"]) as PackedScene
@@ -379,6 +383,8 @@ func stash(body: RigidBody3D) -> bool:
 			id = "berry:" + String((body as Berry3D).juice.substance_id)
 		elif body is Hammer3D:
 			id = "hammer"
+		elif body is MagnifyingLens3D:
+			id = "lens"
 		elif body is Rock3D and (body as Rock3D).mineral != null:
 			id = "rock:" + String((body as Rock3D).mineral.mineral_id)
 		elif body is StirTool3D:

@@ -24,6 +24,14 @@ static var _registry: Dictionary = {}
 ## as the shape the mineral really breaks into (cubes, rhombs, sheets...).
 @export var fragment_cleavage: int = -1
 
+## Weak seam: a hairline along the rock's front, x offset from its centre
+## (metres). It glows while the hammer is aimed at this rock; a blow landing
+## on it splits the rock at once.
+var seam_offset_x: float = 0.0
+var _seam: MeshInstance3D = null
+var _seam_mat: StandardMaterial3D = null
+const SEAM_HIT_METERS: float = 0.009
+
 var integrity: float = 1.0
 var integrity_max: float = 1.0
 var _crack_mat: ShaderMaterial = null
@@ -330,3 +338,48 @@ static func spawn(parent: Node, m: MineralData, at: Vector3, mass_value: float) 
 	parent.add_child(rock)
 	rock.global_position = at
 	return rock
+
+
+
+## Show or hide the glowing weak seam (the hammer calls this on its target).
+func show_seam(on: bool) -> void:
+	if on and _seam == null:
+		var rad: float = radius_meters()
+		seam_offset_x = randf_range(-0.55, 0.55) * rad
+		_seam_mat = StandardMaterial3D.new()
+		_seam_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		_seam_mat.albedo_color = crack_glow_color().lerp(Color.WHITE, 0.3)
+		_seam_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		_seam_mat.no_depth_test = true
+		var line: BoxMesh = BoxMesh.new()
+		line.size = Vector3(0.0018, rad * 1.5, 0.0018)
+		line.material = _seam_mat
+		_seam = MeshInstance3D.new()
+		_seam.mesh = line
+		_seam.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		_seam.top_level = true
+		add_child(_seam)
+	if _seam != null:
+		_seam.visible = on
+		if on:
+			var rad2: float = radius_meters()
+			_seam.global_transform = Transform3D(Basis(Vector3.BACK, 0.25), global_position + Vector3(seam_offset_x, 0.0, rad2 * 0.9))
+			_seam_mat.albedo_color.a = 0.55 + 0.45 * sin(Time.get_ticks_msec() * 0.012)
+
+
+## True when a blow at world x `x` lands on the weak seam.
+func seam_hit(x: float) -> bool:
+	return _seam != null and _seam.visible and absf(x - (global_position.x + seam_offset_x)) < SEAM_HIT_METERS
+
+
+## A clean blow on the seam: split at once, with a brief hit-stop.
+func critical_crack() -> void:
+	AudioDirector.play(&"arcane_chime", global_position, -4.0, 1.3)
+	AudioHaptics.impact(3.0)
+	if LabCamera3D.instance != null:
+		LabCamera3D.instance.shake(0.4)
+	if GrimoireJournal.instance != null:
+		GrimoireJournal.instance.toast.emit("Critical strike! Clean split along the seam", &"discovery")
+	Engine.time_scale = 0.05
+	get_tree().create_timer(0.04, true, false, true).timeout.connect(func() -> void: Engine.time_scale = 1.0)
+	crack()

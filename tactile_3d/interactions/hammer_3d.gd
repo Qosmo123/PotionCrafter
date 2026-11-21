@@ -237,7 +237,18 @@ func release_charge() -> void:
 	_start_swing(charge)
 
 
+var _seam_rock: Rock3D = null
+
+
 func _physics_process(delta: float) -> void:
+	# While held, the rock it would hit shows its glowing weak seam.
+	var aim: Rock3D = find_target() if TactileGrabber3D.current_held == self else null
+	if aim != _seam_rock:
+		if _seam_rock != null and is_instance_valid(_seam_rock):
+			_seam_rock.show_seam(false)
+		_seam_rock = aim
+	if _seam_rock != null and is_instance_valid(_seam_rock):
+		_seam_rock.show_seam(true)
 	var was_slamming: bool = _slam_timer > 0.0
 	_slam_timer = maxf(_slam_timer - delta, 0.0)
 	if was_slamming and _slam_timer <= 0.0:
@@ -282,5 +293,8 @@ func _finish_swing() -> void:
 	var t: Rock3D = _target
 	_target = null
 	if t == null or not is_instance_valid(t) or t.mineral == null:
+		return
+	if t.seam_hit(global_position.x):
+		t.critical_crack()
 		return
 	t.strike_fraction(easy_fraction(t.mineral, _swing_charge))

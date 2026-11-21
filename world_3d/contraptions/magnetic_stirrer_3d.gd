@@ -46,12 +46,28 @@ func _ready() -> void:
 	add_child(sensor)
 
 
+var _knob: StaticBody3D = null
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	var key: InputEventKey = event as InputEventKey
 	if key != null and key.pressed and not key.echo and key.keycode == KEY_M:
-		_speed_index = (_speed_index + 1) % SPEEDS_RAD_S.size()
-		target_swirl_rad_s = SPEEDS_RAD_S[_speed_index]
-		AudioDirector.play(&"click", global_position, -8.0)
+		cycle_speed()
+		return
+	if _knob == null:
+		_knob = ClickSwitch.make_button(self, Vector3(0.07, 0.035, 0.03), Vector3(0.0, 0.025, 0.1))  # front of the base
+	if ClickSwitch.clicked(self, event, [_knob]) != null:
+		cycle_speed()
+		get_viewport().set_input_as_handled()
+
+
+## Off, slow, fast (M, or click the stirrer base).
+func cycle_speed() -> void:
+	_speed_index = (_speed_index + 1) % SPEEDS_RAD_S.size()
+	target_swirl_rad_s = SPEEDS_RAD_S[_speed_index]
+	AudioDirector.play(&"click", global_position, -8.0)
+	if GrimoireJournal.instance != null:
+		GrimoireJournal.instance.toast.emit("Magnetic stirrer: %s" % ["off", "slow", "fast"][_speed_index], &"info")
 
 
 func _physics_process(delta: float) -> void:
@@ -92,4 +108,4 @@ func _on_body_exited(body: Node3D) -> void:
 
 ## Short hover text.
 func hover_info() -> String:
-	return "[b]Magnetic Stirrer[/b]  [color=#B3ADD6]set a vessel on it; M changes the speed[/color]"
+	return "[b]Magnetic Stirrer[/b]  [color=#5CE1E6]%s[/color]  [color=#B3ADD6]set a vessel on it; click the base (or M) to change the speed[/color]" % ["off", "slow", "fast"][_speed_index]

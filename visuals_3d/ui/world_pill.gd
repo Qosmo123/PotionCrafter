@@ -91,7 +91,7 @@ func _resize() -> void:
 		text_px = Vector2(80.0, float(font_size))
 	# Height from the line count: Label3D spaces lines a little wider.
 	var lines: int = text.count("\n") + 1
-	text_px.y = maxf(text_px.y, float(lines) * (f.get_height(font_size) + line_spacing + 2.0))
+	text_px.y = maxf(text_px.y, float(lines) * (f.get_height(font_size) * 1.18 + line_spacing))
 	_quad.size = (text_px + PAD_PX) * pixel_size
 	(_quad.material as ShaderMaterial).set_shader_parameter(&"size_px", text_px + PAD_PX)
 	_backing.position = Vector3(0.0, 0.0, -0.0005)

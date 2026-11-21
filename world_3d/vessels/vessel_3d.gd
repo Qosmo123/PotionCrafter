@@ -104,6 +104,14 @@ var _label_strip: MeshInstance3D
 var _label_icon: MeshInstance3D
 var _label_category: int = -1
 var _pour_hit_world: Vector3 = Vector3.ZERO
+## How close the contents are to an undiscovered recipe (0..1) and a hint.
+var discovery_warmth: float = 0.0
+## True once the player has changed the contents (poured into it, heated or
+## stirred it); only then does it show discovery hints.
+var player_touched: bool = false
+var discovery_hint: String = ""
+var _shimmer: GPUParticles3D = null
+var _warm_level: int = 0
 var _pour_intensity: float = 0.0
 const LABEL_ICON_SHADER: Shader = preload("res://visuals_3d/shaders/label_icon.gdshader")
 ## Label categories (icon index in label_icon.gdshader) and their colours.
@@ -555,8 +563,54 @@ func add_agitation(amount: float) -> void:
 	agitation = clampf(agitation + amount, 0.0, 1.0)
 
 
+## Set by RecipeBook: >= 0.7 "getting warm" (shimmer + chime), >= 0.9
+## "almost there" (a pulsing glow and a plain-language hint).
+func set_discovery_warmth(score: float, hint: String) -> void:
+	discovery_warmth = score
+	discovery_hint = hint
+	var level: int = 2 if score >= 0.92 else (1 if score >= 0.78 else 0)
+	if level > _warm_level:
+		AudioDirector.play(&"arcane_chime", global_position, -14.0 if level == 1 else -8.0, 1.0 + 0.15 * float(level))
+	_warm_level = level
+	if level > 0 and _shimmer == null:
+		_shimmer = _make_shimmer()
+	if _shimmer != null:
+		_shimmer.emitting = level > 0
+		_shimmer.amount_ratio = 0.4 if level == 1 else 1.0
+		_shimmer.position = Vector3(0.0, _lip_local_y, 0.0)
+
+
+func _make_shimmer() -> GPUParticles3D:
+	var pm: ParticleProcessMaterial = ParticleProcessMaterial.new()
+	pm.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_RING
+	pm.emission_ring_radius = maxf(_lip_radius_meters, 0.01)
+	pm.emission_ring_inner_radius = maxf(_lip_radius_meters * 0.7, 0.005)
+	pm.emission_ring_height = 0.002
+	pm.emission_ring_axis = Vector3.UP
+	pm.direction = Vector3.UP
+	pm.spread = 15.0
+	pm.initial_velocity_min = 0.03
+	pm.initial_velocity_max = 0.07
+	pm.gravity = Vector3(0.0, 0.02, 0.0)
+	pm.scale_min = 0.6
+	pm.scale_max = 1.2
+	pm.color = Color(1.0, 0.85, 0.45)
+	var p: GPUParticles3D = GPUParticles3D.new()
+	p.amount = 24
+	p.lifetime = 1.3
+	p.process_material = pm
+	var quad: QuadMesh = QuadMesh.new()
+	quad.size = Vector2(0.004, 0.004)
+	quad.material = VesselEffects.billboard_material(true, 2.2, Color(1.0, 0.85, 0.45))
+	p.draw_pass_1 = quad
+	p.emitting = false
+	add_child(p)
+	return p
+
+
 ## A pour stream is landing on this liquid at `at` (world) this tick.
 func note_pour_impact(at: Vector3, intensity: float) -> void:
+	player_touched = true
 	_pour_hit_world = at
 	_pour_intensity = maxf(_pour_intensity, clampf(intensity, 0.0, 1.0))
 
@@ -1049,7 +1103,8 @@ func _update_liquid_visual() -> void:
 	_liquid_material.set_shader_parameter(&"fill_fraction", fill)
 	_liquid_material.set_shader_parameter(&"liquid_color", color)
 	_liquid_material.set_shader_parameter(&"surface_color", surface)
-	_liquid_material.set_shader_parameter(&"emission_hdr", mixture.get_emission_hdr() * (1.0 + mixture.arcane_flash * 3.0))
+	var warm_pulse: float = (0.5 + 0.5 * sin(Time.get_ticks_msec() * 0.006)) * 0.35 if _warm_level >= 2 else 0.0
+	_liquid_material.set_shader_parameter(&"emission_hdr", mixture.get_emission_hdr() * (1.0 + mixture.arcane_flash * 3.0) + Color(1.0, 0.8, 0.4, 0.0) * warm_pulse)
 	_liquid_material.set_shader_parameter(&"foam_thickness_meters", foam_height_meters)
 	_liquid_material.set_shader_parameter(&"glitter", mixture.get_glitter())
 	_liquid_material.set_shader_parameter(&"rainbow", mixture.get_rainbow())
@@ -1058,6 +1113,8 @@ func _update_liquid_visual() -> void:
 	_liquid_material.set_shader_parameter(&"turbidity", clampf(mixture.get_liquid_turbidity() + emulsion_level * 0.6 + suspension_level * 0.8, 0.0, 1.0))
 	_liquid_material.set_shader_parameter(&"swirl_rad_s", mixture.swirl_rad_s)
 	_liquid_material.set_shader_parameter(&"agitation", agitation)
+	if not player_touched and (absf(mixture.swirl_rad_s) > 1.0 or mixture.temperature_kelvin > SimConstants.AMBIENT_TEMP_KELVIN + 8.0 or mixture.temperature_kelvin < SimConstants.AMBIENT_TEMP_KELVIN - 8.0):
+		player_touched = true
 	_liquid_material.set_shader_parameter(&"pour_hit_world", _pour_hit_world)
 	_liquid_material.set_shader_parameter(&"pour_intensity", _pour_intensity)
 	_pour_intensity = move_toward(_pour_intensity, 0.0, 0.08)  # rings settle once the pour stops
