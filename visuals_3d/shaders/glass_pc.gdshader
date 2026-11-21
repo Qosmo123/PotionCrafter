@@ -19,6 +19,9 @@ uniform float refraction_strength = 0.035;
 uniform float chromatic_spread = 0.22;
 uniform float waviness = 0.25;
 uniform float glass_roughness : hint_range(0.0, 1.0) = 0.06;
+// Cool moonlight rim so clear glass reads against dark wood.
+uniform vec3 moon_rim_color : source_color = vec3(0.6, 0.74, 1.0);
+uniform float moon_rim_strength = 0.24;
 
 varying vec3 world_pos;
 
@@ -66,8 +69,9 @@ void fragment() {
 	float rim_line = exp(-pow((n_dot_v - 0.19) / 0.035, 2.0));
 	float streak = smoothstep(0.1, 0.0, abs(n.x - 0.52)) * smoothstep(-0.6, 0.2, n.y);
 	ALBEDO = edge_tint * 0.06;
-	EMISSION = refracted * transmit * 0.35 * (1.0 - rim * 0.6) + vec3(rim_line * 0.1 + streak * 0.16);
-	ALPHA = clamp(0.05 + edge * 3.0 + fresnel * 0.9 + rim * 0.2 + streak * 0.25, 0.0, 0.95);
+	float moon_rim = pow(1.0 - n_dot_v, 4.0);
+	EMISSION = refracted * transmit * 0.35 * (1.0 - rim * 0.6) + vec3(rim_line * 0.1 + streak * 0.16) + moon_rim_color * moon_rim * moon_rim_strength;
+	ALPHA = clamp(0.05 + edge * 3.0 + fresnel * 0.9 + rim * 0.2 + streak * 0.25 + moon_rim * 0.15, 0.0, 0.95);
 	NORMAL = n;
 	ROUGHNESS = glass_roughness * (0.6 + vnoise(wp * 3.0) * 0.8);
 	METALLIC = 0.0;

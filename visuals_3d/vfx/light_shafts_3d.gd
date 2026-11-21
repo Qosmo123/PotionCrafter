@@ -9,7 +9,8 @@ extends Node3D
 @export var beam_length_meters: float = 1.25
 @export var beam_width_meters: float = 0.13
 @export var beam_gap_meters: float = 0.24
-@export var strength: float = 0.22
+## Kept low: strong beams washed the whole scene into a brown haze.
+@export var strength: float = 0.09
 @export var motes: int = 70
 
 const SHAFT_SHADER: Shader = preload("res://visuals_3d/shaders/light_shaft.gdshader")

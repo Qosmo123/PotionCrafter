@@ -59,6 +59,7 @@ func _ready() -> void:
 		var visual: Node3D = model.instantiate() as Node3D
 		add_child(visual)
 		PropMaterials.apply(visual)
+		_reskin_period(visual)
 	var housing: BoxShape3D = BoxShape3D.new()
 	housing.size = Vector3(0.2, wheel_height_meters - 0.01, 0.2)
 	var hc: CollisionShape3D = CollisionShape3D.new()
@@ -456,3 +457,24 @@ func hover_info() -> String:
 	if mode == Mode.FACET:
 		return "[b]Faceting Machine[/b]  [color=#5CE1E6]%s · %s[/color]  [color=#B3ADD6]switch on, hold a polished gem on the wheel; F picks the cut[/color]" % ["on" if running else "off", RockMeshes.CUT_NAMES[selected_cut]]
 	return "[b]Gem Polisher[/b]  [color=#5CE1E6]%s[/color]  [color=#B3ADD6]switch on, hold a stone on the wheel until it shines[/color]" % ("on" if running else "off")
+
+
+
+## The model's housing was white plastic, out of place among the iron and
+## brass. Light-coloured parts become dark green enamel over cast iron;
+## everything else (copper ring, brass) keeps its material.
+func _reskin_period(visual: Node3D) -> void:
+	var enamel: StandardMaterial3D = PropMaterials.textured("iron", Color(0.1, 0.17, 0.14), 0.15, 0.25)
+	enamel.roughness = 0.38
+	enamel.clearcoat_enabled = true
+	enamel.clearcoat = 0.7
+	enamel.clearcoat_roughness = 0.25
+	for node: Node in visual.find_children("*", "MeshInstance3D", true, false):
+		var mi: MeshInstance3D = node as MeshInstance3D
+		for s: int in mi.mesh.get_surface_count():
+			var mat: BaseMaterial3D = mi.get_active_material(s) as BaseMaterial3D
+			if mat == null:
+				continue
+			var c: Color = mat.albedo_color
+			if c.get_luminance() > 0.6 and c.s < 0.25:
+				mi.set_surface_override_material(s, enamel)

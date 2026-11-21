@@ -10,6 +10,10 @@ uniform sampler2D normal_tex : hint_normal, filter_linear_mipmap_anisotropic, re
 uniform sampler2D rough_tex : filter_linear_mipmap_anisotropic, repeat_enable;
 uniform float tile_meters = 0.12;
 uniform vec3 gilt_color : source_color = vec3(0.95, 0.72, 0.3);
+// Books sit in the background: a little darker and less saturated so the
+// workbench in front stands out.
+uniform float background_shade = 0.78;
+uniform float background_desaturate = 0.18;
 instance uniform vec3 base_color : source_color = vec3(0.35, 0.06, 0.05);
 instance uniform vec3 label_color : source_color = vec3(0.05, 0.04, 0.04);
 instance uniform float seed = 0.0;
@@ -98,7 +102,9 @@ void fragment() {
 	// Old gilt flakes away in patches.
 	gilt *= spine * smoothstep(0.18, 0.4, scuff) * (1.0 - band * 0.5);
 
-	ALBEDO = mix(col, gilt_color, gilt);
+	vec3 albedo = mix(col, gilt_color, gilt);
+	float luma = dot(albedo, vec3(0.299, 0.587, 0.114));
+	ALBEDO = mix(albedo, vec3(luma), background_desaturate) * background_shade;
 	METALLIC = gilt;
 	ROUGHNESS = mix(texture(rough_tex, tuv).r, 0.32, gilt);
 	NORMAL_MAP = texture(normal_tex, tuv).rgb;

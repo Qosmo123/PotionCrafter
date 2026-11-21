@@ -135,7 +135,7 @@ shader = ExtResource("12_stone")
 shader_parameter/albedo_tex = ExtResource("tex_masonry_wall_albedo")
 shader_parameter/normal_tex = ExtResource("tex_masonry_wall_normal")
 shader_parameter/rough_tex = ExtResource("tex_masonry_wall_rough")
-shader_parameter/tint = Color(0.44, 0.41, 0.37, 1)
+shader_parameter/tint = Color(0.33, 0.315, 0.295, 1)
 shader_parameter/tile_meters = 1.8
 shader_parameter/grime_strength = 0.6
 shader_parameter/soot_strength = 0.5
@@ -221,7 +221,7 @@ light_specular = 1.0
 light_volumetric_fog_energy = 0.0
 
 [node name="RecipeBoard" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.02, -0.45)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.52, 1.075, -0.45)
 script = ExtResource("97_board")
 
 [node name="KeyLight" type="DirectionalLight3D" parent="."]

@@ -1,6 +1,7 @@
 class_name RecipeBoard3D
 extends Node3D
-## A row of recipe notes pinned under the wall shelf behind the potion bench.
+## Recipe notes pinned to a small corkboard at the edge of the potion bench
+## wall (out of the way of the tall glassware), in a grid.
 ## Learned recipes glow: their rune borders pulse in the colour of their
 ## grimoire category and their titles shine gold; the newest come first.
 ## Unlearned pages stay dim and read "???". A new discovery makes its page flare.
@@ -9,13 +10,17 @@ const PAGE_SIZE: Vector2 = Vector2(0.11, 0.13)
 const CATEGORY_COLORS: Array[Color] = [Color("#5CE1E6"), Color("#B18CFF"), Color("#FF6B9D"), Color("#F4D06F")]
 const SHADER: Shader = preload("res://visuals_3d/shaders/glowing_page.gdshader")
 
-@export var page_count: int = 7
+@export var page_count: int = 6
 @export var spacing_meters: float = 0.24
+## Grid layout on a corkboard (columns), and how big each note is drawn.
+@export var columns: int = 3
+@export var page_scale: float = 0.6
 
 var _pages: Array[Dictionary] = []
 
 
 func _ready() -> void:
+	_build_corkboard()
 	for i: int in page_count:
 		_pages.append(_make_page(i))
 	if RecipeBook.instance != null:
@@ -25,7 +30,11 @@ func _ready() -> void:
 
 func _make_page(i: int) -> Dictionary:
 	var root: Node3D = Node3D.new()
-	root.position = Vector3((float(i) - float(page_count - 1) * 0.5) * spacing_meters, 0.0, 0.0)
+	var col: int = i % columns
+	var row: int = i / columns
+	var cell: Vector2 = PAGE_SIZE * page_scale + Vector2(0.012, 0.014)
+	root.position = Vector3((float(col) - float(columns - 1) * 0.5) * cell.x, -float(row) * cell.y, 0.012)
+	root.scale = Vector3.ONE * page_scale
 	# A slight, random tilt like hand-pinned notes.
 	root.rotation.z = (fmod(float(i) * 0.6180339, 1.0) - 0.5) * 0.12
 	add_child(root)
@@ -127,3 +136,34 @@ func refresh(just_found: RecipeData = null) -> void:
 		if r == just_found:
 			var tw: Tween = create_tween()
 			tw.tween_method(func(v: float) -> void: mat.set_shader_parameter(&"flash", v), 1.5, 0.0, 2.5)
+
+
+
+## Cork panel in a dark wooden frame behind the notes.
+func _build_corkboard() -> void:
+	var rows: int = int(ceil(float(page_count) / float(columns)))
+	var cell: Vector2 = PAGE_SIZE * page_scale + Vector2(0.012, 0.014)
+	var size: Vector2 = Vector2(cell.x * columns + 0.02, cell.y * rows + 0.02)
+	var top_y: float = 0.012
+	var cork: StandardMaterial3D = StandardMaterial3D.new()
+	cork.albedo_color = Color(0.6, 0.42, 0.26)
+	cork.roughness = 1.0
+	cork.albedo_texture = Vessel3D.parchment_texture()
+	cork.uv1_scale = Vector3(3.0, 3.0, 1.0)
+	var frame: StandardMaterial3D = PropMaterials.textured("wood", Color(0.25, 0.15, 0.08), 0.3)
+	var panel: MeshInstance3D = MeshInstance3D.new()
+	var panel_mesh: BoxMesh = BoxMesh.new()
+	panel_mesh.size = Vector3(size.x, size.y, 0.01)
+	panel_mesh.material = cork
+	panel.mesh = panel_mesh
+	panel.position = Vector3(0.0, top_y - size.y * 0.5, 0.004)
+	add_child(panel)
+	for side: Vector4 in [Vector4(0.0, top_y + 0.006, size.x + 0.024, 0.012), Vector4(0.0, top_y - size.y - 0.006, size.x + 0.024, 0.012),
+			Vector4(-size.x * 0.5 - 0.006, top_y - size.y * 0.5, 0.012, size.y), Vector4(size.x * 0.5 + 0.006, top_y - size.y * 0.5, 0.012, size.y)]:
+		var bar: MeshInstance3D = MeshInstance3D.new()
+		var bar_mesh: BoxMesh = BoxMesh.new()
+		bar_mesh.size = Vector3(side.z, side.w, 0.016)
+		bar_mesh.material = frame
+		bar.mesh = bar_mesh
+		bar.position = Vector3(side.x, side.y, 0.006)
+		add_child(bar)

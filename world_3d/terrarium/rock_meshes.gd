@@ -903,6 +903,17 @@ static func _standard(m: MineralData, polish: float, cut: int) -> StandardMateri
 		mat.emission = m.emission
 		mat.emission_energy_multiplier = 1.0 + polish * 1.5 + (1.0 if cut != Cut.NONE else 0.0)
 	_apply_rock_texture(mat, m, polish)
+	# Translucent and transparent minerals let light into them (quartz,
+	# fluorite, gems): subsurface scattering and a soft back-light glow.
+	if m.diaphaneity != MineralData.Diaphaneity.OPAQUE:
+		mat.subsurf_scatter_enabled = true
+		mat.subsurf_scatter_strength = 0.35 if m.diaphaneity == MineralData.Diaphaneity.TRANSLUCENT else 0.2
+		mat.subsurf_scatter_skin_mode = false
+		mat.backlight_enabled = true
+		mat.backlight = m.color.lerp(Color.WHITE, 0.3) * 0.35
+		mat.rim_enabled = true
+		mat.rim = 0.25
+		mat.rim_tint = 0.6
 	return mat
 
 
