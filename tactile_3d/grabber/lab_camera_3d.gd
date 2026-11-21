@@ -1,7 +1,9 @@
 class_name LabCamera3D
 extends Camera3D
-## Table-level camera with smooth zoom.
-## PC: scroll wheel zooms when nothing is held (while holding, the wheel tilts/pours).
+## Table-level camera with smooth zoom and panning.
+## PC: scroll wheel zooms when nothing is held (while holding, the wheel tilts/pours);
+## right-drag with empty hands slides the view around (pressing the station's
+## number key again centres it).
 ## Android: two-finger pinch zooms when nothing is held.
 ## Zoom dollies along the view direction, so perspective stays natural.
 
@@ -32,11 +34,18 @@ var _base_ortho_size: float = 0.7
 ## Screen-shake "trauma" 0..1 (decays). Offset scales with trauma² so small
 ## taps barely nudge and big breaks really thump.
 var _trauma: float = 0.0
+## Right-drag pan, in metres along the view's right and up directions.
+var _pan: Vector2 = Vector2.ZERO
+var _pan_target: Vector2 = Vector2.ZERO
+var _panning: bool = false
 var _shake_time: float = 0.0
 
 const SHAKE_MAX_METERS: float = 0.012
 const SHAKE_MAX_ROLL_RAD: float = 0.012
 const SHAKE_DECAY_PER_S: float = 2.2
+## How far the view may slide from the station's centre (metres).
+const PAN_LIMIT_METERS: Vector2 = Vector2(0.45, 0.25)
+const PAN_SMOOTHING_PER_S: float = 18.0
 
 
 func _enter_tree() -> void:
@@ -52,7 +61,10 @@ func _ready() -> void:
 
 ## Glide to a work station; the grabber reach and satchel drop point follow.
 func go_to_station(index: int) -> void:
-	if index < 0 or index >= station_offsets.size() or index == station:
+	if index < 0 or index >= station_offsets.size():
+		return
+	_pan_target = Vector2.ZERO
+	if index == station:
 		return
 	station = index
 	AudioDirector.play_ui(&"whoosh", -12.0, 1.0)
@@ -70,6 +82,21 @@ func _unhandled_input(event: InputEvent) -> void:
 	var key: InputEventKey = event as InputEventKey
 	if key != null and key.pressed and not key.echo and key.keycode >= KEY_1 and key.keycode <= KEY_9:
 		go_to_station(key.keycode - KEY_1)
+		return
+	if event is InputEventMouseButton and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_RIGHT:
+		# Right-drag pans with empty hands (holding something, it tilts it).
+		_panning = (event as InputEventMouseButton).pressed and not holding
+		return
+	if event is InputEventMouseMotion and _panning:
+		if holding:
+			_panning = false
+			return
+		var rel: Vector2 = (event as InputEventMouseMotion).relative
+		var meters_per_px: float = _view_height_meters() / maxf(get_viewport().get_visible_rect().size.y, 1.0)
+		# The bench follows the mouse, like dragging a sheet of paper.
+		_pan_target += Vector2(-rel.x, rel.y) * meters_per_px
+		_pan_target = _pan_target.clamp(-PAN_LIMIT_METERS, PAN_LIMIT_METERS)
+		get_viewport().set_input_as_handled()
 		return
 	if event is InputEventMouseButton:
 		var mb: InputEventMouseButton = event as InputEventMouseButton
@@ -111,15 +138,23 @@ func shake(amount: float) -> void:
 	_trauma = clampf(_trauma + amount, 0.0, 1.0)
 
 
+## Height of the visible bench at the focus distance, for converting pixels.
+func _view_height_meters() -> float:
+	if projection == PROJECTION_ORTHOGONAL:
+		return size
+	return 2.0 * tan(deg_to_rad(fov) * 0.5) * 1.5
+
+
 func _process(delta: float) -> void:
 	_zoom_current = lerpf(_zoom_current, _zoom_target, 1.0 - exp(-zoom_smoothing_per_s * delta))
+	_pan = _pan.lerp(_pan_target, 1.0 - exp(-PAN_SMOOTHING_PER_S * delta))
 	var forward: Vector3 = -_base_transform.basis.z
 	var basis: Basis = _base_transform.basis
-	var jitter: Vector3 = Vector3.ZERO
+	var jitter: Vector3 = (basis.x * _pan.x + basis.y * _pan.y)
 	if _trauma > 0.0:
 		_shake_time += delta * 38.0
 		var k: float = _trauma * _trauma
-		jitter = (basis.x * sin(_shake_time * 1.13) + basis.y * sin(_shake_time * 0.91 + 1.7)) * SHAKE_MAX_METERS * k
+		jitter += (basis.x * sin(_shake_time * 1.13) + basis.y * sin(_shake_time * 0.91 + 1.7)) * SHAKE_MAX_METERS * k
 		basis = basis.rotated(basis.z.normalized(), sin(_shake_time * 0.77 + 3.1) * SHAKE_MAX_ROLL_RAD * k)
 		_trauma = maxf(_trauma - SHAKE_DECAY_PER_S * delta, 0.0)
 	if projection == PROJECTION_ORTHOGONAL:

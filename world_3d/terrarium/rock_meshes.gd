@@ -34,7 +34,11 @@ static var _cache: Dictionary = {}
 
 
 static func for_mineral(m: MineralData, radius: float, seed_value: int, cut: int, fragment: int = -1) -> Mesh:
-	var key: String = "%s_%d_%d_%d_%.3f" % [m.mineral_id, seed_value % 7, cut, fragment, radius]
+	# Rocks within 1.5% of each other's size share one mesh (masses are
+	# random, so an exact-radius key never hit the cache).
+	var step: int = int(round(log(maxf(radius, 1e-4)) / 0.015))
+	radius = exp(float(step) * 0.015)
+	var key: String = "%s_%d_%d_%d_%d" % [m.mineral_id, seed_value % 7, cut, fragment, step]
 	if _cache.has(key):
 		return _cache[key]
 	var mesh: Mesh
@@ -164,12 +168,55 @@ static func style_for_mineral(m: MineralData) -> int:
 	return RockForm.ANGULAR
 
 
-## Convex collision hull for a rock mesh, built once per mesh.
+## Most points handed to the physics engine for a rock's hull.
+const HULL_MAX_POINTS: int = 96
+
+
+## Convex collision hull for a rock mesh, built once per mesh. The engine
+## builds the hull from a spread-out sample of the mesh's vertices: about
+## 0.1 ms, where Mesh.create_convex_shape(clean, simplify) took 50-80 ms per
+## rock and froze the game every time a rock was spawned or cracked.
 static func convex_for(mesh: Mesh) -> Shape3D:
 	var id: int = mesh.get_instance_id()
 	if not _shape_cache.has(id):
-		_shape_cache[id] = mesh.create_convex_shape(true, true)
+		var shape: ConvexPolygonShape3D = ConvexPolygonShape3D.new()
+		shape.points = hull_points(mesh)
+		_shape_cache[id] = shape
 	return _shape_cache[id]
+
+
+## Distinct vertices of `mesh`, thinned to at most HULL_MAX_POINTS. Always
+## keeps the extreme point along each axis so the hull spans the full rock.
+static func hull_points(mesh: Mesh) -> PackedVector3Array:
+	var seen: Dictionary = {}
+	var unique: PackedVector3Array = PackedVector3Array()
+	for s: int in mesh.get_surface_count():
+		var verts: PackedVector3Array = mesh.surface_get_arrays(s)[Mesh.ARRAY_VERTEX]
+		for v: Vector3 in verts:
+			var key: Vector3i = Vector3i((v * 1e4).round())
+			if not seen.has(key):
+				seen[key] = true
+				unique.append(v)
+	if unique.size() <= HULL_MAX_POINTS:
+		return unique
+	var out: PackedVector3Array = PackedVector3Array()
+	var lo: Vector3 = unique[0]
+	var hi: Vector3 = unique[0]
+	var extremes: Array[Vector3] = [unique[0], unique[0], unique[0], unique[0], unique[0], unique[0]]
+	for v: Vector3 in unique:
+		for axis: int in 3:
+			if v[axis] < extremes[axis * 2][axis]:
+				extremes[axis * 2] = v
+			if v[axis] > extremes[axis * 2 + 1][axis]:
+				extremes[axis * 2 + 1] = v
+	for e: Vector3 in extremes:
+		out.append(e)
+	var step: float = float(unique.size()) / float(HULL_MAX_POINTS - extremes.size())
+	var f: float = 0.0
+	while int(f) < unique.size() and out.size() < HULL_MAX_POINTS:
+		out.append(unique[int(f)])
+		f += step
+	return out
 
 
 static func _icosphere() -> void:

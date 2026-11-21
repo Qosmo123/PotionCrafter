@@ -8,6 +8,9 @@ extends SceneTree
 ##            crank in circles: the rock is ground to powder.
 
 const TICKS_PER_S: float = 60.0
+## Open bench between the crusher's beaker and the sifter trays, away from
+## the crates (whose random stones a click there could pick up instead).
+const CLEAR_SPOT: Vector3 = Vector3(2.69, 0.86, -0.1)
 
 var _bench: Node3D
 var _grabber: TactileGrabber3D
@@ -80,7 +83,7 @@ func _physics_process(_d: float) -> bool:
 			_next()
 		1:  # Let the camera arrive and everything settle, then take a sand bag.
 			if _step_ticks > 80:
-				_item = Rock3D.spawn(_bench, Rock3D.get_mineral("desert_sand"), _sifter.global_transform * Vector3(-0.3, 0.05, 0.42), 0.2)
+				_item = Rock3D.spawn(_bench, Rock3D.get_mineral("desert_sand"), CLEAR_SPOT, 0.2)
 				_next()
 		2:
 			if _step_ticks == 40:
@@ -119,11 +122,13 @@ func _physics_process(_d: float) -> bool:
 					sifted += _tray_kg(_sifter.trays[k])
 				_check(sifted > 0.02, "shaking sifts sand into the trays (%.0f g)" % (sifted * 1000.0))
 				_grabber.release()
-				_item = Rock3D.spawn(_bench, Rock3D.get_mineral("fizzrock"), _crusher.global_transform * Vector3(-0.15, 0.05, 0.42), 0.08)
+				_item = Rock3D.spawn(_bench, Rock3D.get_mineral("fizzrock"), CLEAR_SPOT, 0.08)
 				_next()
 		7:  # A rock into the crusher.
 			if _step_ticks == 40:
 				_click(_camera.unproject_position(_item.global_position))
+			if _step_ticks == 46:
+				_check(_grabber.held_body == _item, "the rock can be picked up")
 			if _step_ticks > 45:
 				_move(_camera.unproject_position(_crusher.global_transform * Vector3(0.0, _crusher.hopper_height_meters + 0.12, 0.0)))
 				if _until(_grabber.intake_target != null and absf(_item.global_position.x - _crusher.global_position.x) < 0.03, 8.0):
@@ -132,7 +137,7 @@ func _physics_process(_d: float) -> bool:
 					_next()
 		8:
 			if _until(_crusher._current != null, 3.0):
-				_check(_crusher._current == _item, "the rock drops into the crusher hopper")
+				_check(_crusher._current == _item, "the rock drops into the crusher hopper (rock at %s, hopper %s, crusher has %s)" % [_item.global_position if is_instance_valid(_item) else "gone", _crusher.global_transform * Vector3(0.0, _crusher.hopper_height_meters, 0.0), _crusher._current])
 				_tray_start_kg = _tray_kg(_crusher.tray)
 				_click(_camera.unproject_position(_crusher._handle.global_position))
 				_next()
@@ -145,7 +150,7 @@ func _physics_process(_d: float) -> bool:
 			_move(_camera.unproject_position(at))
 			if _until(_crusher._current == null, 25.0):
 				_check(_crusher._current == null, "cranking grinds the rock (progress %.0f%%)" % (_crusher.progress * 100.0))
-				_check(_tray_kg(_crusher.tray) > _tray_start_kg + 0.05, "the powder lands in the crusher's beaker (+%.0f g)" % ((_tray_kg(_crusher.tray) - _tray_start_kg) * 1000.0))
+				_check(_tray_kg(_crusher.tray) > _tray_start_kg + 0.05, "the powder lands in the crusher's beaker (+%.0f g, beaker upright %.2f)" % [(_tray_kg(_crusher.tray) - _tray_start_kg) * 1000.0, _crusher.tray.global_basis.y.y])
 				_grabber.release()
 				_next()
 		10:

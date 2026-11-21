@@ -184,8 +184,10 @@ func _finish(rock: Rock3D) -> void:
 		for k: int in mini(m.inclusions.size(), m.inclusion_chances.size()):
 			if randf() < m.inclusion_chances[k] * 0.5:  # grinding destroys some finds
 				var find_m: MineralData = m.inclusions[k] as MineralData
-				var find: Rock3D = Rock3D.spawn(get_parent(), find_m, global_transform * Vector3(0.0, 0.12, 0.14), find_m.typical_mass_kg)
-				find.linear_velocity = global_basis.z * 0.4
+				# Out of the side hatch onto open bench, not forward into the
+				# beaker (a tumbling find used to knock it over and spill the powder).
+				var find: Rock3D = Rock3D.spawn(get_parent(), find_m, global_transform * Vector3(0.13, 0.06, 0.06), find_m.typical_mass_kg)
+				find.linear_velocity = global_basis.x * 0.15
 				finds.append(find_m.display_name)
 				if GrimoireJournal.instance != null:
 					GrimoireJournal.instance.record_find(find_m)

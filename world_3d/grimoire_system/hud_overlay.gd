@@ -22,7 +22,8 @@ const HELP_TEXT: String = """[b][color=#F4D06F]Hands[/color][/b]
   Water  ·  hold a glass under the tap (or set it on the tray): it fills itself and stops when nearly full
   Heat  ·  click the stove's knob for off / low / medium / high  ·  click the burner to light it
   Shift while moving  ·  slow, precise placement    ·    Wheel / right-drag  ·  tilt by hand
-  Wheel when empty-handed  ·  zoom      ·  Two fingers: twist to tilt, pinch to zoom
+  Wheel when empty-handed  ·  zoom    ·    Right-drag when empty-handed  ·  move the view (station key re-centres)
+  Two fingers  ·  twist to tilt, pinch to zoom
   E  ·  put the held item back in the satchel
 
 [b][color=#F4D06F]Brewing[/color][/b]
