@@ -1,4 +1,4 @@
-[gd_scene load_steps=136 format=3]
+[gd_scene load_steps=137 format=3]
 
 [ext_resource type="PackedScene" path="res://world_3d/vessels/vessel_3d.tscn" id="1_vessel"]
 [ext_resource type="Resource" path="res://content/substances/moonwater.tres" id="2_moon"]
@@ -58,6 +58,7 @@
 [ext_resource type="PackedScene" path="res://world_3d/props/drawer_chest.gltf" id="55_drawers"]
 [ext_resource type="Script" path="res://visuals_3d/vfx/candle_flame.gd" id="56_candle"]
 [ext_resource type="Script" path="res://world_3d/props/candle_body.gd" id="100_candlebody"]
+[ext_resource type="Script" path="res://world_3d/props/lab_dressing.gd" id="101_labdress"]
 [ext_resource type="Script" path="res://visuals_3d/vfx/ambient_dust.gd" id="57_dust"]
 [ext_resource type="Script" path="res://world_3d/contraptions/tool_crock_3d.gd" id="58_crock"]
 [ext_resource type="PackedScene" path="res://world_3d/props/tool_crock.gltf" id="59_crockm"]
@@ -656,6 +657,9 @@ script = ExtResource("69_crate")
 model = ExtResource("77_cratem")
 random_count = 8
 random_kinds = PackedInt32Array(2, 3, 4)
+
+[node name="LabDressing" type="Node3D" parent="MineralLab"]
+script = ExtResource("101_labdress")
 
 [node name="StreakPlate" type="StaticBody3D" parent="MineralLab"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.62, 0.8, 0.42)
