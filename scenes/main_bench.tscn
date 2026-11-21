@@ -1,4 +1,4 @@
-[gd_scene load_steps=138 format=3]
+[gd_scene load_steps=140 format=3]
 
 [ext_resource type="PackedScene" path="res://world_3d/vessels/vessel_3d.tscn" id="1_vessel"]
 [ext_resource type="Resource" path="res://content/substances/moonwater.tres" id="2_moon"]
@@ -60,6 +60,8 @@
 [ext_resource type="Script" path="res://world_3d/props/candle_body.gd" id="100_candlebody"]
 [ext_resource type="Script" path="res://world_3d/props/lab_dressing.gd" id="101_labdress"]
 [ext_resource type="Script" path="res://world_3d/props/science_dressing.gd" id="102_scidress"]
+[ext_resource type="Script" path="res://world_3d/contraptions/burner_3d.gd" id="103_burner"]
+[ext_resource type="Script" path="res://world_3d/contraptions/water_tap_3d.gd" id="104_tap"]
 [ext_resource type="Script" path="res://visuals_3d/vfx/ambient_dust.gd" id="57_dust"]
 [ext_resource type="Script" path="res://world_3d/contraptions/tool_crock_3d.gd" id="58_crock"]
 [ext_resource type="PackedScene" path="res://world_3d/props/tool_crock.gltf" id="59_crockm"]
@@ -327,7 +329,7 @@ mesh = SubResource("FlameMesh_1")
 cast_shadow = 0
 
 [node name="HotPlate" type="StaticBody3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.6, 0.81, -0.1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 0.81, -0.1)
 script = ExtResource("8_plate")
 
 [node name="Furniture" type="Node3D" parent="."]
@@ -377,13 +379,13 @@ script = ExtResource("20_abox")
 [node name="Mesh" parent="Furniture/Mortar" instance=ExtResource("27_mortar")]
 
 [node name="Tools" type="Node3D" parent="Furniture"]
-transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0.5, 0.8, 0.3)
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0.95, 0.8, 0.3)
 script = ExtResource("29_pvis")
 
 [node name="Mesh" parent="Furniture/Tools" instance=ExtResource("28_tools")]
 
 [node name="ToolCrock" type="StaticBody3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.17, 0.8, 0.34)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.62, 0.8, 0.34)
 script = ExtResource("58_crock")
 model = ExtResource("59_crockm")
 stocked_tools = Array[NodePath]([NodePath("../StirTools/Whisk"), NodePath("../StirTools/GlassRod"), NodePath("../StirTools/SilverRod"), NodePath("../StirTools/WoodenSpoon"), NodePath("../StirTools/ArcaneWand")])
@@ -445,18 +447,35 @@ model = ExtResource("38_magm")
 [node name="Stands" type="Node3D" parent="."]
 
 [node name="CorkRing" type="StaticBody3D" parent="Stands"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.45, 0.8, -0.1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.43, 0.8, -0.1)
 script = ExtResource("18_stand")
 
 [node name="TubeRack" type="StaticBody3D" parent="Stands"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.02, 0.8, -0.1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.086, 0.8, -0.1)
 script = ExtResource("18_stand")
 kind = 1
+socket_count = 6
+
+[node name="CorkRing3" type="StaticBody3D" parent="Stands"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.36, 0.8, 0.12)
+script = ExtResource("18_stand")
+
+[node name="CorkRing4" type="StaticBody3D" parent="Stands"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.315, 0.8, 0.12)
+script = ExtResource("18_stand")
+
+[node name="Burner" type="StaticBody3D" parent="Stands"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.33, 0.8, -0.1)
+script = ExtResource("103_burner")
+
+[node name="WaterTap" type="Node3D" parent="Stands"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.57, 0.8, -0.1)
+script = ExtResource("104_tap")
 
 [node name="Vessels" type="Node3D" parent="."]
 
 [node name="FlaskMoonwater" parent="Vessels" instance=ExtResource("1_vessel")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.45, 0.905, -0.1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.43, 0.905, -0.1)
 profile = ExtResource("13_pround")
 initial_substances = Array[Resource]([ExtResource("2_moon")])
 initial_moles = Array[float]([8.0])
@@ -502,7 +521,7 @@ initial_substances = Array[Resource]([ExtResource("43_borax")])
 initial_moles = Array[float]([5.0])
 
 [node name="BubbleBase" parent="Vessels" instance=ExtResource("1_vessel")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.62, 0.873, 0.12)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.07, 0.873, 0.12)
 profile = ExtResource("14_perl")
 initial_substances = Array[Resource]([ExtResource("44_soap"), ExtResource("45_glyc")])
 initial_moles = Array[float]([4.0, 0.6])
@@ -780,7 +799,7 @@ grabber = NodePath("../Grabber")
 camera = NodePath("../Camera3D")
 
 [node name="Grimoire" type="StaticBody3D" parent="." node_paths=PackedStringArray("camera")]
-transform = Transform3D(0.819152, 0, 0.573576, 0, 1, 0, -0.573576, 0, 0.819152, -0.7, 0.8, 0.02)
+transform = Transform3D(0.819152, 0, 0.573576, 0, 1, 0, -0.573576, 0, 0.819152, -0.76, 0.8, 0.3)
 script = ExtResource("64_book3d")
 model = ExtResource("65_bookm")
 camera = NodePath("../Camera3D")

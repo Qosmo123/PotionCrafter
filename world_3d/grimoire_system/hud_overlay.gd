@@ -4,6 +4,7 @@ extends CanvasLayer
 ## corner buttons (Grimoire, Help) with the coin purse, and bottling (B).
 
 var _volume_sliders: Dictionary = {}
+var _assist_hint: Label
 var _syncing_volumes: bool = false
 
 const TOAST_SECONDS: float = 3.2
@@ -11,9 +12,13 @@ const STATION_RUNES: PackedStringArray = ["☿", "◆", "⊕"]  # alchemical gly
 const STATION_NAMES: PackedStringArray = ["Potion Bench", "Mineral Lab", "Science Bench"]
 const HELP_TEXT: String = """[b][color=#F4D06F]Hands[/color][/b]
   Click  ·  pick something up, move the mouse, click again to put it down (dragging works too)
-  Side view  ·  move left/right and up/down; held items slide onto whatever is under them
-  Shift while moving  ·  slow, precise placement
-  Wheel / right-drag while holding  ·  tilt and pour
+  Pour  ·  hold a vessel over another one: it tips and pours by itself (move away or click to stop)
+  Stir  ·  hold a rod, spoon or whisk over a vessel, then wiggle or circle the mouse (or hold S)
+  Swirl  ·  holding a glass, circle the mouse (or hold S) to swish it round
+  Put down  ·  click again: vials glide into the rack, round flasks onto cork rings, glass onto the stove, burner or tap tray
+  Water  ·  hold a glass under the tap (or set it on the tray): it fills itself and stops when nearly full
+  Heat  ·  click the stove's knob for off / low / medium / high  ·  click the burner to light it
+  Shift while moving  ·  slow, precise placement    ·    Wheel / right-drag  ·  tilt by hand
   Wheel when empty-handed  ·  zoom      ·  Two fingers: twist to tilt, pinch to zoom
   E  ·  put the held item back in the satchel
 
@@ -125,6 +130,23 @@ func _ready() -> void:
 				LabCamera3D.instance.go_to_station(idx))
 		nav_row.add_child(sb)
 		_station_buttons.append(sb)
+	# What the hands are doing (pouring, stirring, swirling) and how to do more.
+	_assist_hint = Label.new()
+	_assist_hint.anchor_left = 0.5
+	_assist_hint.anchor_right = 0.5
+	_assist_hint.anchor_top = 1.0
+	_assist_hint.anchor_bottom = 1.0
+	_assist_hint.offset_left = -420
+	_assist_hint.offset_right = 420
+	_assist_hint.offset_top = -132
+	_assist_hint.offset_bottom = -104
+	_assist_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_assist_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_assist_hint.add_theme_font_size_override(&"font_size", 18)
+	_assist_hint.add_theme_color_override(&"font_color", CosmicTheme.TEXT)
+	_assist_hint.add_theme_color_override(&"font_outline_color", Color(0.0, 0.0, 0.0, 0.85))
+	_assist_hint.add_theme_constant_override(&"outline_size", 6)
+	_shell.add_child(_assist_hint)
 	_strike = Button.new()
 	_strike.text = "STRIKE  [Space]"
 	_strike.tooltip_text = "Tap to strike. Hold to wind up a bigger swing, release to smash."
@@ -597,6 +619,9 @@ func bottle(vessel: Vessel3D) -> void:
 func _process(delta: float) -> void:
 	if GrimoireJournal.instance != null:
 		_coins.text = "◉ %d" % GrimoireJournal.instance.coins
+	var hint: String = grabber.assist_hint() if grabber != null else ""
+	if _assist_hint.text != hint:
+		_assist_hint.text = hint
 	var hammer: Hammer3D = grabber.held_body as Hammer3D if grabber != null else null
 	_strike.visible = hammer != null
 	_charge_bar.visible = hammer != null and hammer.charging

@@ -26,6 +26,9 @@ const LAYER_TACTILE_TOOL: int = 1 << 3
 const LAYER_POUR_STREAM_RAY: int = 1 << 4
 const LAYER_TERRARIUM_ENTITY: int = 1 << 5
 const LAYER_SNAP_SOCKET: int = 1 << 6
+## Click targets for bench controls (knobs, handles): hit by the pointer
+## only, never by objects.
+const LAYER_CLICK_TARGET: int = 1 << 7
 
 
 ## Clamp a temperature into the safe simulation range, scrubbing NaN/Inf.

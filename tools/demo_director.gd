@@ -69,6 +69,8 @@ func _process(_delta: float) -> void:
 		_brew_demo(bench)
 	if _args.has("seal"):
 		_seal_demo(bench)
+	if _args.has("easy"):
+		_easy_demo(bench)
 	if _args.has("noliquid") and _frames == 50:
 		for v: Vessel3D in Vessel3D.all_vessels:
 			var l: Node3D = v.get_node_or_null("Liquid") as Node3D
@@ -290,6 +292,30 @@ func _brew_demo(bench: Node) -> void:
 				GrimoireJournal.instance.pin(String(r.recipe_id))
 	if _frames == 10 and HudOverlay.instance != null:
 		HudOverlay.instance.set("_pin_vessel", bench.get_node("Vessels/FlaskMoonwater"))
+
+
+## Easy handling: a beaker filling at the tap, the burner lit under a flask,
+## a puddle on the bench, and a vial in the hand with the free rack sockets
+## glowing where it can go.
+func _easy_demo(bench: Node) -> void:
+	var grabber: TactileGrabber3D = bench.get_node("Grabber") as TactileGrabber3D
+	var cam: Camera3D = bench.get_node("Camera3D") as Camera3D
+	if _frames == 3:
+		var tap: WaterTap3D = bench.get_node("Stands/WaterTap") as WaterTap3D
+		var beaker: Vessel3D = bench.get_node("Vessels/Beaker") as Vessel3D
+		beaker.global_position = tap.global_position + Vector3(0.0, 0.015 + 0.05, 0.0)
+		var burner: Burner3D = bench.get_node("Stands/Burner") as Burner3D
+		burner.toggle()
+		var honey: Vessel3D = bench.get_node("Vessels/FlaskHoney") as Vessel3D
+		honey.global_position = burner.global_position + Vector3(0.0, burner.gauze_height_meters + 0.075, 0.0)
+		var color: Color = Color(0.3, 0.75, 0.45, 0.6)
+		SpillPuddles3D.spill(bench, Vector3(-0.2, 0.9, 0.3), 1.2e-5, color)
+		SpillPuddles3D.spill(bench, Vector3(-0.17, 0.9, 0.33), 4e-6, color)
+	if _frames == 20:
+		grabber.grab(bench.get_node("Vessels/VialSoda") as Vessel3D)
+	if _frames > 20:
+		var rack: SupportStand3D = bench.get_node("Stands/TubeRack") as SupportStand3D
+		grabber._pointer_screen = cam.unproject_position(rack.seat_floor_world(4) + Vector3(0.0, 0.17, 0.0))
 
 
 ## Bottling: a row of corked, wax-sealed bottles (one per grade colour) and

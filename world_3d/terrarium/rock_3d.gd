@@ -51,6 +51,7 @@ static func get_mineral(id: String) -> MineralData:
 
 func _ready() -> void:
 	collision_layer = SimConstants.LAYER_SOLID_REAGENT
+	Flat2D.lock(self)
 	collision_mask = SimConstants.LAYER_STATIC_BENCH | SimConstants.LAYER_SOLID_REAGENT | SimConstants.LAYER_RIGID_VESSEL | SimConstants.LAYER_TACTILE_TOOL
 	contact_monitor = true
 	max_contacts_reported = 4

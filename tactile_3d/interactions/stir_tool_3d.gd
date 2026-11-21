@@ -30,6 +30,7 @@ var _active_vessel: Vessel3D = null
 
 func _ready() -> void:
 	collision_layer = SimConstants.LAYER_TACTILE_TOOL
+	Flat2D.lock(self)
 	collision_mask = SimConstants.LAYER_STATIC_BENCH | SimConstants.LAYER_TACTILE_TOOL
 	mass = tool_mass_kg
 	continuous_cd = true
@@ -46,6 +47,11 @@ func _ready() -> void:
 	add_child(shape)
 	_tip_local = Vector3(0.0, -0.5 * length_meters + 0.006, 0.0)
 	_prev_tip_world = global_transform * _tip_local
+
+
+## Tip position in the tool's own frame (the end that goes in the liquid).
+func get_tip_local() -> Vector3:
+	return _tip_local
 
 
 func get_hover_offset_meters() -> float:

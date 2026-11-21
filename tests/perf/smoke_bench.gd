@@ -120,7 +120,8 @@ func _check_after_pour() -> void:
 	_check_bottling()
 	var warmed: float = _spirits.mixture.temperature_kelvin - _spirits_start_kelvin
 	_check(warmed > 5.0, "hot plate should warm the spirits flask (+%.2f K)" % warmed)
-	_check(absf(_vial.global_position.y - _grabber.hover_plane_y_meters) < 0.03, "grabbed vial should track the hover plane (y=%.3f)" % _vial.global_position.y)
+	# Side view: a held vial is lifted clear of the rack it came from.
+	_check(_grabber.held_body == _vial and _vial.global_position.y > 0.88, "grabbed vial is held up out of the rack (y=%.3f)" % _vial.global_position.y)
 	print("swirl %.2f rad/s, " % _spirits.mixture.swirl_rad_s, "beaker %.1f mL, spilled %.2f g, spirits +%.1f K, vial y %.3f" % [
 		_beaker.mixture.get_liquid_volume_m3() * 1e6, _moon.spilled_mass_kg * 1000.0, warmed, _vial.global_position.y])
 

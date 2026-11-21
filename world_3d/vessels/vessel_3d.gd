@@ -81,6 +81,8 @@ var emulsion_level: float = 0.0
 ## Fresh precipitate still suspended (cloudy) before it settles as sediment.
 var suspension_level: float = 0.0
 var foam_overflow_rate_m_s: float = 0.0
+## Liquid running over the brim this tick (m^3/s), from overfilling.
+var overflow_m3_s: float = 0.0
 ## Corked and labelled (bottled). Sealed vessels neither pour nor vent.
 var sealed: bool = false
 
@@ -130,6 +132,7 @@ var _effects: VesselEffects
 
 func _ready() -> void:
 	collision_layer = SimConstants.LAYER_RIGID_VESSEL
+	Flat2D.lock(self)
 	# Tools pass through glass (stirring rods must reach inside); everything else collides.
 	collision_mask = (SimConstants.LAYER_STATIC_BENCH | SimConstants.LAYER_RIGID_VESSEL
 		| SimConstants.LAYER_SOLID_REAGENT)
@@ -380,6 +383,18 @@ func get_lip_local_y() -> float:
 
 func get_lip_radius_meters() -> float:
 	return _lip_radius_meters
+
+
+## World point on the rim where liquid leaves when tilted (the lowest point of
+## the lip; the top centre when upright).
+func get_pour_lip_world() -> Vector3:
+	var xf: Transform3D = global_transform
+	var axis: Vector3 = xf.basis.y.normalized()
+	var top: Vector3 = xf * Vector3(0.0, _lip_local_y, 0.0)
+	var down_in_rim: Vector3 = Vector3.DOWN - axis * Vector3.DOWN.dot(axis)
+	if down_in_rim.length_squared() < 1e-6:
+		return top
+	return top + down_in_rim.normalized() * _lip_radius_meters
 
 
 ## Inner wall radius at a local height, interpolated along the profile
@@ -633,10 +648,33 @@ func _condensed_volume_m3() -> float:
 	return mixture.get_liquid_volume_m3() + mixture.get_solid_volume_m3()
 
 
+## Anything over the brim runs down the outside of the glass and pools on
+## the bench at its foot (on the side facing the room, so it can be seen).
 func _spill_overflow() -> void:
+	overflow_m3_s = 0.0
 	var excess_m3: float = _condensed_volume_m3() - capacity_m3
 	if excess_m3 > 0.0:
+		var color: Color = mixture.get_contents_color()
+		var viscosity_pas: float = mixture.get_liquid_viscosity_pas()
 		spilled_mass_kg += mixture.transfer_liquid_volume_to(null, excess_m3)
+		overflow_m3_s = excess_m3 / maxf(get_physics_process_delta_time(), 1e-6)
+		var outer_r: float = profile.outer_radius_meters if profile != null else inner_radius_meters + wall_thickness_meters
+		var run: Vector3 = _overflow_rim_world() + _overflow_dir() * (outer_r * 0.35)
+		SpillPuddles3D.spill(self, run, excess_m3, color, viscosity_pas)
+
+
+## Point on the rim where overflow spills: the lowest lip point when tipped,
+## else the front of the rim (toward the camera).
+func _overflow_rim_world() -> Vector3:
+	return global_transform * Vector3(0.0, _lip_local_y, 0.0) + _overflow_dir() * (_lip_radius_meters + wall_thickness_meters)
+
+
+func _overflow_dir() -> Vector3:
+	var axis: Vector3 = global_basis.y.normalized()
+	var down_in_rim: Vector3 = Vector3.DOWN - axis * Vector3.DOWN.dot(axis)
+	if down_in_rim.length_squared() > 0.01:
+		return down_in_rim.normalized()
+	return Vector3.BACK
 
 
 ## Invert the frustum volume table: local surface height + radius for the current volume.
@@ -701,7 +739,7 @@ func _update_pouring(delta: float) -> void:
 	pour_rate_m3_s = 0.0
 	var liquid_m3: float = mixture.get_liquid_volume_m3()
 	if not open_top or liquid_m3 <= MIN_LIQUID_M3:
-		_stop_stream()
+		_stop_stream_or_overflow()
 		return
 
 	var xf: Transform3D = global_transform
@@ -719,7 +757,7 @@ func _update_pouring(delta: float) -> void:
 	var slope_rise: float = -(surface_slope.x * (lip.x - surface_world.x) + surface_slope.y * (lip.z - surface_world.z))
 	var head_m: float = surface_world.y + slope_rise - lip.y
 	if head_m <= 0.0:
-		_stop_stream()
+		_stop_stream_or_overflow()
 		return
 
 	# Weir discharge throttled by viscosity: thin liquids gush, syrups ooze.
@@ -737,9 +775,12 @@ func _update_pouring(delta: float) -> void:
 	var dst: MixtureContainer = null
 	if receiver != null and receiver.open_top and _pour_ray.get_collision_normal().y > 0.5:
 		dst = receiver.mixture
+	var spill_color: Color = mixture.get_contents_color()
 	var moved_kg: float = mixture.transfer_liquid_volume_to(dst, volume_m3)
 	if dst == null:
 		spilled_mass_kg += moved_kg
+		var land: Vector3 = _pour_ray.get_collision_point() if _pour_ray.is_colliding() else spout + Vector3(0.0, -POUR_RAY_LENGTH_METERS, 0.0)
+		SpillPuddles3D.spill(self, land, volume_m3, spill_color, viscosity_pas)
 
 	is_pouring = true
 	pour_rate_m3_s = volume_m3 / maxf(delta, 1e-6)
@@ -813,6 +854,28 @@ func _update_foam_and_bubbles(delta: float) -> void:
 
 func _stop_stream() -> void:
 	_stream.emitting = false
+	_splash.emitting = false
+
+
+## No pour: if the glass is brimming over, show the overflow running down its
+## outside instead of a stream from the lip.
+func _stop_stream_or_overflow() -> void:
+	if overflow_m3_s <= 1e-7:
+		_stop_stream()
+		return
+	var color: Color = mixture.get_contents_color() if mixture.get_liquid_volume_m3() > 0.0 else Color(0.7, 0.8, 0.9, 0.5)
+	color.a = clampf(color.a + 0.4, 0.0, 1.0)
+	var viscosity_pas: float = mixture.get_liquid_viscosity_pas()
+	var width_m: float = clampf(sqrt(overflow_m3_s / 0.05) * 0.6, 0.0015, 0.012)
+	_stream.global_transform = Transform3D(Basis.IDENTITY, _overflow_rim_world())
+	_stream_process.direction = (Vector3.DOWN * 0.9 + _overflow_dir() * 0.1).normalized()
+	_stream_process.initial_velocity_min = 0.08
+	_stream_process.initial_velocity_max = 0.12
+	_stream_process.scale_min = width_m / STREAM_REFERENCE_WIDTH_METERS
+	_stream_process.scale_max = _stream_process.scale_min
+	_stream_process.color = color
+	_stream.trail_lifetime = clampf(0.12 + viscosity_pas * 0.05, 0.12, 0.5)
+	_stream.emitting = true
 	_splash.emitting = false
 
 

@@ -61,11 +61,11 @@ func _physics_process(_delta: float) -> bool:
 		_click(_click_pos, true)
 	if _tick == 162:
 		_click(_click_pos, false)  # a quick click: released where it was pressed
-	if _tick == 175:
+	if _tick == 175 - 0:
 		_check(_grabber.held_body == _vial, "a quick click keeps holding the flask without holding the button")
 		_click(_click_pos, true)
 		_click(_click_pos, false)
-		_check(_grabber.held_body == null, "a second click puts it down")
+		_check(_grabber.placing or _grabber.held_body == null, "a second click starts putting it down")
 	if _tick == 180:
 		# Easy hammer: hold it over a granite rock and click until it cracks.
 		var hammer: Hammer3D = _bench.get_node("MineralLab/Hammer") as Hammer3D
@@ -74,6 +74,8 @@ func _physics_process(_delta: float) -> bool:
 		_hammer = hammer
 		_hammer.freeze = true
 		_hammer.global_position = AnvilLoader.anvil_top(anvil) + Vector3(0.0, 0.12, 0.0)
+	if _tick == 280:
+		_check(_grabber.held_body == null, "the hands finish putting it down by themselves")
 	if _tick > 190 and _tick < 400 and _hammer != null and (_tick - 190) % 25 == 0 and is_instance_valid(_rock):
 		_hammer._cooldown = 0.0
 		if _hammer.click_use():

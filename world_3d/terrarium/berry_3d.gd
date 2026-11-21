@@ -13,6 +13,7 @@ var _burst: bool = false
 
 func _ready() -> void:
 	collision_layer = SimConstants.LAYER_SOLID_REAGENT
+	Flat2D.lock(self)
 	collision_mask = SimConstants.LAYER_STATIC_BENCH | SimConstants.LAYER_SOLID_REAGENT | SimConstants.LAYER_RIGID_VESSEL
 	mass = berry_mass_kg
 	angular_damp = 4.0
