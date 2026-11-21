@@ -71,6 +71,16 @@ func _process(_delta: float) -> void:
 		_seal_demo(bench)
 	if _args.has("easy"):
 		_easy_demo(bench)
+	if _args.has("pourshot") and _frames == SHOT_FRAME - 5:
+		# Mid-pour still: spirits into the beaker, honey onto the bench.
+		var beaker: Vessel3D = bench.get_node("Vessels/Beaker") as Vessel3D
+		var spirits: Vessel3D = bench.get_node("Vessels/FlaskSpirits") as Vessel3D
+		var honey: Vessel3D = bench.get_node("Vessels/FlaskHoney") as Vessel3D
+		for pair: Array in [[spirits, beaker.global_position + Vector3(-0.07, 0.17, 0.0), 1.95], [honey, Vector3(-0.32, 1.05, 0.3), 2.2]]:
+			var v: Vessel3D = pair[0]
+			v.freeze_mode = RigidBody3D.FREEZE_MODE_KINEMATIC
+			v.freeze = true
+			v.global_transform = Transform3D(Basis(Vector3(0.0, 0.0, -1.0), float(pair[2])), pair[1])
 	if _args.has("noliquid") and _frames == 50:
 		for v: Vessel3D in Vessel3D.all_vessels:
 			var l: Node3D = v.get_node_or_null("Liquid") as Node3D

@@ -66,11 +66,11 @@ const MAX_OMEGA_DT: float = 0.3
 
 @export_group("Carry feel")
 ## Top speed the hand moves held items across the bench (m/s).
-@export var carry_speed_m_s: float = 1.1
+@export var carry_speed_m_s: float = 0.55
 ## Top speed with Shift held, for careful placement.
-@export var precise_speed_m_s: float = 0.3
+@export var precise_speed_m_s: float = 0.18
 ## How fast items lift to / lower from the carry height (m/s).
-@export var lift_speed_m_s: float = 0.9
+@export var lift_speed_m_s: float = 0.5
 ## Items are let go with at most this speed so they don't skid off (m/s).
 @export var release_speed_m_s: float = 0.5
 ## Pick tolerance around the cursor for the mouse, in screen pixels.
@@ -124,6 +124,8 @@ const POUR_EXIT_METERS: float = 0.11
 const ASSIST_DWELL_S: float = 0.18
 const POUR_FULL_FRACTION: float = 0.93
 const POUR_MAX_ROLL_RAD: float = 2.1
+## A comfortable assisted pour: ~25 mL/s, scaled by the wheel (0.25x..3x).
+const POUR_TARGET_RATE_M3_S: float = 2.5e-5
 ## Stir and swirl strength.
 const STIR_RAD_PER_PX: float = 0.02
 const MAX_STIR_RAD_S: float = 12.0
@@ -133,7 +135,7 @@ const ARM_TRAVEL_METERS: float = 0.07
 const ARM_HOLD_SECONDS: float = 1.2
 ## How close (left/right) the item must be to a free seat to glide into it.
 const SEAT_CATCH_METERS: float = 0.045
-const PLACE_TIMEOUT_S: float = 1.6
+const PLACE_TIMEOUT_S: float = 2.6
 var _gravity_vector: Vector3 = Vector3.DOWN * SimConstants.GRAVITY_M_S2
 var _pick_ray: RayCast3D
 var _pick_cast: ShapeCast3D
@@ -152,6 +154,8 @@ var _assist_dwell_s: float = 0.0
 var _assist_suppressed: Vessel3D = null
 var _assist_note: String = ""
 var _pour_side: float = 1.0
+## Wheel while pouring: faster or slower (1 = normal).
+var _pour_speed: float = 1.0
 var _assist_rolled: bool = false
 var _wobble_roll_rad: float = 0.0
 ## Pointer gestures, measured from raw motion: how fast it moves (px/s) and
@@ -261,10 +265,16 @@ func _unhandled_input(event: InputEvent) -> void:
 				_mouse_tilting = mb.pressed
 			MOUSE_BUTTON_WHEEL_UP:
 				if mb.pressed and held_body != null:
-					_add_roll(wheel_tilt_step_rad)
+					if pour_target != null:
+						_pour_speed = clampf(_pour_speed * 1.25, 0.25, 3.0)
+					else:
+						_add_roll(wheel_tilt_step_rad)
 			MOUSE_BUTTON_WHEEL_DOWN:
 				if mb.pressed and held_body != null:
-					_add_roll(-wheel_tilt_step_rad)
+					if pour_target != null:
+						_pour_speed = clampf(_pour_speed / 1.25, 0.25, 3.0)
+					else:
+						_add_roll(-wheel_tilt_step_rad)
 	elif event is InputEventMouseMotion:
 		var mm: InputEventMouseMotion = event as InputEventMouseMotion
 		_pointer_screen = mm.position
@@ -750,7 +760,7 @@ func _update_assists(cursor: Vector3, dt: float) -> Variant:
 		_wobble_roll_rad = move_toward(_wobble_roll_rad, 0.0, 2.0 * dt)
 	# Ease the tilt back upright once a pour has ended.
 	if pour_target == null and _assist_rolled:
-		pour_roll_rad = move_toward(pour_roll_rad, 0.0, 3.0 * dt)
+		pour_roll_rad = move_toward(pour_roll_rad, 0.0, 1.8 * dt)
 		if absf(pour_roll_rad) < 1e-3:
 			pour_roll_rad = 0.0
 			_assist_rolled = false
@@ -808,14 +818,19 @@ func _pour_into(vessel: Vessel3D, target: Vessel3D, dt: float) -> Variant:
 	var lip: Vector3 = vessel.get_pour_lip_world()
 	var over: bool = absf(lip.x - mouth.x) < target.get_lip_radius_meters() * 0.8 and absf(lip.z - mouth.z) < target.get_lip_radius_meters() * 0.8
 	if over:
-		# Tip quickly until it starts to pour, then creep on as it empties.
-		var rate: float = 0.35 if vessel.is_pouring else 1.8
-		pour_roll_rad = _pour_side * minf(absf(pour_roll_rad) + rate * dt, POUR_MAX_ROLL_RAD)
+		# Ease over, tip until it starts to pour, then hold a steady flow:
+		# tip on gently as it empties, ease back if it gushes.
+		var magnitude: float = absf(pour_roll_rad)
+		var rate: float = 0.22 if vessel.is_pouring else lerpf(0.45, 1.0, smoothstep(0.0, 0.6, magnitude))
+		if vessel.is_pouring and vessel.pour_rate_m3_s > POUR_TARGET_RATE_M3_S * _pour_speed:
+			rate = -0.25
+		pour_roll_rad = _pour_side * clampf(magnitude + rate * dt, 0.0, POUR_MAX_ROLL_RAD)
 	elif not vessel.is_pouring:
 		pour_roll_rad = _pour_side * minf(absf(pour_roll_rad), 0.45)
 	var outer_r: float = vessel.profile.outer_radius_meters if vessel.profile != null else vessel.inner_radius_meters + vessel.wall_thickness_meters
 	var clearance: float = 0.022 + outer_r * 0.6
-	var lip_offset: Vector3 = vessel.get_pour_lip_world() - vessel.global_position
+	# Aim where the stream lands (a little ahead of the lip) at the mouth.
+	var lip_offset: Vector3 = vessel.get_pour_lip_world() - vessel.global_position + vessel.stream_offset_world
 	var want: Vector3 = Vector3(mouth.x, mouth.y + clearance, mouth.z) - lip_offset
 	# Keep the whole glass above the other rim at its current tilt, so it
 	# never rests on it (and can't tip if it does).
@@ -883,7 +898,7 @@ func _describe_assist(vessel: Vessel3D, tool: StirTool3D) -> String:
 	if tap_target != null:
 		return "Full  ·  move away" if tap_target.filling == null else "Filling with water  ·  move away to stop"
 	if pour_target != null:
-		return "Pouring into the %s  ·  move away or click to stop" % _vessel_label(pour_target)
+		return "Pouring into the %s  ·  wheel: faster/slower  ·  move away or click to stop" % _vessel_label(pour_target)
 	if not dock_seat.is_empty():
 		return "Click to set it in the %s" % ("rack" if (dock_seat["stand"] as SupportStand3D).kind == SupportStand3D.Kind.TUBE_RACK else "cork ring")
 	if stir_target != null:
@@ -911,7 +926,7 @@ func _update_placing() -> void:
 	var dt: float = 1.0 / float(Engine.physics_ticks_per_second)
 	_place_time_s += dt
 	_assist_note = "Putting it down"
-	pour_roll_rad = move_toward(pour_roll_rad, 0.0, 4.0 * dt)
+	pour_roll_rad = move_toward(pour_roll_rad, 0.0, 2.2 * dt)
 	_wobble_roll_rad = move_toward(_wobble_roll_rad, 0.0, 4.0 * dt)
 	var body: RigidBody3D = held_body
 	var p: Vector3 = body.global_position
@@ -936,7 +951,7 @@ func _update_placing() -> void:
 		var rest: float = (surface + _half_height + 0.004) if not is_nan(surface) else p.y
 		want = Vector3(_place_x, rest if upright > 0.97 and over else _target_world.y, _place_z)
 		done = over and upright > 0.995 and absf(p.y - rest) < 0.008
-	var step: float = 0.6 * dt
+	var step: float = 0.35 * dt
 	_target_world = _target_world.move_toward(want, step)
 	# Settled: the hand has reached the spot and the glass has stopped moving
 	# (it may be resting a touch high on something), so let go.

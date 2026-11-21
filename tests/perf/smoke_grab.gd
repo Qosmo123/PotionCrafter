@@ -50,7 +50,7 @@ func _physics_process(_delta: float) -> bool:
 		_max_speed = maxf(_max_speed, Vector2(_vial.linear_velocity.x, _vial.linear_velocity.z).length())
 	if _tick == 150:
 		_check(_max_speed <= _grabber.carry_speed_m_s * 1.35, "a pointer flick moves the vial at a calm speed (max %.2f m/s)" % _max_speed)
-		_check(_max_speed > 0.3, "the vial still follows the pointer (max %.2f m/s)" % _max_speed)
+		_check(_max_speed > _grabber.carry_speed_m_s * 0.3, "the vial still follows the pointer (max %.2f m/s)" % _max_speed)
 		_vial.linear_velocity = Vector3(3.0, 0.0, 0.0)
 		_grabber.release()
 		_check(_vial.linear_velocity.length() <= _grabber.release_speed_m_s + 1e-4, "letting go caps the speed (%.2f m/s)" % _vial.linear_velocity.length())

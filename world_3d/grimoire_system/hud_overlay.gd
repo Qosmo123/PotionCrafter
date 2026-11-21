@@ -5,6 +5,8 @@ extends CanvasLayer
 
 var _volume_sliders: Dictionary = {}
 var _assist_hint: Label
+var _inspect_target: Object = null
+var _inspect_wait: float = 0.0
 var _syncing_volumes: bool = false
 
 const TOAST_SECONDS: float = 3.2
@@ -12,7 +14,8 @@ const STATION_RUNES: PackedStringArray = ["☿", "◆", "⊕"]  # alchemical gly
 const STATION_NAMES: PackedStringArray = ["Potion Bench", "Mineral Lab", "Science Bench"]
 const HELP_TEXT: String = """[b][color=#F4D06F]Hands[/color][/b]
   Click  ·  pick something up, move the mouse, click again to put it down (dragging works too)
-  Pour  ·  hold a vessel over another one: it tips and pours by itself (move away or click to stop)
+  Pour  ·  hold a vessel over another one: it tips and pours by itself (wheel: faster/slower; move away or click to stop)
+  Info  ·  rest the cursor on something for its name; hold Alt for the full card
   Stir  ·  hold a rod, spoon or whisk over a vessel, then wiggle or circle the mouse (or hold S)
   Swirl  ·  holding a glass, circle the mouse (or hold S) to swish it round
   Put down  ·  click again: vials glide into the rack, round flasks onto cork rings, glass onto the stove, burner or tap tray
@@ -222,8 +225,17 @@ func _ready() -> void:
 	_shell.add_child(_coins)
 
 	_inspector = PanelContainer.new()
-	_inspector.add_theme_stylebox_override(&"panel", CosmicTheme.glass(CosmicTheme.PRISM_CYAN, 14, 1))
-	CosmicTheme.frost(_inspector)
+	# Slim pill: one line by default (hold Alt for the full card).
+	var pill: StyleBoxFlat = StyleBoxFlat.new()
+	pill.bg_color = Color(CosmicTheme.DEEP, 0.78)
+	pill.set_corner_radius_all(8)
+	pill.content_margin_left = 9
+	pill.content_margin_right = 9
+	pill.content_margin_top = 4
+	pill.content_margin_bottom = 4
+	pill.border_color = Color(CosmicTheme.PRISM_CYAN, 0.35)
+	pill.set_border_width_all(1)
+	_inspector.add_theme_stylebox_override(&"panel", pill)
 	_inspector.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_inspector.visible = false
 	_shell.add_child(_inspector)
@@ -231,12 +243,12 @@ func _ready() -> void:
 	_inspector_label.bbcode_enabled = true
 	_inspector_label.fit_content = true
 	_inspector_label.scroll_active = false
-	_inspector_label.custom_minimum_size = Vector2(340, 0)
+	_inspector_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	_inspector_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_inspector_label.add_theme_font_size_override(&"normal_font_size", 15)
+	_inspector_label.add_theme_font_size_override(&"normal_font_size", 13)
 	_inspector_label.add_theme_color_override(&"default_color", CosmicTheme.TEXT)
 	_inspector_label.add_theme_font_override(&"bold_font", CosmicTheme.display_font())
-	_inspector_label.add_theme_font_size_override(&"bold_font_size", 18)
+	_inspector_label.add_theme_font_size_override(&"bold_font_size", 14)
 	_inspector.add_child(_inspector_label)
 
 	_help = PanelContainer.new()
@@ -656,14 +668,25 @@ func _process(delta: float) -> void:
 	if book_open or _help.visible or camera == null:
 		_inspector.visible = false
 		return
+	# Hidden while carrying (the hint line at the bottom says what is going
+	# on); otherwise a one-line label after resting on something briefly.
 	var mouse: Vector2 = get_viewport().get_mouse_position()
-	var target: Object = grabber.held_body if grabber != null and grabber.held_body != null else _pick(mouse)
-	var text: String = describe(target)
+	var target: Object = null if grabber != null and grabber.held_body != null else _pick(mouse)
+	if target != _inspect_target:
+		_inspect_target = target
+		_inspect_wait = 0.35
+	_inspect_wait -= delta
+	var detailed: bool = Input.is_key_pressed(KEY_ALT)
+	var text: String = (describe(target) if detailed else describe_short(target)) if _inspect_wait <= 0.0 or detailed else ""
 	_inspector.visible = text != ""
 	if _inspector.visible:
-		_inspector_label.text = text
+		if _inspector_label.text != text:
+			_inspector_label.text = text
+			_inspector_label.custom_minimum_size = Vector2(320.0 if detailed else 0.0, 0.0)
+			_inspector_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART if detailed else TextServer.AUTOWRAP_OFF
+			_inspector.reset_size()
 		var vp: Vector2 = get_viewport().get_visible_rect().size
-		var pos: Vector2 = mouse + Vector2(22.0, 18.0)
+		var pos: Vector2 = mouse + Vector2(16.0, 14.0)
 		pos.x = minf(pos.x, vp.x - _inspector.size.x - 8.0)
 		pos.y = minf(pos.y, vp.y - _inspector.size.y - 8.0)
 		_inspector.position = pos
@@ -676,6 +699,29 @@ func _pick(screen: Vector2) -> Object:
 		SimConstants.LAYER_RIGID_VESSEL | SimConstants.LAYER_SOLID_REAGENT | SimConstants.LAYER_TACTILE_TOOL)
 	var hit: Dictionary = space.intersect_ray(query)
 	return hit.get("collider", null)
+
+
+## One short line for the hover label: name plus the most useful number.
+static func describe_short(target: Object) -> String:
+	if target is Vessel3D:
+		var v: Vessel3D = target as Vessel3D
+		var m: MixtureContainer = v.mixture
+		if m == null or m.get_liquid_volume_m3() * 1e6 < 0.5:
+			return "Empty %s" % _vessel_kind(v)
+		var tag: String = "  [color=#FF9A5C]burning[/color]" if m.burning else ("  [color=#8FE9FF]boiling[/color]" if v.is_boiling else "")
+		return "[b]%s[/b]  [color=#5CE1E6]%.0f mL · %.0f °C[/color]%s" % [Vessel3D.contents_tag_text(m, v.foam_height_meters), m.get_liquid_volume_m3() * 1e6, m.temperature_kelvin - 273.15, tag]
+	if target is Rock3D:
+		var rock: Rock3D = target as Rock3D
+		return "[b]%s[/b]  [color=#%s]%s[/color]" % [rock.describe_name(), CosmicTheme.rarity_aura(rock.mineral.rarity).to_html(false), "★".repeat(rock.mineral.rarity + 1)]
+	if target is Hammer3D:
+		return "[b]Hammer[/b]"
+	if target is MachineHandle3D:
+		return "[b]Handle[/b]  [color=#B3ADD6]drag it[/color]"
+	if target is StirTool3D:
+		return "[b]%s[/b]" % String((target as StirTool3D).name).capitalize()
+	if target is Berry3D:
+		return "[b]%s[/b]" % (target as Berry3D).juice.display_name.replace(" Juice", "")
+	return ""
 
 
 static func describe(target: Object) -> String:

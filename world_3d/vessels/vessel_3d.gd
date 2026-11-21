@@ -83,6 +83,8 @@ var suspension_level: float = 0.0
 var foam_overflow_rate_m_s: float = 0.0
 ## Liquid running over the brim this tick (m^3/s), from overfilling.
 var overflow_m3_s: float = 0.0
+## Where the pour stream lands relative to the lip (horizontal offset, m).
+var stream_offset_world: Vector3 = Vector3.ZERO
 ## Corked and labelled (bottled). Sealed vessels neither pour nor vent.
 var sealed: bool = false
 
@@ -116,6 +118,7 @@ var _liquid_material: ShaderMaterial
 var _liquid_mesh: MeshInstance3D
 var _pour_ray: RayCast3D
 var _stream: GPUParticles3D
+var _pour_stream: PourStream3D
 var _stream_process: ParticleProcessMaterial
 var _splash: GPUParticles3D
 var _splash_process: ParticleProcessMaterial
@@ -560,6 +563,9 @@ func _build_pour_rig() -> void:
 	_stream.visibility_aabb = AABB(Vector3(-2.0, -2.0, -2.0), Vector3(4.0, 4.0, 4.0))
 	_stream.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(_stream)
+	_pour_stream = PourStream3D.new()
+	_pour_stream.name = &"PourStream"
+	add_child(_pour_stream)
 
 	# Splash crown where the stream lands.
 	_splash_process = ParticleProcessMaterial.new()
@@ -768,9 +774,21 @@ func _update_pouring(delta: float) -> void:
 	var volume_m3: float = minf(flow_m3_s * delta, liquid_m3)
 
 	var spout: Vector3 = lip + pour_dir * 0.003
+	# The stream leaves the lip mostly downward (it clings to the glass), with
+	# a little forward speed; it lands where that arc meets the surface below.
+	var exit_speed: float = sqrt(2.0 * _gravity_m_s2 * head_m)
+	var stream_speed: float = maxf(exit_speed / (1.0 + viscosity_pas * 4.0), 0.05)
+	var forward: Vector3 = Vector3(pour_dir.x, 0.0, pour_dir.z)
+	forward = forward.normalized() if forward.length_squared() > 1e-6 else Vector3.ZERO
+	var stream_velocity: Vector3 = forward * minf(stream_speed * 0.55, 0.14) + Vector3.DOWN * stream_speed * 0.6
 	_pour_ray.global_transform = Transform3D(Basis.IDENTITY, spout)
 	_pour_ray.target_position = Vector3(0.0, -POUR_RAY_LENGTH_METERS, 0.0)
 	_pour_ray.force_raycast_update()
+	var rough_y: float = _pour_ray.get_collision_point().y if _pour_ray.is_colliding() else spout.y - POUR_RAY_LENGTH_METERS
+	var landing: Vector3 = PourStream3D.point_at_height(spout, stream_velocity, rough_y)
+	_pour_ray.global_transform = Transform3D(Basis.IDENTITY, Vector3(landing.x, spout.y, landing.z))
+	_pour_ray.force_raycast_update()
+	stream_offset_world = Vector3(landing.x - spout.x, 0.0, landing.z - spout.z)
 	var receiver: Vessel3D = _pour_ray.get_collider() as Vessel3D
 	var dst: MixtureContainer = null
 	if receiver != null and receiver.open_top and _pour_ray.get_collision_normal().y > 0.5:
@@ -784,27 +802,24 @@ func _update_pouring(delta: float) -> void:
 
 	is_pouring = true
 	pour_rate_m3_s = volume_m3 / maxf(delta, 1e-6)
-	var exit_speed: float = sqrt(2.0 * _gravity_m_s2 * head_m)
 	var stream_color: Color = mixture.get_contents_color()
-	stream_color.a = clampf(stream_color.a + 0.4, 0.0, 1.0)
 
 	# Stream width from continuity (Q = A v); viscous streams stay thick and slow.
-	var stream_speed: float = maxf(exit_speed / (1.0 + viscosity_pas * 4.0), 0.05)
-	var width_m: float = clampf(2.0 * sqrt(flow_m3_s / (PI * stream_speed)), 0.0015, 0.02)
-	_stream.global_transform = Transform3D(Basis.IDENTITY, spout)
-	_stream_process.direction = (pour_dir * 0.8 + Vector3.DOWN * 0.2).normalized()
-	_stream_process.initial_velocity_min = stream_speed * 0.95
-	_stream_process.initial_velocity_max = stream_speed * 1.05
-	_stream_process.scale_min = width_m / STREAM_REFERENCE_WIDTH_METERS
-	_stream_process.scale_max = _stream_process.scale_min
-	_stream_process.color = stream_color
-	_stream.trail_lifetime = clampf(0.12 + viscosity_pas * 0.05, 0.12, 0.5)
-	_stream.emitting = true
+	# Syrups fall slowly and hold together in a thick rope.
+	var min_width_m: float = 0.0025 + 0.005 * clampf(viscosity_pas / 4.0, 0.0, 1.0)
+	var width_m: float = clampf(2.0 * sqrt(flow_m3_s / (PI * stream_speed)), min_width_m, minf(0.016, _lip_radius_meters * 1.1))
+	var land_y: float = _pour_ray.get_collision_point().y if _pour_ray.is_colliding() else spout.y - POUR_RAY_LENGTH_METERS
+	if receiver != null and dst != null:
+		# Into a vessel: the stream ends at its liquid surface, not its rim.
+		land_y = minf(land_y, receiver.get_surface_point_world().y)
+	var aura: Color = mixture.get_emission_hdr()
+	_pour_stream.show_arc(spout, stream_velocity, land_y, width_m, stream_color, viscosity_pas, clampf((aura.r + aura.g + aura.b) * 0.3, 0.0, 2.0))
+	_stream.emitting = false
 
 	if _pour_ray.is_colliding():
-		var impact_speed: float = sqrt(stream_speed * stream_speed + 2.0 * _gravity_m_s2 * maxf(spout.y - _pour_ray.get_collision_point().y, 0.0))
+		var impact_speed: float = sqrt(stream_speed * stream_speed + 2.0 * _gravity_m_s2 * maxf(spout.y - land_y, 0.0))
 		var splashiness: float = clampf(flow_m3_s / 3e-5, 0.0, 1.0) / (1.0 + viscosity_pas * 60.0)
-		_splash.global_transform = Transform3D(Basis.IDENTITY, _pour_ray.get_collision_point() + Vector3.UP * 0.002)
+		_splash.global_transform = Transform3D(Basis.IDENTITY, Vector3(landing.x, land_y + 0.002, landing.z))
 		_splash_process.initial_velocity_min = impact_speed * 0.15
 		_splash_process.initial_velocity_max = impact_speed * 0.4
 		_splash_process.color = stream_color
@@ -855,6 +870,8 @@ func _update_foam_and_bubbles(delta: float) -> void:
 func _stop_stream() -> void:
 	_stream.emitting = false
 	_splash.emitting = false
+	_pour_stream.hide_stream()
+	stream_offset_world = Vector3.ZERO
 
 
 ## No pour: if the glass is brimming over, show the overflow running down its
@@ -866,16 +883,14 @@ func _stop_stream_or_overflow() -> void:
 	var color: Color = mixture.get_contents_color() if mixture.get_liquid_volume_m3() > 0.0 else Color(0.7, 0.8, 0.9, 0.5)
 	color.a = clampf(color.a + 0.4, 0.0, 1.0)
 	var viscosity_pas: float = mixture.get_liquid_viscosity_pas()
-	var width_m: float = clampf(sqrt(overflow_m3_s / 0.05) * 0.6, 0.0015, 0.012)
-	_stream.global_transform = Transform3D(Basis.IDENTITY, _overflow_rim_world())
-	_stream_process.direction = (Vector3.DOWN * 0.9 + _overflow_dir() * 0.1).normalized()
-	_stream_process.initial_velocity_min = 0.08
-	_stream_process.initial_velocity_max = 0.12
-	_stream_process.scale_min = width_m / STREAM_REFERENCE_WIDTH_METERS
-	_stream_process.scale_max = _stream_process.scale_min
-	_stream_process.color = color
-	_stream.trail_lifetime = clampf(0.12 + viscosity_pas * 0.05, 0.12, 0.5)
-	_stream.emitting = true
+	var width_m: float = clampf(sqrt(overflow_m3_s / 0.05) * 0.6, 0.002, 0.012)
+	var rim: Vector3 = _overflow_rim_world()
+	_pour_ray.global_transform = Transform3D(Basis.IDENTITY, rim)
+	_pour_ray.target_position = Vector3(0.0, -POUR_RAY_LENGTH_METERS, 0.0)
+	_pour_ray.force_raycast_update()
+	var land_y: float = _pour_ray.get_collision_point().y if _pour_ray.is_colliding() else rim.y - 0.2
+	_pour_stream.show_arc(rim, _overflow_dir() * 0.02 + Vector3.DOWN * 0.08, land_y, width_m, color, viscosity_pas)
+	_stream.emitting = false
 	_splash.emitting = false
 
 

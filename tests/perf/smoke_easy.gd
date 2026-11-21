@@ -1,15 +1,20 @@
 extends SceneTree
 ## Smoke test for the easy controls on the real bench (side view).
 ## Usage: godot --path . --script res://tests/perf/smoke_easy.gd
+## Each step waits for its outcome (with a time limit) rather than checking
+## at fixed ticks, so it holds whatever the hand speeds are.
 ##   Pour   hold the moonwater flask over the beaker: it tips and pours by
 ##          itself; moving away stops it and it comes back upright.
-##   Stir   hold the glass rod over the beaker and circle the pointer: the
-##          beaker's liquid spins.
-##   Swirl  hold a flask in the open and circle the pointer: its liquid spins.
-##   2D     loose objects stay in their lane; a held one is free in depth.
+##   Stir   hold the glass rod over the beaker and circle the pointer.
+##   Swirl  hold a flask in the open and circle the pointer.
+##   Seats  a vial into a free rack socket, a round flask onto a cork ring.
+##   Tap    the beaker on the tap tray fills and stops; left running it
+##          overflows into a puddle.
+##   Heat   stove knob settings; the beaker on the lit burner warms up.
+
+const TICKS_PER_S: float = 60.0
 
 var _bench: Node3D
-var _tick: int = 0
 var _failures: PackedStringArray = PackedStringArray()
 var _grabber: TactileGrabber3D
 var _camera: Camera3D
@@ -18,21 +23,19 @@ var _beaker: Vessel3D
 var _spirits: Vessel3D
 var _rod: StirTool3D
 var _soda: Vessel3D
-var _seat_x: float = 0.0
-var _ring_x: float = 0.0
 var _tap: WaterTap3D
 var _burner: Burner3D
-var _start_kelvin: float = 0.0
-var _beaker_start_m3: float = 0.0
-var _saw_pour_target: bool = false
-var _max_roll: float = 0.0
-var _max_beaker_swirl: float = 0.0
-var _saw_stir_target: bool = false
-var _max_spirits_swirl: float = 0.0
-var _saw_swirling: bool = false
+var _rack: SupportStand3D
+var _ring: SupportStand3D
+
+var _step: int = 0
+var _step_ticks: int = 0
+var _total_ticks: int = 0
 var _phase: float = 0.0
-var _saw_pour_hint: bool = false
 var _swirl_center: Vector2 = Vector2.ZERO
+var _seen: Dictionary = {}
+var _value: float = 0.0
+var _beaker_start_m3: float = 0.0
 
 
 func _initialize() -> void:
@@ -46,6 +49,10 @@ func _initialize() -> void:
 	_spirits = _bench.get_node("Vessels/FlaskSpirits") as Vessel3D
 	_rod = _bench.get_node("StirTools/GlassRod") as StirTool3D
 	_soda = _bench.get_node("Vessels/VialSoda") as Vessel3D
+	_tap = _bench.get_node("Stands/WaterTap") as WaterTap3D
+	_burner = _bench.get_node("Stands/Burner") as Burner3D
+	_rack = _bench.get_node("Stands/TubeRack") as SupportStand3D
+	_ring = _bench.get_node("Stands/CorkRing3") as SupportStand3D
 
 
 func _screen_above(v: Vessel3D, up_m: float) -> Vector2:
@@ -60,132 +67,168 @@ func _circle_pointer(center: Vector2, radius_px: float) -> void:
 	_grabber._pointer_screen = p
 
 
+func _next() -> void:
+	_step += 1
+	_step_ticks = 0
+
+
+## True once `condition` holds, or once `seconds` have passed (then the
+## caller's checks report what went wrong).
+func _until(condition: bool, seconds: float) -> bool:
+	return condition or _step_ticks > int(seconds * TICKS_PER_S)
+
+
 func _physics_process(_delta: float) -> bool:
-	_tick += 1
-	if _tick == 60:
-		_check(_moon.axis_lock_angular_x and _moon.axis_lock_angular_y and not _moon.axis_lock_angular_z, "loose vessels only tip sideways (2D)")
-		_check(_beaker.mixture.get_liquid_volume_m3() < _beaker.capacity_m3 * 0.5, "the beaker has room to fill")
-		_beaker_start_m3 = _beaker.mixture.get_liquid_volume_m3()
-		_grabber.grab(_moon)
-		_grabber._pointer_screen = _screen_above(_beaker, 0.1)
-	if _tick > 60 and _tick < 330:
-		_grabber._pointer_screen = _screen_above(_beaker, 0.1)
-		_saw_pour_target = _saw_pour_target or _grabber.pour_target == _beaker
-		_saw_pour_hint = _saw_pour_hint or _grabber.assist_hint().begins_with("Pouring")
-		_max_roll = maxf(_max_roll, absf(_grabber.pour_roll_rad))
-	if _tick == 330:
-		var gained_ml: float = (_beaker.mixture.get_liquid_volume_m3() - _beaker_start_m3) * 1e6
-		_check(_saw_pour_target, "holding the flask over the beaker picks it as the pour target")
-		_check(_max_roll > 1.0, "the flask tips by itself (max %.2f rad)" % _max_roll)
-		_check(gained_ml > 5.0, "moonwater pours into the beaker (+%.1f mL, spilled %.1f g)" % [gained_ml, _moon.spilled_mass_kg * 1000.0])
-		_check(_saw_pour_hint, "the hint says it is pouring")
-		# Move well away to the left.
-		_grabber._pointer_screen = _camera.unproject_position(_beaker.global_position + Vector3(-0.42, 0.15, 0.0))
-	if _tick == 430:
-		_check(_grabber.pour_target == null, "moving away stops the pour")
-		_check(absf(_grabber.pour_roll_rad) < 0.05, "the flask comes back upright (roll %.2f)" % _grabber.pour_roll_rad)
-		_check(not _moon.is_pouring, "nothing pours once upright")
-		_grabber.release()
-	if _tick == 440:
-		_grabber.grab(_rod)
-		_grabber._pointer_screen = _screen_above(_beaker, 0.12)
-	if _tick > 450 and _tick < 640:
-		_circle_pointer(_screen_above(_beaker, 0.12), 26.0)
-		_saw_stir_target = _saw_stir_target or _grabber.stir_target == _beaker
-		_max_beaker_swirl = maxf(_max_beaker_swirl, absf(_beaker.mixture.swirl_rad_s))
-	if _tick == 640:
-		_check(_saw_stir_target, "holding the rod over the beaker starts stirring")
-		_check(_max_beaker_swirl > 2.0, "circling the pointer spins the beaker's liquid (%.1f rad/s)" % _max_beaker_swirl)
-		_grabber.release()
-	if _tick == 650:
-		_grabber.grab(_spirits)
-		_swirl_center = _camera.unproject_position(_spirits.global_position + Vector3(0.0, 0.25, 0.0))
-	if _tick > 660 and _tick < 820:
-		# Out in the open, away from other vessels.
-		_circle_pointer(_swirl_center, 30.0)
-		_saw_swirling = _saw_swirling or _grabber.swirling
-		_max_spirits_swirl = maxf(_max_spirits_swirl, absf(_spirits.mixture.swirl_rad_s))
-	if _tick == 820:
-		_check(_saw_swirling, "circling the pointer with a flask held swirls it")
-		_check(_max_spirits_swirl > 3.0, "the flask's liquid spins (%.1f rad/s)" % _max_spirits_swirl)
-		_grabber.put_down()
-	if _tick == 960:
-		_check(_grabber.held_body == null, "putting a flask down finishes by itself")
-		_check(_spirits.global_basis.y.y > 0.99, "it is set down upright")
-		# Seats: carry a vial to a free rack socket.
-		var rack: SupportStand3D = _bench.get_node("Stands/TubeRack") as SupportStand3D
-		_check(rack.seat_count() == 6, "the rack has six sockets")
-		_check(not rack.is_seat_free(0) and rack.is_seat_free(4), "the vials fill the first sockets, the rest are free")
-		_seat_x = rack.seat_floor_world(4).x
-		_grabber.grab(_soda)
-	if _tick > 960 and _tick < 1050:
-		_grabber._pointer_screen = _camera.unproject_position(Vector3(_seat_x, 0.97, -0.1))
-	if _tick == 1050:
-		var seat: Dictionary = _grabber.dock_seat
-		_check(not seat.is_empty() and int(seat.get("index", -1)) == 4, "over a free socket, the vial picks it as its seat (%s)" % str(seat.get("index", "none")))
-		_check(_grabber.assist_hint().begins_with("Click to set it"), "the hint offers the rack ('%s')" % _grabber.assist_hint())
-		_grabber.put_down()
-	if _tick == 1170:
-		_check(_grabber.held_body == null, "the vial is let go once seated")
-		_check(absf(_soda.global_position.x - _seat_x) < 0.006, "the vial stands in its socket (off by %.1f mm)" % (absf(_soda.global_position.x - _seat_x) * 1000.0))
-		_check(_soda.global_basis.y.y > 0.99, "the seated vial is upright")
-		# A round flask onto a free cork ring.
-		var ring: SupportStand3D = _bench.get_node("Stands/CorkRing3") as SupportStand3D
-		_ring_x = ring.seat_floor_world(0).x
-		_grabber.grab(_moon)
-	if _tick > 1170 and _tick < 1320:
-		_grabber._pointer_screen = _camera.unproject_position(Vector3(_ring_x, 1.05, -0.1))
-	if _tick == 1320:
-		_check(not _grabber.dock_seat.is_empty(), "over a free cork ring, the round flask picks it as its seat")
-		_grabber.put_down()
-	if _tick == 1460:
-		_check(_grabber.held_body == null, "the flask is let go once seated")
-		_check(absf(_moon.global_position.x - _ring_x) < 0.01, "the round flask sits in its cork ring (off by %.1f mm)" % (absf(_moon.global_position.x - _ring_x) * 1000.0))
-		_check(_moon.global_basis.y.y > 0.98, "the seated flask is upright")
-		# Water tap: set the beaker on the tap's tray.
-		_tap = _bench.get_node("Stands/WaterTap") as WaterTap3D
-		_beaker_start_m3 = _beaker.mixture.get_liquid_volume_m3()
-		_grabber.grab(_beaker)
-	if _tick > 1460 and _tick < 1640:
-		_grabber._pointer_screen = _camera.unproject_position(_tap.global_position + Vector3(0.0, 0.16, 0.0))
-	if _tick == 1640:
-		_check(not _grabber.dock_seat.is_empty(), "over the tap's tray, the beaker picks it as its seat")
-		_grabber.put_down()
-	if _tick == 2240:
-		_check(_grabber.held_body == null, "the beaker is set on the tray")
-		var frac: float = _beaker.get_fill_fraction()
-		_check(frac > 0.85 and frac < 0.95, "the tap fills it and stops when nearly full (%.0f%%)" % (frac * 100.0))
-		_check(SpillPuddles3D.total_volume_m3() < 1e-7, "no spills so far")
-		_tap.running_free = true
-	if _tick == 2600:
-		_check(_beaker.spilled_mass_kg > 0.005, "left running, the full beaker overflows (%.1f g)" % (_beaker.spilled_mass_kg * 1000.0))
-		_check(SpillPuddles3D.total_volume_m3() > 2e-6, "the overflow makes a puddle on the bench (%.1f mL)" % (SpillPuddles3D.total_volume_m3() * 1e6))
-		_tap.running_free = false
-		# Burner: carry the beaker of water onto the gauze, light it.
-		_burner = _bench.get_node("Stands/Burner") as Burner3D
-		var plate: HotPlate3D = _bench.get_node("HotPlate") as HotPlate3D
-		plate.set_level(1)
-		_check(absf(plate.plate_temperature_kelvin - 420.0) < 0.1 and plate.heating_enabled, "the stove knob's low setting is 420 K")
-		plate.set_level(0)
-		_check(not plate.heating_enabled, "the stove's off setting stops heating")
-		plate.set_level(3)
-		_grabber.grab(_beaker)
-	if _tick > 2600 and _tick < 2800:
-		_grabber._pointer_screen = _camera.unproject_position(_burner.global_position + Vector3(0.0, 0.3, 0.0))
-	if _tick == 2800:
-		_check(not _grabber.dock_seat.is_empty(), "over the burner, the beaker picks the gauze as its seat")
-		_grabber.put_down()
-		_burner.toggle()
-		_check(_burner.lit, "clicking the burner lights it")
-	if _tick == 2900:
-		_start_kelvin = _beaker.mixture.temperature_kelvin
-	if _tick == 3200:
-		var warmed: float = _beaker.mixture.temperature_kelvin - _start_kelvin
-		_check(_grabber.held_body == null and absf(_beaker.global_position.x - _burner.global_position.x) < 0.02, "the beaker sits on the burner")
-		_check(warmed > 1.0, "the lit burner heats the water (+%.1f K in 5 s)" % warmed)
-		_burner.toggle()
-		_finish()
-		return true
+	_total_ticks += 1
+	_step_ticks += 1
+	if _total_ticks < 60:
+		return false
+	match _step:
+		0:  # Pour the moonwater into the beaker.
+			_check(_moon.axis_lock_angular_x and _moon.axis_lock_angular_y and not _moon.axis_lock_angular_z, "loose vessels only tip sideways (2D)")
+			_check(_beaker.mixture.get_liquid_volume_m3() < _beaker.capacity_m3 * 0.5, "the beaker has room to fill")
+			_beaker_start_m3 = _beaker.mixture.get_liquid_volume_m3()
+			_grabber.grab(_moon)
+			_next()
+		1:
+			_grabber._pointer_screen = _screen_above(_beaker, 0.1)
+			if _grabber.pour_target == _beaker:
+				_seen["pour_target"] = true
+			if _grabber.assist_hint().begins_with("Pouring"):
+				_seen["pour_hint"] = true
+			_value = maxf(_value, absf(_grabber.pour_roll_rad))
+			if _until(_moon.mixture.get_liquid_volume_m3() < 1e-6, 12.0):
+				var gained_ml: float = (_beaker.mixture.get_liquid_volume_m3() - _beaker_start_m3) * 1e6
+				_check(_seen.has("pour_target"), "holding the flask over the beaker picks it as the pour target")
+				_check(_value > 1.0, "the flask tips by itself (max %.2f rad)" % _value)
+				_check(gained_ml > 5.0, "moonwater pours into the beaker (+%.1f mL, spilled %.1f g)" % [gained_ml, _moon.spilled_mass_kg * 1000.0])
+				_check(_moon.spilled_mass_kg < 0.002, "nothing spills on the way (%.1f g)" % (_moon.spilled_mass_kg * 1000.0))
+				_check(_seen.has("pour_hint"), "the hint says it is pouring")
+				_grabber._pointer_screen = _camera.unproject_position(_beaker.global_position + Vector3(-0.42, 0.15, 0.0))
+				_next()
+		2:  # Move away: the pour ends and the flask comes upright.
+			if _until(_grabber.pour_target == null and absf(_grabber.pour_roll_rad) < 0.02, 4.0):
+				_check(_grabber.pour_target == null, "moving away stops the pour")
+				_check(absf(_grabber.pour_roll_rad) < 0.05, "the flask comes back upright (roll %.2f)" % _grabber.pour_roll_rad)
+				_check(not _moon.is_pouring, "nothing pours once upright")
+				_grabber.release()
+				_grabber.grab(_rod)
+				_value = 0.0
+				_next()
+		3:  # Stir the beaker by circling the pointer.
+			if _step_ticks > 10:
+				_circle_pointer(_screen_above(_beaker, 0.12), 26.0)
+			if _grabber.stir_target == _beaker:
+				_seen["stir"] = true
+			_value = maxf(_value, absf(_beaker.mixture.swirl_rad_s))
+			if _until(_value > 2.0, 8.0):
+				_check(_seen.has("stir"), "holding the rod over the beaker starts stirring")
+				_check(_value > 2.0, "circling the pointer spins the beaker's liquid (%.1f rad/s)" % _value)
+				_grabber.release()
+				_grabber.grab(_spirits)
+				_swirl_center = _camera.unproject_position(_spirits.global_position + Vector3(0.0, 0.25, 0.0))
+				_value = 0.0
+				_next()
+		4:  # Swirl the flask by hand.
+			if _step_ticks > 10:
+				_circle_pointer(_swirl_center, 30.0)
+			if _grabber.swirling:
+				_seen["swirl"] = true
+			_value = maxf(_value, absf(_spirits.mixture.swirl_rad_s))
+			if _until(_value > 3.0 and _step_ticks > 60, 8.0):
+				_check(_seen.has("swirl"), "circling the pointer with a flask held swirls it")
+				_check(_value > 3.0, "the flask's liquid spins (%.1f rad/s)" % _value)
+				_grabber.put_down()
+				_next()
+		5:  # Put down: it finishes by itself, upright.
+			if _until(_grabber.held_body == null, 5.0):
+				_check(_grabber.held_body == null, "putting a flask down finishes by itself")
+				_next()
+		6:
+			if _until(_spirits.linear_velocity.length() < 0.01, 2.0):
+				_check(_spirits.global_basis.y.y > 0.99, "it is set down upright")
+				_check(_rack.seat_count() == 6, "the rack has six sockets")
+				_check(not _rack.is_seat_free(0) and _rack.is_seat_free(4), "the vials fill the first sockets, the rest are free")
+				_grabber.grab(_soda)
+				_next()
+		7:  # Carry a vial to a free socket.
+			var seat_x: float = _rack.seat_floor_world(4).x
+			_grabber._pointer_screen = _camera.unproject_position(Vector3(seat_x, 0.97, -0.1))
+			if _until(int(_grabber.dock_seat.get("index", -1)) == 4 and absf(_soda.global_position.x - seat_x) < 0.02, 8.0):
+				_check(int(_grabber.dock_seat.get("index", -1)) == 4, "over a free socket, the vial picks it as its seat (%s)" % str(_grabber.dock_seat.get("index", "none")))
+				_check(_grabber.assist_hint().begins_with("Click to set it"), "the hint offers the rack ('%s')" % _grabber.assist_hint())
+				_grabber.put_down()
+				_next()
+		8:
+			if _until(_grabber.held_body == null and _soda.linear_velocity.length() < 0.01, 6.0):
+				var seat_x2: float = _rack.seat_floor_world(4).x
+				_check(_grabber.held_body == null, "the vial is let go once seated")
+				_check(absf(_soda.global_position.x - seat_x2) < 0.006, "the vial stands in its socket (off by %.1f mm)" % (absf(_soda.global_position.x - seat_x2) * 1000.0))
+				_check(_soda.global_basis.y.y > 0.99, "the seated vial is upright")
+				_grabber.grab(_moon)
+				_next()
+		9:  # A round flask onto a free cork ring.
+			var ring_x: float = _ring.seat_floor_world(0).x
+			_grabber._pointer_screen = _camera.unproject_position(Vector3(ring_x, 1.05, -0.1))
+			if _until(not _grabber.dock_seat.is_empty() and absf(_moon.global_position.x - ring_x) < 0.03, 8.0):
+				_check(not _grabber.dock_seat.is_empty(), "over a free cork ring, the round flask picks it as its seat")
+				_grabber.put_down()
+				_next()
+		10:
+			if _until(_grabber.held_body == null and _moon.linear_velocity.length() < 0.01, 6.0):
+				var ring_x2: float = _ring.seat_floor_world(0).x
+				_check(_grabber.held_body == null, "the flask is let go once seated")
+				_check(absf(_moon.global_position.x - ring_x2) < 0.01, "the round flask sits in its cork ring (off by %.1f mm)" % (absf(_moon.global_position.x - ring_x2) * 1000.0))
+				_check(_moon.global_basis.y.y > 0.98, "the seated flask is upright")
+				_grabber.grab(_beaker)
+				_next()
+		11:  # The beaker onto the tap's tray.
+			_grabber._pointer_screen = _camera.unproject_position(_tap.global_position + Vector3(0.0, 0.16, 0.0))
+			if _until(not _grabber.dock_seat.is_empty() and absf(_beaker.global_position.x - _tap.global_position.x) < 0.02, 8.0):
+				_check(not _grabber.dock_seat.is_empty(), "over the tap's tray, the beaker picks it as its seat")
+				_grabber.put_down()
+				_next()
+		12:
+			if _until(_grabber.held_body == null and _tap.filling == null and _tap.vessel_under() != null, 25.0):
+				var frac: float = _beaker.get_fill_fraction()
+				_check(_grabber.held_body == null, "the beaker is set on the tray")
+				_check(frac > 0.85 and frac < 0.95, "the tap fills it and stops when nearly full (%.0f%%)" % (frac * 100.0))
+				_check(_beaker.spilled_mass_kg < 1e-4, "no spills so far (%.1f g)" % (_beaker.spilled_mass_kg * 1000.0))
+				_tap.running_free = true
+				_next()
+		13:  # Left running, it overflows into a puddle.
+			if _until(SpillPuddles3D.total_volume_m3() > 2e-6, 12.0):
+				_check(_beaker.spilled_mass_kg > 0.002, "left running, the full beaker overflows (%.1f g)" % (_beaker.spilled_mass_kg * 1000.0))
+				_check(SpillPuddles3D.total_volume_m3() > 2e-6, "the overflow makes a puddle on the bench (%.1f mL)" % (SpillPuddles3D.total_volume_m3() * 1e6))
+				_tap.running_free = false
+				var plate: HotPlate3D = _bench.get_node("HotPlate") as HotPlate3D
+				plate.set_level(1)
+				_check(absf(plate.plate_temperature_kelvin - 420.0) < 0.1 and plate.heating_enabled, "the stove knob's low setting is 420 K")
+				plate.set_level(0)
+				_check(not plate.heating_enabled, "the stove's off setting stops heating")
+				plate.set_level(3)
+				_grabber.grab(_beaker)
+				_next()
+		14:  # The beaker onto the burner; light it.
+			_grabber._pointer_screen = _camera.unproject_position(_burner.global_position + Vector3(0.0, 0.3, 0.0))
+			if _until(not _grabber.dock_seat.is_empty() and absf(_beaker.global_position.x - _burner.global_position.x) < 0.02, 10.0):
+				_check(not _grabber.dock_seat.is_empty(), "over the burner, the beaker picks the gauze as its seat")
+				_grabber.put_down()
+				_burner.toggle()
+				_check(_burner.lit, "clicking the burner lights it")
+				_next()
+		15:
+			if _until(_grabber.held_body == null and _beaker.linear_velocity.length() < 0.01, 6.0):
+				_value = _beaker.mixture.temperature_kelvin
+				_next()
+		16:
+			if _step_ticks > 300:
+				var warmed: float = _beaker.mixture.temperature_kelvin - _value
+				_check(_grabber.held_body == null and absf(_beaker.global_position.x - _burner.global_position.x) < 0.02, "the beaker sits on the burner")
+				_check(warmed > 1.0, "the lit burner heats the water (+%.1f K in 5 s)" % warmed)
+				_burner.toggle()
+				_finish()
+				return true
 	return false
 
 
