@@ -471,6 +471,8 @@ func _process(_delta: float) -> void:
 	elif hammer != null:
 		_strike.text = "STRIKE  [Space]"
 	_load_rock.visible = LabCamera3D.instance != null and LabCamera3D.instance.station == 1
+	# The pinned formula belongs to the potion bench.
+	_pin_card.visible = _pin_shown != "" and (LabCamera3D.instance == null or LabCamera3D.instance.station == 0)
 	if LabCamera3D.instance != null:
 		for i: int in _station_buttons.size():
 			_station_buttons[i].button_pressed = LabCamera3D.instance.station == i

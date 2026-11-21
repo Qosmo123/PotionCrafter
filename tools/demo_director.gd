@@ -55,6 +55,8 @@ func _process(_delta: float) -> void:
 			(panel.get_child(0) as Control).add_child(tip)
 	if _args.has("crush"):
 		_crush_demo(bench)
+	if _args.has("facet"):
+		_facet_demo(bench)
 	if _frames == SHOT_FRAME - 8 and _args.has("book"):
 		var book: GrimoireBookUI = bench.get_node("GrimoireBookUI") as GrimoireBookUI
 		book.open(1 if _args.has("formulas") else 0)
@@ -221,3 +223,30 @@ func _crush_demo(bench: Node) -> void:
 	if _frames == SHOT_FRAME - 12:
 		var opal: Rock3D = Rock3D.spawn(bench, Rock3D.get_mineral("precious_opal"), AnvilLoader.anvil_top(anvil) + Vector3(0.12, 0.03, 0.04), 0.02)
 		Rock3D._reveal(opal, opal.mineral)
+
+
+## Phase 3 faceting showcase: a polished sapphire mid-cut with prism rays,
+## the steadiness ring and the cut picker open.
+var _facet_stone: Rock3D = null
+
+
+func _facet_demo(bench: Node) -> void:
+	var f: LapidaryWheel3D = LapidaryWheel3D.faceter
+	if f == null:
+		return
+	if _frames == 2:
+		var cam: LabCamera3D = bench.get_node("Camera3D") as LabCamera3D
+		cam.go_to_station(1)
+		cam.set("_zoom_target", 0.0)
+		f.toggle()
+		f.select_cut(RockMeshes.Cut.ROUND)
+	if _frames == 20:
+		_facet_stone = Rock3D.spawn(bench, Rock3D.get_mineral("sapphire"), f.global_position + Vector3(0.02, f.wheel_height_meters + 0.03, 0.0), 0.012)
+		_facet_stone.set_polish(1.0)
+	if _frames == SHOT_FRAME - 25 and _facet_stone != null:
+		f.set("_cut_progress", 0.72)
+		f.live_steadiness = 0.9
+	if _frames == SHOT_FRAME - 20:
+		var panel: Node = f.get_child(f.get_child_count() - 1)
+		if panel.has_method(&"set_open"):
+			panel.call(&"set_open", true)

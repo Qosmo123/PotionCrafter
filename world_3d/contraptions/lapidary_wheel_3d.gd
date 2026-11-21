@@ -3,11 +3,23 @@ extends StaticBody3D
 ## Lapidary bench machine. Click the brass switch to start the wheel, then hold
 ## a mineral or gem against it with the grabber.
 ##   POLISH: polish rises with contact time, slower for harder stones (Mohs).
-##   FACET:  click the index dial to choose a cut; holding a polished gem steady
-##           on the lap cuts the facets. Cut quality = polish + steadiness of
-##           your hand while cutting. Finished gems are worth far more.
+##   FACET:  click the index dial (or press F) to open the cut picker; holding
+##           a polished gem steady on the lap cuts the facets. Cut quality =
+##           polish + steadiness of your hand while cutting, times how well the
+##           cut suits the stone. A fan of prism rays brightens as the facets
+##           come in; the ring on the lap shows how steady your hand is.
+##           Cuts done 3x at 70%+ are mastered and can be quick-faceted.
 
 enum Mode { POLISH, FACET }
+
+const PRISM_SHADER: Shader = preload("res://visuals_3d/shaders/prism_ray.gdshader")
+const RAY_COLORS: PackedColorArray = [Color("#FF5A5A"), Color("#FFA34D"), Color("#FFE45C"), Color("#6BFF8A"), Color("#5CE1E6"), Color("#6B8BFF"), Color("#B46BFF")]
+const QUICK_FACET_SPEED: float = 4.0
+
+## The faceting machine in the scene (read by the cut picker).
+static var faceter: LapidaryWheel3D = null
+
+signal cut_changed
 
 @export var mode: Mode = Mode.POLISH
 @export var model: PackedScene
@@ -29,6 +41,15 @@ var _work_target: Rock3D = null
 var _cut_progress: float = 0.0
 var _steadiness_sum: float = 0.0
 var _steadiness_samples: int = 0
+var quick_facet: bool = false
+## Smoothed steadiness of the hand right now (0..1), for the ring and meters.
+var live_steadiness: float = 1.0
+var _rays: Array[MeshInstance3D] = []
+var _beam_in: MeshInstance3D
+var _ring: MeshInstance3D
+var _ring_mat: StandardMaterial3D
+var _milestone: int = 0
+var _ray_spin: float = 0.0
 
 
 func _ready() -> void:
@@ -120,7 +141,55 @@ func _ready() -> void:
 	_sparks.draw_pass_1 = spark_quad
 	_sparks.position.y = wheel_height_meters + 0.01
 	add_child(_sparks)
+	if mode == Mode.FACET:
+		faceter = self
+		_build_light_guides()
+		var panel: CanvasLayer = (load("res://world_3d/grimoire_system/faceting_panel.gd") as GDScript).new() as CanvasLayer
+		add_child(panel)
 	_update_status()
+
+
+func _exit_tree() -> void:
+	if faceter == self:
+		faceter = null
+
+
+## Prism fan (one incoming white beam, seven rainbow rays out) and the
+## steadiness ring on the lap.
+func _build_light_guides() -> void:
+	var mat: ShaderMaterial = ShaderMaterial.new()
+	mat.shader = PRISM_SHADER
+	for i: int in RAY_COLORS.size() + 1:
+		var quad: QuadMesh = QuadMesh.new()
+		quad.size = Vector2(0.008 if i > 0 else 0.012, 1.0)
+		quad.center_offset = Vector3(0.0, -0.5, 0.0)
+		var mi: MeshInstance3D = MeshInstance3D.new()
+		mi.mesh = quad
+		mi.material_override = mat
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		mi.visible = false
+		add_child(mi)
+		mi.set_instance_shader_parameter(&"tint", Color.WHITE if i == 0 else RAY_COLORS[i - 1])
+		if i == 0:
+			_beam_in = mi
+		else:
+			_rays.append(mi)
+	var torus: TorusMesh = TorusMesh.new()
+	torus.inner_radius = wheel_radius_meters * 0.55
+	torus.outer_radius = wheel_radius_meters * 0.6
+	torus.rings = 48
+	torus.ring_segments = 6
+	_ring = MeshInstance3D.new()
+	_ring.mesh = torus
+	_ring_mat = StandardMaterial3D.new()
+	_ring_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	_ring_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	_ring_mat.albedo_color = Color(CosmicTheme.SUCCESS, 0.0)
+	_ring.material_override = _ring_mat
+	_ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_ring.position.y = wheel_height_meters + 0.006
+	_ring.scale = Vector3(1.0, 0.25, 1.0)
+	add_child(_ring)
 
 
 func _button(at: Vector3, color: Color) -> StaticBody3D:
@@ -161,16 +230,54 @@ func _unhandled_input(event: InputEvent) -> void:
 		toggle()
 		get_viewport().set_input_as_handled()
 	elif hit != null and hit == _dial:
-		cycle_cut(1 if press.button_index == MOUSE_BUTTON_LEFT else -1)
+		if press.button_index == MOUSE_BUTTON_LEFT:
+			picker_requested.emit()
+		else:
+			cycle_cut(1)
 		AudioHaptics.tick()
 		_update_status()
 		get_viewport().set_input_as_handled()
 
 
+signal picker_requested
+
+
 ## Step the index dial through every cut (skipping "Uncut").
 func cycle_cut(step: int) -> void:
 	var count: int = RockMeshes.CUT_NAMES.size() - 1
-	selected_cut = posmod(selected_cut - 1 + step, count) + 1
+	select_cut(posmod(selected_cut - 1 + step, count) + 1)
+
+
+func select_cut(cut: int) -> void:
+	selected_cut = clampi(cut, 1, RockMeshes.CUT_NAMES.size() - 1)
+	if not is_mastered(selected_cut):
+		quick_facet = false
+	_cut_progress = 0.0
+	_milestone = 0
+	_update_status()
+	cut_changed.emit()
+
+
+static func is_mastered(cut: int) -> bool:
+	return GrimoireJournal.instance != null and GrimoireJournal.instance.is_mastered(RockMeshes.CUT_NAMES[cut])
+
+
+## The stone being worked (or null).
+func work_target() -> Rock3D:
+	return _work_target if is_instance_valid(_work_target) else null
+
+
+func cut_progress() -> float:
+	return _cut_progress
+
+
+## Quality the cut would get if it finished now.
+func projected_quality() -> float:
+	var stone: Rock3D = work_target()
+	if stone == null:
+		return 0.0
+	var steadiness: float = _steadiness_sum / maxf(float(_steadiness_samples), 1.0) if _steadiness_samples > 0 else live_steadiness
+	return clampf((stone.polish * 0.4 + steadiness * 0.6) * cut_suitability(stone.mineral, selected_cut), 0.0, 1.0)
 
 
 ## How well this stone suits the chosen cut. Real lapidaries cut opaque and
@@ -204,6 +311,52 @@ func toggle() -> void:
 func _process(delta: float) -> void:
 	_spin = lerpf(_spin, 40.0 if running else 0.0, 1.0 - exp(-delta * 2.0))
 	_wheel.rotation.y += _spin * delta
+	if mode == Mode.FACET and _ring != null:
+		_update_light_guides(delta)
+
+
+## Live light guides: rays grow and brighten with cut progress x steadiness;
+## the ring glows green when the hand is steady, amber/pink when it wobbles.
+func _update_light_guides(delta: float) -> void:
+	var stone: Rock3D = work_target()
+	var active: bool = running and stone != null and stone.mineral.can_facet and stone.polish >= 0.3
+	var ring_target: float = 0.75 if running and stone != null else (0.25 if running else 0.0)
+	var ring_col: Color = CosmicTheme.SUCCESS.lerp(CosmicTheme.WARNING, clampf((0.85 - live_steadiness) * 3.0, 0.0, 1.0))
+	ring_col = ring_col.lerp(CosmicTheme.PRISM_PINK, clampf((0.5 - live_steadiness) * 3.0, 0.0, 1.0))
+	_ring_mat.albedo_color = Color(ring_col, lerpf(_ring_mat.albedo_color.a, ring_target, 1.0 - exp(-delta * 6.0)))
+	_beam_in.visible = active
+	for r: MeshInstance3D in _rays:
+		r.visible = active
+	if not active:
+		return
+	var glow: float = clampf(_cut_progress, 0.0, 1.0) * (0.35 + 0.65 * live_steadiness)
+	var center: Vector3 = stone.global_position
+	var cam: Camera3D = get_viewport().get_camera_3d()
+	# Incoming white beam from a lamp above-behind.
+	_orient_ray(_beam_in, center + Vector3(-0.05, 0.3, -0.12), center, cam, 0.6 + 0.4 * glow)
+	_ray_spin += delta * 0.6
+	for i: int in _rays.size():
+		var a: float = _ray_spin + TAU * float(i) / float(_rays.size())
+		var dir: Vector3 = Vector3(cos(a), 0.55 + 0.15 * sin(a * 2.0), sin(a)).normalized()
+		var length: float = 0.05 + 0.18 * glow
+		_orient_ray(_rays[i], center, center + dir * length, cam, glow)
+
+
+## Point a quad ray from `a` to `b`, turned to face the camera.
+static func _orient_ray(ray: MeshInstance3D, a: Vector3, b: Vector3, cam: Camera3D, strength: float) -> void:
+	var along: Vector3 = b - a
+	var length: float = along.length()
+	if length < 1e-4:
+		ray.visible = false
+		return
+	var y: Vector3 = -along / length  # QuadMesh tip is at -Y after the center offset
+	var to_cam: Vector3 = (cam.global_position - a).normalized() if cam != null else Vector3.BACK
+	var x: Vector3 = y.cross(to_cam).normalized()
+	if x.length() < 0.5:
+		x = y.cross(Vector3.UP).normalized()
+	var z: Vector3 = x.cross(y)
+	ray.global_transform = Transform3D(Basis(x, y * length, z), a)
+	ray.set_instance_shader_parameter(&"strength", strength)
 
 
 func _physics_process(delta: float) -> void:
@@ -240,14 +393,34 @@ func _physics_process(delta: float) -> void:
 		if stone.polish < 0.3:
 			_status.text = "Polish it first\n(%d%% / 30%%)" % int(stone.polish * 100.0)
 			return
-		_steadiness_sum += clampf(1.0 - stone.linear_velocity.length() * 6.0, 0.0, 1.0)
+		var sample: float = clampf(1.0 - stone.linear_velocity.length() * 6.0, 0.0, 1.0)
+		var mastered: bool = quick_facet and is_mastered(selected_cut)
+		if mastered:
+			# Practised hands: the mastered cut goes fast and holds your best form.
+			sample = maxf(sample, float(GrimoireJournal.instance.cut_mastery[RockMeshes.CUT_NAMES[selected_cut]]["best"]) * 0.95)
+		live_steadiness = lerpf(live_steadiness, sample, 1.0 - exp(-delta * 8.0))
+		_steadiness_sum += sample
 		_steadiness_samples += 1
-		_cut_progress += delta * 0.2 / hardness_drag
+		_cut_progress += delta * 0.2 / hardness_drag * (QUICK_FACET_SPEED if mastered else 1.0)
+		var quarter: int = int(_cut_progress * 4.0)
+		if quarter > _milestone and quarter < 4:
+			# Crystalline chime cue: a glint of sparks each quarter of the way.
+			_milestone = quarter
+			AudioHaptics.tick()
+			var fx: ImpactFx3D = ImpactFx3D.get_pool(self)
+			if fx != null:
+				fx.hit(stone.global_position + Vector3(0.0, 0.015, 0.0), stone.mineral.color, CosmicTheme.STARLIGHT_GOLD, 0.35)
 		_status.text = "Cutting %s: %s\n%d%%  steady hands!" % [stone.mineral.display_name, RockMeshes.CUT_NAMES[selected_cut], int(_cut_progress * 100.0)]
 		if _cut_progress >= 1.0:
 			var steadiness: float = _steadiness_sum / maxf(float(_steadiness_samples), 1.0)
 			var suit: float = cut_suitability(stone.mineral, selected_cut)
 			stone.apply_cut(selected_cut, clampf((stone.polish * 0.4 + steadiness * 0.6) * suit, 0.0, 1.0))
+			var fx: ImpactFx3D = ImpactFx3D.get_pool(self)
+			if fx != null:
+				fx.reveal(stone.global_position - Vector3(0.0, 0.02, 0.0), CosmicTheme.STARLIGHT_GOLD if stone.cut_quality >= 0.85 else CosmicTheme.PRISM_CYAN)
+			if GrimoireJournal.instance != null and GrimoireJournal.instance.record_cut(RockMeshes.CUT_NAMES[selected_cut], stone.cut_quality):
+				GrimoireJournal.instance.toast.emit("Cut mastered: %s! Quick-facet is now available for it." % RockMeshes.CUT_NAMES[selected_cut], &"secret")
+			_milestone = 0
 			var tip: String = ""
 			if suit > 1.0:
 				tip = "  Perfect choice: a cabochon shows off its %s!" % ("magic" if stone.mineral.phenomenon == MineralData.Phenomenon.NONE else MineralData.PHENOMENON_NAMES[stone.mineral.phenomenon])
@@ -268,6 +441,5 @@ func _update_status() -> void:
 	var title: String = "Gem Polisher" if mode == Mode.POLISH else "Faceting Machine"
 	var state: String = "ON: hold a stone on the wheel" if running else "click the brass switch to start"
 	if mode == Mode.FACET:
-		state += "\ncut %d/%d: %s\n%s\n(click dial / right-click)" % [selected_cut, RockMeshes.CUT_NAMES.size() - 1,
-			RockMeshes.CUT_NAMES[selected_cut], RockMeshes.CUT_INFO[selected_cut]]
+		state += "\ncut: %s%s\n(click the dial or press F to choose)" % [RockMeshes.CUT_NAMES[selected_cut], "  ⚡" if quick_facet else ""]
 	_status.text = "%s\n%s" % [title, state]

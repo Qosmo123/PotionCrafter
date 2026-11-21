@@ -32,6 +32,11 @@ var collection: Dictionary = {}
 var seen: Dictionary = {}
 ## Recipe pinned to the bench as a floating formula card ("" = none). Additive save key.
 var pinned_recipe: String = ""
+## Faceting mastery: cut name -> {count, best}. Additive save key.
+var cut_mastery: Dictionary = {}
+
+const MASTERY_CUTS: int = 3
+const MASTERY_QUALITY: float = 0.7
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 
 
@@ -246,6 +251,23 @@ func mark_seen(key: String) -> void:
 	_save()
 
 
+## Log a finished cut. Returns true the moment a cut becomes mastered.
+func record_cut(cut_name: String, quality: float) -> bool:
+	var was: bool = is_mastered(cut_name)
+	var e: Dictionary = cut_mastery.get(cut_name, {"count": 0, "best": 0.0})
+	e["count"] = int(e["count"]) + 1
+	e["best"] = maxf(float(e["best"]), quality)
+	cut_mastery[cut_name] = e
+	_save()
+	changed.emit()
+	return not was and is_mastered(cut_name)
+
+
+func is_mastered(cut_name: String) -> bool:
+	var e: Dictionary = cut_mastery.get(cut_name, {})
+	return int(e.get("count", 0)) >= MASTERY_CUTS and float(e.get("best", 0.0)) >= MASTERY_QUALITY
+
+
 func pin(recipe_id: String) -> void:
 	pinned_recipe = "" if pinned_recipe == recipe_id else recipe_id
 	_save()
@@ -270,6 +292,7 @@ func _save() -> void:
 	cfg.set_value("journal", "collection", collection)
 	cfg.set_value("journal", "seen", seen)
 	cfg.set_value("journal", "pinned", pinned_recipe)
+	cfg.set_value("journal", "cut_mastery", cut_mastery)
 	cfg.save(SAVE_PATH)
 
 
@@ -287,6 +310,7 @@ func _load() -> void:
 	collection = cfg.get_value("journal", "collection", {})
 	seen = cfg.get_value("journal", "seen", {})
 	pinned_recipe = cfg.get_value("journal", "pinned", "")
+	cut_mastery = cfg.get_value("journal", "cut_mastery", {})
 	var saved_orders: Array = cfg.get_value("journal", "commissions", [])
 	for o: Variant in saved_orders:
 		commissions.append(o as Dictionary)
