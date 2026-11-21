@@ -30,6 +30,7 @@
 [ext_resource type="PackedScene" path="res://world_3d/props/tools_set.gltf" id="28_tools"]
 [ext_resource type="Script" path="res://world_3d/props/prop_visual.gd" id="29_pvis"]
 [ext_resource type="Script" path="res://tactile_3d/grabber/lab_camera_3d.gd" id="30_cam"]
+[ext_resource type="Script" path="res://world_3d/grimoire_system/recipe_board_3d.gd" id="97_board"]
 [ext_resource type="Script" path="res://tactile_3d/interactions/stir_tool_3d.gd" id="31_stir"]
 [ext_resource type="Script" path="res://world_3d/contraptions/magnetic_stirrer_3d.gd" id="32_mag"]
 [ext_resource type="PackedScene" path="res://world_3d/props/glass_rod.gltf" id="33_grod"]
@@ -106,9 +107,9 @@ glow_enabled = true
 
 [sub_resource type="CameraAttributesPractical" id="CamAttr_1"]
 dof_blur_far_enabled = true
-dof_blur_far_distance = 2.6
-dof_blur_far_transition = 1.5
-dof_blur_amount = 0.06
+dof_blur_far_distance = 3.9
+dof_blur_far_transition = 1.2
+dof_blur_amount = 0.04
 
 [sub_resource type="ShaderMaterial" id="WoodMat_1"]
 render_priority = 0
@@ -188,6 +189,17 @@ camera_attributes = SubResource("CamAttr_1")
 script = ExtResource("10_gfx")
 world_environment = NodePath("../WorldEnvironment")
 key_light = NodePath("../KeyLight")
+
+[node name="RimLight" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-64, 172, 0)
+light_color = Color(0.72, 0.8, 1, 1)
+light_energy = 0.5
+light_specular = 1.0
+light_volumetric_fog_energy = 0.0
+
+[node name="RecipeBoard" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.02, -0.45)
+script = ExtResource("97_board")
 
 [node name="KeyLight" type="DirectionalLight3D" parent="."]
 rotation_degrees = Vector3(-38, 52, 0)

@@ -75,6 +75,7 @@ func _ready() -> void:
 	add_child(_collider)
 	_rebuild()
 	add_to_group(&"collectibles")
+	ContactShadow3D.attach(self, radius_meters(), -radius_meters() * 0.8)
 
 
 func radius_meters() -> float:

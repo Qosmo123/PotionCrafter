@@ -141,6 +141,8 @@ func _ready() -> void:
 		_build_cylinder()
 	_build_volume_table()
 	_build_pour_rig()
+	var foot_r: float = profile.outer_radius_meters if profile != null else inner_radius_meters + wall_thickness_meters
+	ContactShadow3D.attach(self, foot_r, _profile_y[0] if _profile_y.size() > 0 else 0.0)
 
 	mixture = MixtureContainer.new()
 	for i: int in mini(initial_substances.size(), initial_moles.size()):
