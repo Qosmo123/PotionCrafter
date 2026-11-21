@@ -15,6 +15,7 @@ const LIQUID_MATERIAL: ShaderMaterial = preload("res://content/materials_3d/liqu
 const GLASS_PC_MATERIAL: Material = preload("res://content/materials_3d/glass_pc.tres")
 const GLASS_MOBILE_MATERIAL: Material = preload("res://content/materials_3d/glass_mobile.tres")
 const BOOK_COLORS: Array[Color] = [Color(0.35, 0.06, 0.05), Color(0.07, 0.2, 0.1), Color(0.06, 0.1, 0.28), Color(0.3, 0.2, 0.08), Color(0.2, 0.05, 0.22)]
+const BOOK_LABELS: Array[Color] = [Color(0.04, 0.035, 0.03), Color(0.3, 0.04, 0.04), Color(0.05, 0.14, 0.08), Color(0.5, 0.4, 0.26)]
 
 @export var plank_heights_meters: PackedFloat32Array = PackedFloat32Array([0.016, 0.436, 0.856])
 @export var shelf_width_meters: float = 1.7
@@ -111,14 +112,14 @@ func _place_books(rng: RandomNumberGenerator, x: float, plank_y: float) -> float
 	for i: int in count:
 		var thickness: float = rng.randf_range(0.025, 0.05)
 		var height: float = rng.randf_range(0.17, 0.26)
-		var mesh: BoxMesh = BoxMesh.new()
-		mesh.size = Vector3(thickness, height, rng.randf_range(0.13, 0.18))
-		var mat: StandardMaterial3D = StandardMaterial3D.new()
-		mat.albedo_color = BOOK_COLORS[rng.randi_range(0, BOOK_COLORS.size() - 1)] * rng.randf_range(0.7, 1.2)
-		mat.roughness = 0.65
-		mesh.material = mat
-		var book: MeshInstance3D = MeshInstance3D.new()
-		book.mesh = mesh
+		var depth: float = rng.randf_range(0.13, 0.18)
+		var color: Color = BOOK_COLORS[rng.randi_range(0, BOOK_COLORS.size() - 1)] * rng.randf_range(0.7, 1.2)
+		# Binding details come from their own generator, so the shelf layout
+		# (drawn from `rng`) stays exactly as it was.
+		var detail: RandomNumberGenerator = RandomNumberGenerator.new()
+		detail.seed = hash(Vector3(x + used, plank_y, float(seed_value)))
+		var label: Color = BOOK_LABELS[detail.randi_range(0, BOOK_LABELS.size() - 1)]
+		var book: Node3D = Book3D.make(thickness, height, depth, color, label, detail)
 		book.position = Vector3(x + used + thickness * 0.5, plank_y + height * 0.5, shelf_depth_meters * 0.5 - 0.02)
 		book.rotation.z = rng.randf_range(-0.04, 0.04) if i < count - 1 else rng.randf_range(-0.25, 0.0)
 		add_child(book)

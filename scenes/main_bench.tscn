@@ -1,4 +1,4 @@
-[gd_scene load_steps=135 format=3]
+[gd_scene load_steps=136 format=3]
 
 [ext_resource type="PackedScene" path="res://world_3d/vessels/vessel_3d.tscn" id="1_vessel"]
 [ext_resource type="Resource" path="res://content/substances/moonwater.tres" id="2_moon"]
@@ -57,6 +57,7 @@
 [ext_resource type="PackedScene" path="res://world_3d/props/tool_pegboard.gltf" id="54_peg"]
 [ext_resource type="PackedScene" path="res://world_3d/props/drawer_chest.gltf" id="55_drawers"]
 [ext_resource type="Script" path="res://visuals_3d/vfx/candle_flame.gd" id="56_candle"]
+[ext_resource type="Script" path="res://world_3d/props/candle_body.gd" id="100_candlebody"]
 [ext_resource type="Script" path="res://visuals_3d/vfx/ambient_dust.gd" id="57_dust"]
 [ext_resource type="Script" path="res://world_3d/contraptions/tool_crock_3d.gd" id="58_crock"]
 [ext_resource type="PackedScene" path="res://world_3d/props/tool_crock.gltf" id="59_crockm"]
@@ -310,6 +311,7 @@ mesh = SubResource("LegMesh_1")
 [node name="Candle" type="MeshInstance3D" parent="."]
 position = Vector3(-0.36, 0.88, -0.56)
 mesh = SubResource("CandleMesh_1")
+script = ExtResource("100_candlebody")
 
 [node name="CandleFlame" type="Node3D" parent="Candle" node_paths=PackedStringArray("flame", "light")]
 script = ExtResource("56_candle")

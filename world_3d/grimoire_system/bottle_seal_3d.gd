@@ -304,52 +304,8 @@ static func _lathe(cols: Array[PackedVector3Array], hint_y: float, cork: bool) -
 	return _finish(verts, idx, uvs, Vector3(0.0, hint_y, 0.0), false)
 
 
-## Orient every triangle as a Godot front face seen from outside (outward is
-## away from `center`, or along -`center` when `planar`), then build smooth
-## normals and tangents.
 static func _finish(verts: PackedVector3Array, idx: PackedInt32Array, uvs: PackedVector2Array, center: Vector3, planar: bool) -> ArrayMesh:
-	var nrm: PackedVector3Array = PackedVector3Array()
-	nrm.resize(verts.size())
-	for k: int in range(0, idx.size(), 3):
-		var v0: Vector3 = verts[idx[k]]
-		var v1: Vector3 = verts[idx[k + 1]]
-		var v2: Vector3 = verts[idx[k + 2]]
-		var cr: Vector3 = (v1 - v0).cross(v2 - v0)
-		if cr.length_squared() < 1e-24:
-			continue
-		var hint: Vector3 = -center if planar else (v0 + v1 + v2) / 3.0 - center
-		if cr.dot(hint) > 0.0:
-			# Front faces have (b-a)x(c-a) pointing into the surface.
-			var tmp: int = idx[k + 1]
-			idx[k + 1] = idx[k + 2]
-			idx[k + 2] = tmp
-			cr = -cr
-		nrm[idx[k]] -= cr
-		nrm[idx[k + 1]] -= cr
-		nrm[idx[k + 2]] -= cr
-	var tangents: PackedFloat32Array = PackedFloat32Array()
-	tangents.resize(verts.size() * 4)
-	for k: int in verts.size():
-		var n2: Vector3 = nrm[k].normalized() if nrm[k].length_squared() > 1e-24 else Vector3.UP
-		nrm[k] = n2
-		var t2: Vector3 = Vector3.RIGHT if planar else Vector3.UP.cross(n2)
-		if t2.length_squared() < 1e-6:
-			t2 = Vector3.RIGHT
-		t2 = (t2 - n2 * n2.dot(t2)).normalized()
-		tangents[k * 4] = t2.x
-		tangents[k * 4 + 1] = t2.y
-		tangents[k * 4 + 2] = t2.z
-		tangents[k * 4 + 3] = 1.0
-	var arrays: Array = []
-	arrays.resize(Mesh.ARRAY_MAX)
-	arrays[Mesh.ARRAY_VERTEX] = verts
-	arrays[Mesh.ARRAY_NORMAL] = nrm
-	arrays[Mesh.ARRAY_TANGENT] = tangents
-	arrays[Mesh.ARRAY_TEX_UV] = uvs
-	arrays[Mesh.ARRAY_INDEX] = idx
-	var mesh: ArrayMesh = ArrayMesh.new()
-	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
-	return mesh
+	return MeshUtil.finish(verts, idx, uvs, center, planar)
 
 
 # --- Materials --------------------------------------------------------------------

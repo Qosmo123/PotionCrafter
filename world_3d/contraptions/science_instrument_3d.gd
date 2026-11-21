@@ -53,6 +53,9 @@ func _ready() -> void:
 
 # ---------------------------------------------------------------- construction
 func _mat(color: Color, metallic: float = 0.0, roughness: float = 0.5) -> StandardMaterial3D:
+	# Opaque brass and steel fittings use the shared 4K metal set (never mutated).
+	if metallic >= 0.9 and roughness >= 0.2 and color.a >= 1.0:
+		return PropMaterials.textured("metal", color, 0.3, metallic)
 	var m: StandardMaterial3D = StandardMaterial3D.new()
 	m.albedo_color = color
 	m.metallic = metallic
@@ -85,7 +88,7 @@ func _cyl(radius: float, height: float, segments: int = 24) -> CylinderMesh:
 func _build_base() -> void:
 	var plinth: BoxMesh = BoxMesh.new()
 	plinth.size = Vector3(0.2, 0.025, 0.24)
-	_mesh(plinth, _mat(Color(0.12, 0.13, 0.15), 0.1, 0.35), Vector3(0.0, 0.0125, 0.0))
+	_mesh(plinth, PropMaterials.textured("iron", Color(0.34, 0.35, 0.38), 0.3, 0.4), Vector3(0.0, 0.0125, 0.0))
 	var trim: BoxMesh = BoxMesh.new()
 	trim.size = Vector3(0.204, 0.006, 0.244)
 	_mesh(trim, _mat(Color(0.75, 0.55, 0.25), 0.9, 0.3), Vector3(0.0, 0.026, 0.0))
@@ -153,7 +156,7 @@ func _build_air_meter() -> void:
 	_foam = _mesh(_cyl(0.0235, 0.01), foam_mat, Vector3(0.0, 0.1, -0.05))
 	_foam.visible = false
 	# Dial gauge.
-	var dial: MeshInstance3D = _mesh(_cyl(0.032, 0.008, 32), _mat(Color(0.95, 0.93, 0.85), 0.0, 0.6), Vector3(0.065, 0.12, -0.04))
+	var dial: MeshInstance3D = _mesh(_cyl(0.032, 0.008, 32), PropMaterials.textured("ceramic", Color(0.95, 0.93, 0.85), 0.25), Vector3(0.065, 0.12, -0.04))
 	dial.rotation.x = PI * 0.5
 	_mesh(_cyl(0.035, 0.006, 32), _mat(Color(0.75, 0.55, 0.25), 0.9, 0.3), Vector3(0.065, 0.12, -0.044)).rotation.x = PI * 0.5
 	_needle = Node3D.new()
@@ -177,7 +180,7 @@ func _build_volatility() -> void:
 	_mesh(beam, _mat(Color(0.75, 0.55, 0.25), 0.9, 0.3), Vector3.ZERO, _needle)
 	var dish: CylinderMesh = _cyl(0.03, 0.01, 32)
 	dish.bottom_radius = 0.022
-	_mesh(dish, _mat(Color(0.95, 0.95, 0.93), 0.0, 0.3), Vector3(-0.065, -0.01, 0.0), _needle)
+	_mesh(dish, PropMaterials.textured("ceramic", Color(0.95, 0.95, 0.93), 0.25), Vector3(-0.065, -0.01, 0.0), _needle)
 	_fluid_mat = _mat(Color(0.7, 0.8, 0.9, 0.0))
 	_fluid_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	_fluid = _mesh(_cyl(0.026, 0.003, 32), _fluid_mat, Vector3(-0.065, -0.006, 0.0), _needle)
