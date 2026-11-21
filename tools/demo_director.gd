@@ -67,6 +67,8 @@ func _process(_delta: float) -> void:
 		_facet_demo(bench)
 	if _args.has("brew"):
 		_brew_demo(bench)
+	if _args.has("seal"):
+		_seal_demo(bench)
 	if _args.has("noliquid") and _frames == 50:
 		for v: Vessel3D in Vessel3D.all_vessels:
 			var l: Node3D = v.get_node_or_null("Liquid") as Node3D
@@ -288,6 +290,35 @@ func _brew_demo(bench: Node) -> void:
 				GrimoireJournal.instance.pin(String(r.recipe_id))
 	if _frames == 10 and HudOverlay.instance != null:
 		HudOverlay.instance.set("_pin_vessel", bench.get_node("Vessels/FlaskMoonwater"))
+
+
+## Bottling: a row of corked, wax-sealed bottles (one per grade colour) and
+## one still mid-pour, glowing hot.
+func _seal_demo(bench: Node) -> void:
+	if _frames == 2:
+		var cam: LabCamera3D = bench.get_node("Camera3D") as LabCamera3D
+		cam.set("_zoom_target", 0.45)
+	if _frames != 30 and _frames != SHOT_FRAME - 7:
+		return
+	var filled: Array[Vessel3D] = []
+	for v: Vessel3D in Vessel3D.all_vessels:
+		if v.mixture != null and v.mixture.get_liquid_volume_m3() > 2e-6 and (v.profile == null or not v.profile.vessel_name.contains("beaker")):
+			filled.append(v)
+	var grades: PackedStringArray = ["S", "A", "B", "C", "D", "F", "B"]
+	var count: int = mini(filled.size(), grades.size())
+	for i: int in count:
+		var v: Vessel3D = filled[i]
+		var last: bool = i == count - 1
+		if last != (_frames != 30):
+			continue
+		v.freeze_mode = RigidBody3D.FREEZE_MODE_KINEMATIC
+		v.freeze = true
+		v.global_transform = Transform3D(Basis.IDENTITY, Vector3(-0.29 + 0.098 * float(i), 1.02, 0.25))
+		if not v.sealed:
+			v.toggle_seal()
+		var seal: BottleSeal3D = v.get("_seal") as BottleSeal3D
+		seal.seal(grades[i], 3 + i % 6, not last)
+		print("SEAL %s %s grade %s" % [v.name, v.profile.vessel_name if v.profile != null else "cyl", grades[i]])
 
 
 ## 4K rock and gem surfaces: a row of rough specimens, frozen for a close look.

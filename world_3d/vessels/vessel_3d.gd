@@ -90,7 +90,7 @@ var _history_kelvin: PackedFloat32Array = PackedFloat32Array()
 var _history_index: int = 0
 var _history_count: int = 0
 var _history_timer: float = 0.0
-var _cork: MeshInstance3D
+var _seal: BottleSeal3D
 var _label: Label3D
 var _label_card: MeshInstance3D
 ## Hand-written contents tag on any vessel holding something (the full name +
@@ -229,9 +229,8 @@ func _update_contents_tag() -> void:
 			_label_card.visible = false
 			_label.visible = false
 		return
-	if _cork == null:
-		_build_cork_and_label()
-		_cork.visible = false
+	if _label == null:
+		_build_label()
 	var text: String = contents_tag_text(mixture, foam_height_meters)
 	if _label.text != text:
 		_label.text = text
@@ -298,7 +297,8 @@ func toggle_seal() -> bool:
 	if sealed:
 		sealed = false
 		open_top = true
-		_cork.visible = false
+		if _seal != null:
+			_seal.pop()
 		_label.visible = false
 		_label_card.visible = false
 		return false
@@ -307,29 +307,21 @@ func toggle_seal() -> bool:
 	sealed = true
 	_tag_timer = 0.0
 	open_top = false
-	if _cork == null:
-		_build_cork_and_label()
-	_cork.visible = true
+	if _label == null:
+		_build_label()
+	if _seal == null:
+		_seal = BottleSeal3D.new()
+		_seal.setup(self)
+		add_child(_seal)
+	var potion_name: String = PotionNamer.name_for(mixture, foam_height_meters)
+	_seal.seal(PotionNamer.grade_for(mixture), BottleSeal3D.points_for_name(potion_name), not is_inside_tree())
 	_label.visible = true
 	_label_card.visible = true
-	_label.text = "%s\n%s" % [PotionNamer.name_for(mixture, foam_height_meters), PotionNamer.formula_for(mixture, 2)]
+	_label.text = "%s\n%s" % [potion_name, PotionNamer.formula_for(mixture, 2)]
 	return true
 
 
-func _build_cork_and_label() -> void:
-	var cork_mesh: CylinderMesh = CylinderMesh.new()
-	cork_mesh.top_radius = _lip_radius_meters * 1.18
-	cork_mesh.bottom_radius = _lip_radius_meters * 0.92
-	cork_mesh.height = 0.02
-	cork_mesh.radial_segments = 20
-	var cork_mat: StandardMaterial3D = StandardMaterial3D.new()
-	cork_mat.albedo_color = Color(0.6, 0.43, 0.26)
-	cork_mat.roughness = 0.95
-	cork_mesh.material = cork_mat
-	_cork = MeshInstance3D.new()
-	_cork.mesh = cork_mesh
-	_cork.position.y = _lip_local_y + 0.006
-	add_child(_cork)
+func _build_label() -> void:
 	var outer_r: float = profile.outer_radius_meters if profile != null else inner_radius_meters + wall_thickness_meters
 	# Low on the body (the widest part of round flasks), not up on the neck.
 	var mid_y: float = lerpf(_profile_y[0], _lip_local_y, 0.36)
@@ -384,6 +376,22 @@ func get_lip_local_y() -> float:
 
 func get_lip_radius_meters() -> float:
 	return _lip_radius_meters
+
+
+## Inner wall radius at a local height, interpolated along the profile
+## (clamped to the lip above the opening).
+func get_inner_radius_at_local_y(y: float) -> float:
+	var n: int = _profile_y.size()
+	if n == 0:
+		return inner_radius_meters
+	if y >= _profile_y[n - 1]:
+		return _profile_r[n - 1]
+	for i: int in range(n - 1, 0, -1):
+		var y0: float = _profile_y[i - 1]
+		var y1: float = _profile_y[i]
+		if y >= y0 and y1 > y0:
+			return lerpf(_profile_r[i - 1], _profile_r[i], (y - y0) / (y1 - y0))
+	return _profile_r[0]
 
 
 func get_fill_fraction() -> float:
