@@ -8,8 +8,15 @@ extends Node3D
 ## Stiffness is fixed in N/m, so heavy objects have a lower natural frequency
 ## and visibly lag/sag while light glass feels crisp.
 ##
-## PC:      left-drag = move, scroll wheel or right-drag = tilt/pour.
+## PC:      left-drag = move, scroll wheel or right-drag = tilt/pour,
+##          hold Shift while dragging for slow, precise placement.
 ## Android: one finger = move, second finger twist = tilt/pour.
+##
+## Carry feel: the hand point under the cursor glides toward the pointer at a
+## limited speed (it never jumps), so a quick mouse flick can't fling a light
+## vial across the bench; objects let go with a capped speed so they settle
+## instead of sliding away. Clicking near a small vial still picks it: if the
+## exact ray misses, a small sphere around the cursor is tried.
 
 const PICK_MASK: int = SimConstants.LAYER_RIGID_VESSEL | SimConstants.LAYER_SOLID_REAGENT | SimConstants.LAYER_TACTILE_TOOL
 const PICK_DISTANCE_METERS: float = 12.0
@@ -32,6 +39,18 @@ const MAX_OMEGA_DT: float = 0.3
 @export var angular_damping_ratio: float = 1.0
 @export var max_angular_accel_rad_s2: float = 420.0
 
+@export_group("Carry feel")
+## Top speed the hand moves held items across the bench (m/s).
+@export var carry_speed_m_s: float = 1.1
+## Top speed with Shift held, for careful placement.
+@export var precise_speed_m_s: float = 0.3
+## How fast items lift to / lower from the carry height (m/s).
+@export var lift_speed_m_s: float = 0.9
+## Items are let go with at most this speed so they don't skid off (m/s).
+@export var release_speed_m_s: float = 0.5
+## Pick tolerance around the cursor for the mouse, in screen pixels.
+@export var mouse_pick_radius_px: float = 14.0
+
 @export_group("Tilt input")
 @export var wheel_tilt_step_rad: float = 0.14
 @export var mouse_tilt_rad_per_px: float = 0.008
@@ -49,6 +68,9 @@ var _pick_requested: bool = false
 var _pick_is_touch: bool = false
 var _mouse_tilting: bool = false
 var _target_world: Vector3 = Vector3.ZERO
+## Where the pointer says the hand should be; _target_world chases it.
+var _pointer_target_world: Vector3 = Vector3.ZERO
+var _tracked_body: RigidBody3D = null
 var _gravity_vector: Vector3 = Vector3.DOWN * SimConstants.GRAVITY_M_S2
 var _pick_ray: RayCast3D
 var _pick_cast: ShapeCast3D
@@ -175,9 +197,14 @@ func grab(body: RigidBody3D) -> void:
 	_hold_yaw_rad = body.global_basis.get_euler().y
 	pour_roll_rad = 0.0
 	_target_world = body.global_position
+	_pointer_target_world = _target_world
 
 
 func release() -> void:
+	if held_body != null and is_instance_valid(held_body):
+		# Let go gently: cap the speed so the item settles where you dropped it.
+		held_body.linear_velocity = held_body.linear_velocity.limit_length(release_speed_m_s)
+		held_body.angular_velocity = held_body.angular_velocity.limit_length(4.0)
 	held_body = null
 	_mouse_tilting = false
 	pour_roll_rad = 0.0
@@ -196,6 +223,11 @@ func _physics_process(_delta: float) -> void:
 	if not is_instance_valid(held_body) or held_body.freeze:
 		held_body = null
 		return
+	if held_body != _tracked_body:
+		# Newly held (by pick, grab() or code): the hand starts where it is.
+		_tracked_body = held_body
+		_target_world = held_body.global_position
+		_pointer_target_world = _target_world
 	_update_target()
 	_drive_linear()
 	if not (held_body.has_method(&"wants_free_rotation") and held_body.call(&"wants_free_rotation")):
@@ -209,9 +241,10 @@ func _do_pick() -> void:
 	_pick_ray.target_position = ray
 	_pick_ray.force_raycast_update()
 	var body: RigidBody3D = _pick_ray.get_collider() as RigidBody3D
-	if body == null and _pick_is_touch:
-		# Inflate the pick hull so small stoppers/vials keep a 48 dp touch target.
-		_pick_sphere.radius = _touch_pick_radius_meters()
+	if body == null:
+		# Inflate the pick hull so small stoppers/vials are easy to grab:
+		# a 48 dp target for touch, a few pixels of slack for the mouse.
+		_pick_sphere.radius = _touch_pick_radius_meters() if _pick_is_touch else _pixels_to_meters(mouse_pick_radius_px)
 		_pick_cast.global_transform = Transform3D(Basis.IDENTITY, origin)
 		_pick_cast.target_position = ray
 		_pick_cast.force_shapecast_update()
@@ -224,6 +257,14 @@ func _do_pick() -> void:
 	_hold_yaw_rad = held_body.global_basis.get_euler().y
 	pour_roll_rad = 0.0
 	_target_world = held_body.global_position
+	_pointer_target_world = _target_world
+
+
+## Screen pixels -> metres at the typical working distance from the camera.
+func _pixels_to_meters(px: float) -> float:
+	var viewport_h: float = maxf(get_viewport().get_visible_rect().size.y, 1.0)
+	var view_h_m: float = 2.0 * TOUCH_PICK_REFERENCE_DISTANCE_METERS * tan(deg_to_rad(camera.fov) * 0.5)
+	return clampf(px * view_h_m / viewport_h, 0.003, 0.08)
 
 
 func _touch_pick_radius_meters() -> float:
@@ -240,19 +281,32 @@ func _update_target() -> void:
 	if absf(dir.y) < 1e-4:
 		return
 	var plane_y: float = hover_plane_y_meters
+	var overridden: bool = false
 	if held_body.has_method(&"get_hover_offset_meters"):
 		plane_y += held_body.call(&"get_hover_offset_meters") as float
 	if held_body.has_method(&"get_hover_override_y"):
 		var override_y: float = held_body.call(&"get_hover_override_y") as float
 		if not is_nan(override_y):
 			plane_y = override_y
+			overridden = true
 	var t: float = (plane_y - origin.y) / dir.y
 	if t <= 0.0:
 		return
 	var hit: Vector3 = origin + dir * t
 	var center: Vector3 = global_position
 	var flat: Vector2 = Vector2(hit.x - center.x, hit.z - center.z).limit_length(reach_radius_meters)
-	_target_world = Vector3(center.x + flat.x, plane_y, center.z + flat.y)
+	_pointer_target_world = Vector3(center.x + flat.x, plane_y, center.z + flat.y)
+	# The hand glides toward the pointer at a capped speed (Shift = precise).
+	var dt: float = 1.0 / float(Engine.physics_ticks_per_second)
+	var speed: float = precise_speed_m_s if Input.is_key_pressed(KEY_SHIFT) else carry_speed_m_s
+	if held_body is MachineHandle3D:
+		speed *= 3.0  # cranks and shaker handles need brisk strokes
+	var cur_flat: Vector2 = Vector2(_target_world.x, _target_world.z)
+	var want_flat: Vector2 = Vector2(_pointer_target_world.x, _pointer_target_world.z)
+	cur_flat = cur_flat.move_toward(want_flat, speed * dt)
+	# Machines that drive the height themselves (hammer slam) keep it instant.
+	var y: float = plane_y if overridden else move_toward(_target_world.y, plane_y, lift_speed_m_s * dt)
+	_target_world = Vector3(cur_flat.x, y, cur_flat.y)
 
 
 func _drive_linear() -> void:
