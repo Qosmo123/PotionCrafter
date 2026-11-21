@@ -198,6 +198,57 @@ func gather(recipe: RecipeData) -> PackedStringArray:
 	return missing
 
 
+## "Brew Pinned Formula": pour each ingredient of a known recipe straight
+## from the shelves into `vessel` (equal shares of the free space). This only
+## skips the fetching and pouring: the mixture still has to be heated,
+## stirred and allowed to react, and the chemistry decides what comes out.
+## Returns the ingredients that aren't shelf items (heat, stirring...).
+func dispense_into(recipe: RecipeData, vessel: Vessel3D) -> PackedStringArray:
+	var missing: PackedStringArray = PackedStringArray()
+	var ids: PackedStringArray = PackedStringArray()
+	for ing: String in recipe.ingredients:
+		var id: String = match_ingredient(ing)
+		if id == "" or find_item(id).get("count", 0) == 0:
+			missing.append(ing)
+		elif not id in ids:
+			ids.append(id)
+	if ids.is_empty():
+		last_message = "None of these ingredients are on the shelves: " + ", ".join(missing)
+		return missing
+	var free_m3: float = maxf(vessel.capacity_m3 * 0.8 - vessel.mixture.get_liquid_volume_m3() - vessel.mixture.get_solid_volume_m3(), 0.0)
+	if free_m3 < 5e-6:
+		last_message = "That vessel is already full"
+		missing = recipe.ingredients.duplicate()
+		return missing
+	var share_m3: float = minf(free_m3 / float(ids.size()), REAGENT_FILL_M3)
+	var poured: PackedStringArray = PackedStringArray()
+	for id: String in ids:
+		var item: Dictionary = find_item(id)
+		var subs: Array = item.get("substances", [])
+		var ratios: Array = item.get("ratios", [])
+		var ratio_sum: float = 0.0
+		for k: int in subs.size():
+			ratio_sum += float(ratios[k]) if k < ratios.size() else 1.0
+		if subs.is_empty() and item.has("juice"):
+			subs = [(item["juice"] as SubstanceData).substance_id]
+			ratio_sum = 1.0
+		for k: int in subs.size():
+			var idx: int = SubstanceRegistry.index_of_id(StringName(subs[k]))
+			if idx < 0:
+				continue
+			var s: SubstanceData = SubstanceRegistry.get_substance(idx)
+			var part_m3: float = share_m3 * (float(ratios[k]) if k < ratios.size() else 1.0) / maxf(ratio_sum, 1e-9)
+			vessel.mixture.add_substance(idx, part_m3 * s.density_kg_m3 / s.molar_mass_kg_mol, float(item.get("temp_k", SimConstants.AMBIENT_TEMP_KELVIN)))
+		if int(item["count"]) > 0:
+			item["count"] = int(item["count"]) - 1
+		poured.append(String(item["label"]))
+	last_message = "Poured in: %s" % ", ".join(poured)
+	if not missing.is_empty():
+		last_message += "   ·   still needed: %s" % ", ".join(missing)
+	changed.emit()
+	return missing
+
+
 ## Best storage item for an ingredient written in words ("Two scoops of
 ## Baking Soda" -> the baking-soda vial). Longest label match wins.
 func match_ingredient(words: String) -> String:

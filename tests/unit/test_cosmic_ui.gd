@@ -139,3 +139,18 @@ func test_hammer_charge_builds_and_releases() -> void:
 	h.release_charge()
 	check(not h.charging and h.get_hover_override_y() < hover_charged, "releasing swings it down to the bench")
 	h.free()
+
+
+func test_brew_pinned_dispenses_ingredients_but_not_steps() -> void:
+	var store: InventoryStore = _store()
+	var v: Vessel3D = (load("res://world_3d/vessels/vessel_3d.tscn") as PackedScene).instantiate() as Vessel3D
+	v.mixture = MixtureContainer.new()
+	v.capacity_m3 = 300e-6
+	var r: RecipeData = RecipeData.new()
+	r.ingredients = PackedStringArray(["Moonwater", "Heat"])
+	var missing: PackedStringArray = store.dispense_into(r, v)
+	check(v.mixture.get_liquid_volume_m3() > 50e-6, "moonwater was poured into the vessel (%.0f mL)" % (v.mixture.get_liquid_volume_m3() * 1e6))
+	check(missing.size() == 1 and missing[0] == "Heat", "heat is left for the player to do")
+	check(v.mixture.get_liquid_volume_m3() <= v.capacity_m3, "never overfills the vessel")
+	v.free()
+	store.free()

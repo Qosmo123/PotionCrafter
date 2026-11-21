@@ -13,6 +13,15 @@ static var _soft_dot: GradientTexture2D = null
 static var disabled: bool = false
 
 var _steam: GPUParticles3D
+## Nebula steam: swirling coloured wisps + stardust over arcane or glowing brews.
+var _nebula: GPUParticles3D
+var _nebula_process: ParticleProcessMaterial
+var _stardust: GPUParticles3D
+var _stardust_process: ParticleProcessMaterial
+## One-shot coloured puff when something new lands in the vessel.
+var _puff: GPUParticles3D
+var _puff_process: ParticleProcessMaterial
+var _last_mass_kg: float = -1.0
 var _steam_process: ParticleProcessMaterial
 var _flames: GPUParticles3D
 var _flame_process: ParticleProcessMaterial
@@ -264,6 +273,61 @@ func _ready() -> void:
 	frost_p.color_ramp = _alpha_ramp(Color(0.8, 0.95, 1.0, 0.0), Color(0.9, 0.97, 1.0, 1.0), Color(0.8, 0.95, 1.0, 0.0))
 	_frost = _make_particles(30, 1.2, frost_p, _quad(0.004, billboard_material(true, 2.0, Color(0.8, 0.95, 1.0))))
 	_foam.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+	_build_nebula()
+
+
+func _build_nebula() -> void:
+	var mobile: bool = QualityTier.is_mobile_tier()
+	_nebula_process = ParticleProcessMaterial.new()
+	_nebula_process.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
+	_nebula_process.emission_sphere_radius = 0.02
+	_nebula_process.direction = Vector3.UP
+	_nebula_process.spread = 20.0
+	_nebula_process.initial_velocity_min = 0.03
+	_nebula_process.initial_velocity_max = 0.07
+	_nebula_process.gravity = Vector3(0.0, 0.03, 0.0)
+	_nebula_process.orbit_velocity_min = 0.08
+	_nebula_process.orbit_velocity_max = 0.22
+	_nebula_process.scale_min = 0.8
+	_nebula_process.scale_max = 2.2
+	_nebula_process.scale_curve = _ramp_curve(0.4, 1.8)
+	_nebula_process.color_ramp = _alpha_ramp(Color(1, 1, 1, 0.0), Color(1, 1, 1, 0.32), Color(1, 1, 1, 0.0))
+	_nebula_process.hue_variation_min = -0.06
+	_nebula_process.hue_variation_max = 0.06
+	_nebula_process.turbulence_enabled = true
+	_nebula_process.turbulence_noise_strength = 0.9
+	_nebula_process.turbulence_influence_min = 0.05
+	_nebula_process.turbulence_influence_max = 0.14
+	_nebula = _make_particles(16 if mobile else 36, 3.2, _nebula_process, _quad(0.06, billboard_material(true, 0.0)))
+	_stardust_process = ParticleProcessMaterial.new()
+	_stardust_process.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
+	_stardust_process.emission_sphere_radius = 0.03
+	_stardust_process.direction = Vector3.UP
+	_stardust_process.spread = 40.0
+	_stardust_process.initial_velocity_min = 0.02
+	_stardust_process.initial_velocity_max = 0.06
+	_stardust_process.gravity = Vector3(0.0, 0.02, 0.0)
+	_stardust_process.orbit_velocity_min = 0.2
+	_stardust_process.orbit_velocity_max = 0.45
+	_stardust_process.color_ramp = _alpha_ramp(Color(1.0, 0.9, 0.55, 0.0), Color(1.0, 0.92, 0.6, 1.0), Color(0.6, 0.9, 1.0, 0.0))
+	_stardust = _make_particles(12 if mobile else 30, 2.2, _stardust_process, _quad(0.004, billboard_material(true, 3.0, Color(1.0, 0.9, 0.6))))
+	_puff_process = ParticleProcessMaterial.new()
+	_puff_process.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
+	_puff_process.emission_sphere_radius = 0.015
+	_puff_process.direction = Vector3.UP
+	_puff_process.spread = 50.0
+	_puff_process.initial_velocity_min = 0.06
+	_puff_process.initial_velocity_max = 0.16
+	_puff_process.gravity = Vector3(0.0, 0.05, 0.0)
+	_puff_process.damping_min = 0.3
+	_puff_process.damping_max = 0.6
+	_puff_process.scale_min = 0.8
+	_puff_process.scale_max = 1.8
+	_puff_process.scale_curve = _ramp_curve(0.5, 1.6)
+	_puff_process.color_ramp = _alpha_ramp(Color(1, 1, 1, 0.0), Color(1, 1, 1, 0.45), Color(1, 1, 1, 0.0))
+	_puff = _make_particles(10 if mobile else 18, 1.2, _puff_process, _quad(0.045, billboard_material(true, 0.0)))
+	_puff.one_shot = true
+	_puff.explosiveness = 0.85
 
 
 func _make_particles(amount: int, lifetime: float, process: ParticleProcessMaterial, mesh: Mesh) -> GPUParticles3D:
@@ -295,6 +359,36 @@ func update_effects(vessel: Vessel3D, lip_world: Vector3, surface_world: Vector3
 	if _steam.emitting:
 		_steam.global_position = lip_world
 		_steam.amount_ratio = clampf(steam_level, 0.1, 1.0)
+
+	# Steam takes on a hint of the brew's colour.
+	if _steam.emitting:
+		_steam_process.color = Color(1, 1, 1).lerp(m.get_contents_color(), 0.25)
+
+	# Nebula steam over arcane or glowing brews, coloured by the brew itself.
+	var aura: Color = m.get_emission_hdr()
+	var glow: float = aura.r + aura.g + aura.b
+	var thaums_per_mol: float = m.get_total_thaums() / maxf(m.get_total_moles(), 1e-9)
+	var arcane: float = clampf(maxf(glow / 1.5, thaums_per_mol / 25.0), 0.0, 1.0)
+	_nebula.emitting = has_liquid and vessel.open_top and arcane > 0.12
+	_stardust.emitting = _nebula.emitting and arcane > 0.3
+	if _nebula.emitting:
+		var tint: Color = m.get_contents_color().lerp(Color(0.48, 0.25, 0.89), 0.35)
+		if glow > 0.1:
+			tint = tint.lerp(Color(aura.r, aura.g, aura.b).clamp(), 0.4)
+		_nebula_process.color = Color(tint, 1.0)
+		_nebula.global_position = surface_world + Vector3.UP * 0.02
+		_nebula.amount_ratio = clampf(arcane, 0.25, 1.0)
+		if _stardust.emitting:
+			_stardust.global_position = surface_world + Vector3.UP * 0.03
+			_stardust.amount_ratio = clampf(arcane, 0.3, 1.0)
+
+	# A coloured puff whenever something new is added (≥ 1 g in one tick).
+	var mass_kg: float = m.get_total_mass_kg()
+	if _last_mass_kg >= 0.0 and mass_kg - _last_mass_kg > 0.001 and has_liquid and vessel.open_top and not _puff.emitting:
+		_puff_process.color = Color(m.get_contents_color().lightened(0.2), 1.0)
+		_puff.global_position = surface_world + Vector3.UP * 0.01
+		_puff.restart()
+	_last_mass_kg = mass_kg
 
 	_flames.emitting = m.burning and vessel.open_top
 	_fire_light.visible = _flames.emitting

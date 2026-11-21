@@ -57,6 +57,8 @@ func _process(_delta: float) -> void:
 		_crush_demo(bench)
 	if _args.has("facet"):
 		_facet_demo(bench)
+	if _args.has("brew"):
+		_brew_demo(bench)
 	if _frames == SHOT_FRAME - 8 and _args.has("book"):
 		var book: GrimoireBookUI = bench.get_node("GrimoireBookUI") as GrimoireBookUI
 		book.open(1 if _args.has("formulas") else 0)
@@ -250,3 +252,15 @@ func _facet_demo(bench: Node) -> void:
 		var panel: Node = f.get_child(f.get_child_count() - 1)
 		if panel.has_method(&"set_open"):
 			panel.call(&"set_open", true)
+
+
+## Phase 3 alchemy showcase: a discovered recipe pinned as the ghost
+## parchment, checking the moonwater flask live, with nebula steam rising.
+func _brew_demo(bench: Node) -> void:
+	if _frames == 3 and RecipeBook.instance != null and GrimoireJournal.instance != null:
+		for r: RecipeData in RecipeBook.instance.recipes:
+			if r.recipe_id == &"levitation":
+				RecipeBook.instance.discovered[r.recipe_id] = true
+				GrimoireJournal.instance.pin(String(r.recipe_id))
+	if _frames == 10 and HudOverlay.instance != null:
+		HudOverlay.instance.set("_pin_vessel", bench.get_node("Vessels/FlaskMoonwater"))

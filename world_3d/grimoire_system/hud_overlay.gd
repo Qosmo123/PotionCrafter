@@ -51,6 +51,11 @@ var _shell: Control
 var _pin_card: PanelContainer
 var _pin_body: VBoxContainer
 var _pin_shown: String = "?"
+var _pin_checks: Array[Label] = []
+var _pin_target_label: Label
+var _pin_vessel: Vessel3D = null
+var _pin_timer: float = 0.0
+var _pin_base_y: float = 84.0
 var _charge_bar: ProgressBar
 var _load_rock: Button
 var _reveal_panel: PanelContainer
@@ -227,7 +232,11 @@ func _ready() -> void:
 	_pin_card.position = Vector2(CosmicTheme.GUTTER, 84)
 	_pin_card.custom_minimum_size = Vector2(340, 0)
 	_pin_card.size = Vector2(340, 0)
-	_pin_card.add_theme_stylebox_override(&"panel", CosmicTheme.glass(CosmicTheme.PRISM_PINK, 14, 1, Color(CosmicTheme.DEEP, 0.72)))
+	# Ghostly parchment: warm, translucent vellum with a violet aura.
+	var vellum: CosmicStyleBox = CosmicTheme.glass(Color("#F6E7C1"), 16, 2, Color(0.16, 0.11, 0.21, 0.84))
+	vellum.glow_color = Color(CosmicTheme.VIOLET, 0.35)
+	vellum.glow_size = 14
+	_pin_card.add_theme_stylebox_override(&"panel", vellum)
 	CosmicTheme.frost(_pin_card)
 	_pin_card.visible = false
 	_shell.add_child(_pin_card)
@@ -256,7 +265,11 @@ func _corner_button(text: String, offset_left: float, action: Callable, width: f
 	_shell.add_child(b)
 
 
-## The pinned formula, floating like a ghostly page beside the bench.
+## The pinned formula as a ghostly parchment floating beside the bench: the
+## recipe, its steps, and a live signature check for the vessel in hand
+## (each condition the grimoire listens for, ✓ when met). Once a recipe has
+## been discovered, "Brew Pinned Formula" pours its ingredients into that
+## vessel; heating, stirring and the chemistry itself are still up to you.
 func _refresh_pin() -> void:
 	var journal: GrimoireJournal = GrimoireJournal.instance
 	var r: RecipeData = journal.pinned() if journal != null else null
@@ -264,17 +277,19 @@ func _refresh_pin() -> void:
 	if id == _pin_shown:
 		return
 	_pin_shown = id
+	_pin_checks.clear()
 	for c: Node in _pin_body.get_children():
 		c.queue_free()
 	_pin_card.visible = r != null
 	if r == null:
 		return
+	var ink: Color = Color("#F6E7C1")
 	var head: HBoxContainer = HBoxContainer.new()
 	_pin_body.add_child(head)
-	var t: Label = CosmicTheme.title("✦ " + r.title, 18, CosmicTheme.STARLIGHT_GOLD)
+	var t: Label = CosmicTheme.title("✦ " + r.title, 19, CosmicTheme.STARLIGHT_GOLD)
 	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	t.custom_minimum_size = Vector2(240, 0)
+	t.custom_minimum_size = Vector2(250, 0)
 	head.add_child(t)
 	var unpin: Button = Button.new()
 	unpin.text = "✕"
@@ -286,15 +301,27 @@ func _refresh_pin() -> void:
 	var f: Label = CosmicTheme.label(r.formula, 13, CosmicTheme.PRISM_CYAN, CosmicTheme.mono_font())
 	f.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_pin_body.add_child(f)
-	var ing: Label = CosmicTheme.label("Ingredients:  " + ", ".join(r.ingredients), 13, CosmicTheme.TEXT)
+	var ing: Label = CosmicTheme.label("Ingredients:  " + ", ".join(r.ingredients), 13, ink)
 	ing.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_pin_body.add_child(ing)
 	for k: int in r.method_steps.size():
-		var step: Label = CosmicTheme.label("%d.  %s" % [k + 1, r.method_steps[k]], 13, CosmicTheme.TEXT_DIM)
+		var step: Label = CosmicTheme.label("%d.  %s" % [k + 1, r.method_steps[k]], 13, Color(ink, 0.8))
 		step.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		_pin_body.add_child(step)
+	_pin_body.add_child(CosmicTheme.label("Signature check", 12, CosmicTheme.TEXT_DIM, CosmicTheme.display_font()))
+	for i: int in mini(r.condition_traits.size(), mini(r.condition_min.size(), r.condition_max.size())):
+		var row: Label = CosmicTheme.label("", 12, CosmicTheme.TEXT_FAINT, CosmicTheme.mono_font())
+		row.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		_pin_body.add_child(row)
+		_pin_checks.append(row)
+	_pin_target_label = CosmicTheme.label("", 11, CosmicTheme.TEXT_FAINT)
+	_pin_body.add_child(_pin_target_label)
+	var actions: HBoxContainer = HBoxContainer.new()
+	actions.add_theme_constant_override(&"separation", 6)
+	_pin_body.add_child(actions)
 	var gather: Button = Button.new()
-	gather.text = "☿  Gather ingredients"
+	gather.text = "☿ Gather"
+	gather.tooltip_text = "Set every ingredient you have in storage on the bench"
 	gather.custom_minimum_size = Vector2(0, 36)
 	CosmicTheme.style_button(gather, CosmicTheme.PRISM_CYAN)
 	gather.pressed.connect(func() -> void:
@@ -304,12 +331,62 @@ func _refresh_pin() -> void:
 		if missing.size() == r.ingredients.size():
 			CosmicTheme.shake(_pin_card)
 		show_toast(InventoryStore.instance.last_message, &"info" if missing.is_empty() else &"warning"))
-	_pin_body.add_child(gather)
+	actions.add_child(gather)
+	var known: bool = RecipeBook.instance != null and RecipeBook.instance.is_discovered(r)
+	var brew: Button = Button.new()
+	brew.text = "✧ Brew Pinned Formula" if known else "✧ Brew (discover it first)"
+	brew.tooltip_text = "Pour the ingredients straight into the vessel in your hand (or the one you point at)" if known else "Brew this by hand once; after that the shortcut unlocks"
+	brew.disabled = not known
+	brew.custom_minimum_size = Vector2(0, 36)
+	CosmicTheme.style_button(brew, CosmicTheme.PRISM_PINK, true)
+	brew.pressed.connect(func() -> void: _brew_pinned(r, brew))
+	actions.add_child(brew)
 	for n: Node in _pin_body.get_children():
 		if n is Label:
-			(n as Label).custom_minimum_size.x = 310.0
+			(n as Label).custom_minimum_size.x = 320.0
 	_pin_card.reset_size.call_deferred()
 	CosmicTheme.reveal(_pin_card)
+
+
+func _brew_pinned(r: RecipeData, button: Control) -> void:
+	var v: Vessel3D = _pin_vessel if is_instance_valid(_pin_vessel) else null
+	if v == null or InventoryStore.instance == null:
+		CosmicTheme.shake(button)
+		show_toast("Hold or point at an open vessel first, then brew the pinned formula into it", &"warning")
+		return
+	var missing: PackedStringArray = InventoryStore.instance.dispense_into(r, v)
+	if missing.size() == r.ingredients.size():
+		CosmicTheme.shake(button)
+		show_toast(InventoryStore.instance.last_message, &"warning")
+		return
+	show_toast(InventoryStore.instance.last_message + "   ·   now: " + " → ".join(r.method_steps), &"discovery")
+
+
+## Live signature check against the vessel in hand (or under the pointer).
+func _update_pin_checks() -> void:
+	var r: RecipeData = GrimoireJournal.instance.pinned() if GrimoireJournal.instance != null else null
+	if r == null or _pin_checks.is_empty():
+		return
+	var traits: Dictionary = {}
+	if is_instance_valid(_pin_vessel) and _pin_vessel.mixture != null and _pin_vessel.mixture.get_liquid_volume_m3() > 1e-7:
+		traits = RecipeBook.measure(_pin_vessel)
+		_pin_target_label.text = "checking: %s" % PotionNamer.name_for(_pin_vessel.mixture, _pin_vessel.foam_height_meters)
+	else:
+		_pin_target_label.text = "hold or point at a vessel to check it"
+	for i: int in _pin_checks.size():
+		var trait_name: String = r.condition_traits[i]
+		var lo: float = r.condition_min[i]
+		var hi: float = r.condition_max[i]
+		var nice: String = trait_name.replace("fraction:", "share of ").replace("_", " ")
+		var want: String = ("≥ %s" % String.num(lo, 2)) if hi >= 1e8 else (("≤ %s" % String.num(hi, 2)) if lo <= -1e8 or (lo <= 0.0 and trait_name != "ph") else "%s–%s" % [String.num(lo, 2), String.num(hi, 2)])
+		if traits.is_empty():
+			_pin_checks[i].text = "○ %s %s" % [nice, want]
+			_pin_checks[i].add_theme_color_override(&"font_color", CosmicTheme.TEXT_FAINT)
+			continue
+		var value: float = traits.get(trait_name, 0.0)
+		var ok: bool = value >= lo and value <= hi
+		_pin_checks[i].text = "%s %s %s   (now %s)" % ["✓" if ok else "○", nice, want, String.num(value, 2)]
+		_pin_checks[i].add_theme_color_override(&"font_color", CosmicTheme.SUCCESS if ok else CosmicTheme.TEXT_DIM)
 
 
 func toggle_help() -> void:
@@ -459,7 +536,7 @@ func bottle(vessel: Vessel3D) -> void:
 		show_toast("Nothing to bottle: the vessel is empty", &"warning")
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if GrimoireJournal.instance != null:
 		_coins.text = "◉ %d" % GrimoireJournal.instance.coins
 	var hammer: Hammer3D = grabber.held_body as Hammer3D if grabber != null else null
@@ -473,6 +550,22 @@ func _process(_delta: float) -> void:
 	_load_rock.visible = LabCamera3D.instance != null and LabCamera3D.instance.station == 1
 	# The pinned formula belongs to the potion bench.
 	_pin_card.visible = _pin_shown != "" and (LabCamera3D.instance == null or LabCamera3D.instance.station == 0)
+	if _pin_card.visible:
+		# Float gently, like a page held up by magic.
+		if not CosmicTheme.reduced_motion:
+			_pin_card.position.y = _pin_base_y + sin(Time.get_ticks_msec() * 0.0015) * 4.0
+			_pin_card.modulate.a = 0.9 + 0.08 * sin(Time.get_ticks_msec() * 0.0023)
+		_pin_timer -= delta
+		if _pin_timer <= 0.0:
+			_pin_timer = 0.25
+			var held_v: Vessel3D = grabber.held_body as Vessel3D if grabber != null else null
+			if held_v != null:
+				_pin_vessel = held_v
+			elif camera != null:
+				var hovered: Vessel3D = _pick(get_viewport().get_mouse_position()) as Vessel3D
+				if hovered != null:
+					_pin_vessel = hovered
+			_update_pin_checks()
 	if LabCamera3D.instance != null:
 		for i: int in _station_buttons.size():
 			_station_buttons[i].button_pressed = LabCamera3D.instance.station == i
