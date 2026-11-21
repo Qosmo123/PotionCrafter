@@ -53,6 +53,8 @@ func _process(_delta: float) -> void:
 			tip.add_child(SatchelItemButton.build_card(row.item))
 			tip.position = row.get_global_rect().position + Vector2(-420.0, 0.0)
 			(panel.get_child(0) as Control).add_child(tip)
+	if _args.has("crush"):
+		_crush_demo(bench)
 	if _frames == SHOT_FRAME - 8 and _args.has("book"):
 		var book: GrimoireBookUI = bench.get_node("GrimoireBookUI") as GrimoireBookUI
 		book.open(1 if _args.has("formulas") else 0)
@@ -195,3 +197,27 @@ func _lab(bench: Node) -> void:
 		var stone: Rock3D = Rock3D.spawn(bench, Rock3D.get_mineral("fluorite_octahedron"), polisher.global_transform * Vector3(0.0, polisher.wheel_height_meters + 0.02, 0.0), 0.02)
 		stone.freeze_mode = RigidBody3D.FREEZE_MODE_KINEMATIC
 		stone.freeze = true
+
+
+## Phase 3 crusher showcase: a cracked geode glowing on the anvil, a rare find
+## being revealed, and the Load Next Rock button.
+var _crush_rock: Rock3D = null
+
+
+func _crush_demo(bench: Node) -> void:
+	if _frames == 2:
+		var cam: LabCamera3D = bench.get_node("Camera3D") as LabCamera3D
+		cam.go_to_station(1)
+		cam.set("_zoom_target", 0.3)
+	var anvil: Node3D = get_tree().get_first_node_in_group(&"anvil") as Node3D
+	if anvil == null:
+		return
+	if _frames == 30:
+		var top: Vector3 = AnvilLoader.anvil_top(anvil)
+		_crush_rock = Rock3D.spawn(bench, Rock3D.get_mineral("geode"), top + Vector3(0.0, 0.04, 0.0), 0.25)
+	if _frames == SHOT_FRAME - 20 and _crush_rock != null:
+		_crush_rock.integrity = _crush_rock.integrity_max * 0.3
+		_crush_rock.strike(0.0001)
+	if _frames == SHOT_FRAME - 12:
+		var opal: Rock3D = Rock3D.spawn(bench, Rock3D.get_mineral("precious_opal"), AnvilLoader.anvil_top(anvil) + Vector3(0.12, 0.03, 0.04), 0.02)
+		Rock3D._reveal(opal, opal.mineral)

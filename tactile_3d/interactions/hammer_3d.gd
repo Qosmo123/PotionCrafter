@@ -1,18 +1,27 @@
 class_name Hammer3D
 extends RigidBody3D
-## Geologist's hammer, held head-down. While held, Space (or the Strike button)
-## slams it down onto whatever is below: the grabber's spring yanks it to the
-## bench, and the contact's kinetic energy (½ m v²) chips at a rock's
-## hardness-scaled integrity until it cracks.
+## Geologist's hammer, held head-down. While held, tap Space (or the Strike
+## button) to slam it down onto whatever is below, or HOLD to wind up: the
+## hammer rises higher the longer you hold, and on release it swings down with
+## an extra downward impulse. The contact's kinetic energy (½ m v²) chips at a
+## rock's hardness-scaled integrity until it cracks.
 
 const SLAM_SECONDS: float = 0.22
 const MIN_STRIKE_SPEED: float = 0.8
+const CHARGE_SECONDS: float = 0.8
+const WINDUP_METERS: float = 0.16
+## Downward swing impulse at full charge (N·s): an arm putting its back into it.
+const SWING_IMPULSE_N_S: float = 2.2
 
 @export var head_mass_kg: float = 0.45
 @export var bench_top_y: float = 0.8
 
 var _slam_timer: float = 0.0
 var _cooldown: float = 0.0
+## 0..1 while winding up (read by the HUD charge meter).
+var charge: float = 0.0
+var charging: bool = false
+var _swing_impulse: float = 0.0
 
 
 func _ready() -> void:
@@ -74,14 +83,43 @@ func slam() -> void:
 		_cooldown = SLAM_SECONDS + 0.15
 
 
+## Start winding up a charged blow (Space / Strike held).
+func begin_charge() -> void:
+	if _cooldown <= 0.0:
+		charging = true
+		charge = 0.0
+
+
+## Let go: swing down with power proportional to the wind-up.
+func release_charge() -> void:
+	if not charging:
+		return
+	charging = false
+	_slam_timer = SLAM_SECONDS
+	_cooldown = SLAM_SECONDS + 0.15
+	_swing_impulse = SWING_IMPULSE_N_S * charge * charge
+
+
 func _physics_process(delta: float) -> void:
 	_slam_timer = maxf(_slam_timer - delta, 0.0)
 	_cooldown = maxf(_cooldown - delta, 0.0)
+	if charging:
+		charge = minf(charge + delta / CHARGE_SECONDS, 1.0)
+	elif _slam_timer <= 0.0:
+		charge = 0.0
+	if _swing_impulse > 0.0:
+		apply_central_impulse(Vector3.DOWN * _swing_impulse)
+		_swing_impulse = 0.0
 
 
-## While slamming, pull the head down to the bench top.
+## While slamming, pull the head down to the bench top; while winding up,
+## lift it higher the longer the charge.
 func get_hover_override_y() -> float:
-	return bench_top_y + 0.1 if _slam_timer > 0.0 else NAN
+	if _slam_timer > 0.0:
+		return bench_top_y + 0.1
+	if charging:
+		return bench_top_y + 0.22 + WINDUP_METERS * charge
+	return NAN
 
 
 func _on_body_entered(body: Node) -> void:

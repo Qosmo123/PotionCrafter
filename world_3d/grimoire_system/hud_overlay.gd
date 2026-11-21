@@ -23,7 +23,8 @@ const HELP_TEXT: String = """[b][color=#F4D06F]Hands[/color][/b]
   ○ ward   △ heat   □ chill   ⬠ levitate   ⬡ stir   ⯃ catalyse
 
 [b][color=#F4D06F]Mineral Lab  (press 2)[/color][/b]
-  Hammer + Space  ·  crack rocks open on the anvil to find minerals, gems and fossils
+  Hammer + Space  ·  crack rocks open on the anvil (hold Space to wind up a big swing)
+  R  ·  Load Next Rock: toss the next rock from the crate onto the anvil
   Rock crusher  ·  drop a rock in the hopper, drag the crank handle in circles
   Sand sifter  ·  drop a sand bag in, drag the shaker handle side to side
   Polisher / faceting machine  ·  click the brass switch, hold a stone on the wheel
@@ -50,6 +51,20 @@ var _shell: Control
 var _pin_card: PanelContainer
 var _pin_body: VBoxContainer
 var _pin_shown: String = "?"
+var _charge_bar: ProgressBar
+var _load_rock: Button
+var _reveal_panel: PanelContainer
+
+static var instance: HudOverlay = null
+
+
+func _enter_tree() -> void:
+	instance = self
+
+
+func _exit_tree() -> void:
+	if instance == self:
+		instance = null
 
 
 func _ready() -> void:
@@ -101,6 +116,7 @@ func _ready() -> void:
 		_station_buttons.append(sb)
 	_strike = Button.new()
 	_strike.text = "STRIKE  [Space]"
+	_strike.tooltip_text = "Tap to strike. Hold to wind up a bigger swing, release to smash."
 	_strike.anchor_left = 0.5
 	_strike.anchor_right = 0.5
 	_strike.anchor_top = 1.0
@@ -114,8 +130,40 @@ func _ready() -> void:
 	CosmicTheme.style_button(_strike, CosmicTheme.PRISM_PINK, true)
 	_strike.add_theme_stylebox_override(&"normal", CosmicTheme.glow(CosmicTheme.PRISM_PINK, 10, 12, Color(CosmicTheme.NEBULA, 0.85), 0))
 	_strike.visible = false
-	_strike.pressed.connect(_slam_held)
+	_strike.button_down.connect(_begin_strike)
+	_strike.button_up.connect(_end_strike)
 	_shell.add_child(_strike)
+	# Wind-up meter under the Strike button.
+	_charge_bar = ProgressBar.new()
+	_charge_bar.show_percentage = false
+	_charge_bar.max_value = 1.0
+	_charge_bar.anchor_left = 0.5
+	_charge_bar.anchor_right = 0.5
+	_charge_bar.anchor_top = 1.0
+	_charge_bar.anchor_bottom = 1.0
+	_charge_bar.offset_left = -110
+	_charge_bar.offset_right = 110
+	_charge_bar.offset_top = -26
+	_charge_bar.offset_bottom = -16
+	_charge_bar.add_theme_stylebox_override(&"fill", CosmicTheme.flat(CosmicTheme.PRISM_PINK, Color(0, 0, 0, 0), 0, 5, 0))
+	_charge_bar.visible = false
+	_shell.add_child(_charge_bar)
+	# Chain cracking: lob the next rock onto the anvil (Mineral Lab only).
+	_load_rock = Button.new()
+	_load_rock.text = "↻  Load Next Rock  [R]"
+	_load_rock.tooltip_text = "Toss the next rock from the crate onto the anvil"
+	_load_rock.anchor_left = 0.5
+	_load_rock.anchor_right = 0.5
+	_load_rock.anchor_top = 1.0
+	_load_rock.anchor_bottom = 1.0
+	_load_rock.offset_left = -360
+	_load_rock.offset_right = -126
+	_load_rock.offset_top = -92
+	_load_rock.offset_bottom = -36
+	CosmicTheme.style_button(_load_rock, CosmicTheme.PRISM_CYAN)
+	_load_rock.visible = false
+	_load_rock.pressed.connect(load_next_rock)
+	_shell.add_child(_load_rock)
 	_coins = Label.new()
 	# Coin purse sits in the top bar, left of the Help button.
 	_coins.anchor_left = 1.0
@@ -302,12 +350,20 @@ func show_toast(text: String, kind: StringName = &"info") -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	var key: InputEventKey = event as InputEventKey
-	if key == null or not key.pressed or key.echo:
+	if key == null or key.echo:
+		return
+	if key.keycode == KEY_SPACE:
+		if key.pressed:
+			_begin_strike()
+		else:
+			_end_strike()
+		return
+	if not key.pressed:
 		return
 	if key.keycode == KEY_H:
 		toggle_help()
-	elif key.keycode == KEY_SPACE:
-		_slam_held()
+	elif key.keycode == KEY_R and LabCamera3D.instance != null and LabCamera3D.instance.station == 1:
+		load_next_rock()
 	elif key.keycode == KEY_B and grabber != null and grabber.held_body is Vessel3D:
 		bottle(grabber.held_body as Vessel3D)
 	elif key.keycode == KEY_B:
@@ -327,6 +383,70 @@ func _slam_held() -> void:
 		CosmicTheme.shake(_strike)
 
 
+func _begin_strike() -> void:
+	var hammer: Hammer3D = grabber.held_body as Hammer3D if grabber != null else null
+	if hammer != null:
+		hammer.begin_charge()
+	elif grabber != null and grabber.held_body != null and grabber.held_body.has_method(&"slam"):
+		grabber.held_body.call(&"slam")
+	elif LabCamera3D.instance != null and LabCamera3D.instance.station == 1:
+		show_toast("Pick up the hammer first, then hold Space over a rock on the anvil", &"warning")
+
+
+func _end_strike() -> void:
+	var hammer: Hammer3D = grabber.held_body as Hammer3D if grabber != null else null
+	if hammer != null:
+		hammer.release_charge()
+
+
+func load_next_rock() -> void:
+	var problem: String = AnvilLoader.load_next(self)
+	if problem != "":
+		CosmicTheme.shake(_load_rock)
+		show_toast(problem, &"warning")
+
+
+## Dramatic banner for a rare find (paired with the pillar of light in 3D).
+func show_reveal(m: MineralData) -> void:
+	if _reveal_panel != null and is_instance_valid(_reveal_panel):
+		_reveal_panel.queue_free()
+	var aura: Color = CosmicTheme.rarity_aura(m.rarity)
+	var panel: PanelContainer = PanelContainer.new()
+	panel.add_theme_stylebox_override(&"panel", CosmicTheme.glow(aura, 22, 22, Color(CosmicTheme.DEEP, 0.9), 2))
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var col: VBoxContainer = VBoxContainer.new()
+	col.alignment = BoxContainer.ALIGNMENT_CENTER
+	panel.add_child(col)
+	var kicker: Label = CosmicTheme.label("✦  %s FIND  ✦" % m.rarity_name().to_upper(), 15, aura.lightened(0.2), CosmicTheme.display_font())
+	kicker.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(kicker)
+	var head: HBoxContainer = HBoxContainer.new()
+	head.alignment = BoxContainer.ALIGNMENT_CENTER
+	head.add_theme_constant_override(&"separation", 14)
+	col.add_child(head)
+	var orb: TextureRect = TextureRect.new()
+	orb.texture = CosmicTheme.orb_icon(m.color, m.rarity, 64)
+	orb.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
+	head.add_child(orb)
+	head.add_child(CosmicTheme.title(m.display_name, CosmicTheme.SIZE_HERO + 6, CosmicTheme.TEXT))
+	var stars: Label = CosmicTheme.label("%s   ·   Mohs %.1f   ·   worth about %d ◉" % ["★".repeat(m.rarity + 1), m.hardness_mohs, m.value_coins], 15, CosmicTheme.STARLIGHT_GOLD)
+	stars.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(stars)
+	_shell.add_child(panel)
+	_reveal_panel = panel
+	panel.reset_size()
+	var vp: Vector2 = get_viewport().get_visible_rect().size
+	panel.position = Vector2((vp.x - panel.size.x) * 0.5, vp.y * 0.22)
+	if CosmicTheme.reduced_motion:
+		panel.modulate.a = 1.0
+	else:
+		CosmicTheme.reveal(panel, 0.35, 0.8)
+	var tw: Tween = panel.create_tween()
+	tw.tween_interval(2.8)
+	tw.tween_property(panel, "modulate:a", 0.0, 0.6)
+	tw.tween_callback(panel.queue_free)
+
+
 ## Cork + label the vessel and record it, or uncork it if already sealed.
 func bottle(vessel: Vessel3D) -> void:
 	if vessel.sealed:
@@ -342,7 +462,15 @@ func bottle(vessel: Vessel3D) -> void:
 func _process(_delta: float) -> void:
 	if GrimoireJournal.instance != null:
 		_coins.text = "◉ %d" % GrimoireJournal.instance.coins
-	_strike.visible = grabber != null and grabber.held_body is Hammer3D
+	var hammer: Hammer3D = grabber.held_body as Hammer3D if grabber != null else null
+	_strike.visible = hammer != null
+	_charge_bar.visible = hammer != null and hammer.charging
+	if _charge_bar.visible:
+		_charge_bar.value = hammer.charge
+		_strike.text = "RELEASE!" if hammer.charge >= 1.0 else "WINDING UP…"
+	elif hammer != null:
+		_strike.text = "STRIKE  [Space]"
+	_load_rock.visible = LabCamera3D.instance != null and LabCamera3D.instance.station == 1
 	if LabCamera3D.instance != null:
 		for i: int in _station_buttons.size():
 			_station_buttons[i].button_pressed = LabCamera3D.instance.station == i

@@ -7,6 +7,9 @@ extends RigidBody3D
 ## rocks take real effort and salt crumbles at a tap.
 
 const MINERAL_DIR: String = "res://content/minerals/"
+const CRACK_SHADER: Shader = preload("res://visuals_3d/shaders/rock_cracks.gdshader")
+## Rarity from which a find gets the full shimmer reveal (2 = rare).
+const REVEAL_RARITY: int = 2
 
 static var _registry: Dictionary = {}
 
@@ -22,6 +25,10 @@ static var _registry: Dictionary = {}
 @export var fragment_cleavage: int = -1
 
 var integrity: float = 1.0
+var integrity_max: float = 1.0
+var _crack_mat: ShaderMaterial = null
+var _flash: float = 0.0
+var _weak_hits: int = 0
 var _visual: MeshInstance3D
 var _collider: CollisionShape3D
 var _seed: int = 0
@@ -60,6 +67,8 @@ func _ready() -> void:
 	physics.bounce = 0.05
 	physics_material_override = physics
 	integrity = mineral.hardness_mohs * mineral.hardness_mohs * 0.6 * clampf(mass_kg / 0.1, 0.3, 2.0)
+	integrity_max = integrity
+	set_process(false)
 	_visual = MeshInstance3D.new()
 	add_child(_visual)
 	_collider = CollisionShape3D.new()
@@ -78,6 +87,7 @@ func _rebuild() -> void:
 	var mesh: Mesh = RockMeshes.for_mineral(mineral, r, _seed, cut, fragment_cleavage)
 	_visual.mesh = mesh
 	_visual.material_override = RockMeshes.material_for(mineral, polish, cut)
+	_visual.material_overlay = _crack_mat
 	_collider.shape = mesh.create_convex_shape(true, true)
 
 
@@ -125,8 +135,60 @@ func strike(energy_joules: float) -> void:
 	var effective: float = energy_joules * 10.0 / maxf(mineral.hardness_mohs, 1.0) * cleavage_ease(mineral.cleavage)
 	integrity -= effective
 	AudioHaptics.impact(2.0)
+	_show_hit(effective / maxf(integrity_max, 1e-6))
 	if integrity <= 0.0:
 		crack()
+
+
+## 0 = pristine, 1 = about to split.
+func damage() -> float:
+	return clampf(1.0 - integrity / maxf(integrity_max, 1e-6), 0.0, 1.0)
+
+
+## Colour of the light peeking through the cracks: the rarest thing hidden
+## inside (a hint, not a promise), or warm starlight.
+func crack_glow_color() -> Color:
+	var best: MineralData = null
+	if not exhausted:
+		for inc: Resource in mineral.inclusions:
+			var m: MineralData = inc as MineralData
+			if m != null and (best == null or m.rarity > best.rarity):
+				best = m
+	if best != null and best.rarity >= 1:
+		return best.color.lerp(Color.WHITE, 0.25)
+	return Color(1.0, 0.72, 0.35)
+
+
+## Presentation of a blow: glowing fractures, dust, sparks and a screen nudge.
+func _show_hit(fraction: float) -> void:
+	if _crack_mat == null:
+		_crack_mat = ShaderMaterial.new()
+		_crack_mat.shader = CRACK_SHADER
+		_crack_mat.set_shader_parameter(&"glow_color", crack_glow_color())
+		_crack_mat.set_shader_parameter(&"cell_scale", 3.2 / radius_meters())
+		_crack_mat.set_shader_parameter(&"seed", float(_seed))
+		if _visual != null:
+			_visual.material_overlay = _crack_mat
+	_crack_mat.set_shader_parameter(&"damage", damage())
+	_flash = clampf(0.35 + fraction * 2.0, 0.0, 1.0)
+	set_process(true)
+	var fx: ImpactFx3D = ImpactFx3D.get_pool(self)
+	if fx != null:
+		fx.hit(global_position + Vector3(0.0, radius_meters(), 0.0), mineral.color, crack_glow_color(), clampf(fraction * 3.0, 0.0, 1.0))
+	if LabCamera3D.instance != null:
+		LabCamera3D.instance.shake(clampf(0.12 + fraction * 0.8, 0.0, 0.45))
+	if fraction < 0.04:
+		_weak_hits += 1
+		if _weak_hits == 3 and GrimoireJournal.instance != null:
+			GrimoireJournal.instance.toast.emit("%s is tough (Mohs %.1f). Hold Space to wind up a bigger swing!" % [mineral.display_name, mineral.hardness_mohs], &"warning")
+
+
+func _process(delta: float) -> void:
+	_flash = maxf(_flash - delta * 3.0, 0.0)
+	if _crack_mat != null:
+		_crack_mat.set_shader_parameter(&"flash", _flash)
+	if _flash <= 0.0:
+		set_process(false)
 
 
 ## Split open: roll inclusions into new finds, leave a couple of smaller fragments.
@@ -145,6 +207,8 @@ func crack() -> void:
 				finds.append(find_mineral.display_name)
 				if GrimoireJournal.instance != null:
 					GrimoireJournal.instance.record_find(find_mineral)
+				if find_mineral.rarity >= REVEAL_RARITY:
+					_reveal(find, find_mineral)
 	var pieces: int = fragment_count(mineral.cleavage, rng)
 	var breaks_true: bool = mineral.kind != MineralData.Kind.ROCK and mineral.kind != MineralData.Kind.FOSSIL
 	if mass_kg > 0.004:
@@ -163,6 +227,11 @@ func crack() -> void:
 			frag.global_position = global_position + offset
 			frag.linear_velocity = Vector3(cos(a) * 0.4, 0.5, sin(a) * 0.4)
 			frag.angular_velocity = Vector3(rng.randf_range(-6, 6), rng.randf_range(-6, 6), rng.randf_range(-6, 6))
+	var fx: ImpactFx3D = ImpactFx3D.get_pool(self)
+	if fx != null:
+		fx.hit(global_position, mineral.color, crack_glow_color(), 1.0)
+	if LabCamera3D.instance != null:
+		LabCamera3D.instance.shake(0.55)
 	if GrimoireJournal.instance != null:
 		var text: String = "Cracked %s!" % mineral.display_name
 		if breaks_true:
@@ -170,6 +239,18 @@ func crack() -> void:
 		text += ("  Found: " + ", ".join(finds)) if not finds.is_empty() else ("  Nothing inside this time." if not exhausted and not mineral.inclusions.is_empty() else "")
 		GrimoireJournal.instance.toast.emit(text, &"discovery" if not finds.is_empty() else &"info")
 	queue_free()
+
+
+## Shimmer reveal for a rare find: pillar of light, sparkle burst, banner.
+static func _reveal(find: Rock3D, m: MineralData) -> void:
+	var color: Color = CosmicTheme.rarity_aura(m.rarity)
+	var fx: ImpactFx3D = ImpactFx3D.get_pool(find)
+	if fx != null:
+		fx.reveal(find.global_position - Vector3(0.0, 0.02, 0.0), color)
+	if LabCamera3D.instance != null:
+		LabCamera3D.instance.shake(0.8)
+	if HudOverlay.instance != null:
+		HudOverlay.instance.show_reveal(m)
 
 
 static func cleavage_ease(c: int) -> float:

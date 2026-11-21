@@ -115,3 +115,27 @@ func test_pinned_recipe_toggles() -> void:
 	j.pin("levitation")
 	check(j.pinned_recipe == "", "pinning the same recipe again unpins it")
 	j.free()
+
+
+func test_anvil_toss_lands_on_target() -> void:
+	var from: Vector3 = Vector3(2.5, 0.85, 0.3)
+	var target: Vector3 = Vector3(3.2, 0.95, 0.22)
+	var v: Vector3 = AnvilLoader.toss_velocity(from, target)
+	var t: float = AnvilLoader.FLIGHT_SECONDS
+	var g: float = SimConstants.GRAVITY_M_S2
+	var landing: Vector3 = from + v * t + Vector3(0.0, -0.5 * g * t * t, 0.0)
+	check(landing.distance_to(target) < 1e-3, "ballistic toss lands on the anvil (off by %.4f m)" % landing.distance_to(target))
+	check(v.y > 0.0, "the rock is lobbed upward in an arc")
+
+
+func test_hammer_charge_builds_and_releases() -> void:
+	var h: Hammer3D = Hammer3D.new()
+	h.begin_charge()
+	for i: int in 30:
+		h._physics_process(1.0 / 60.0)
+	check(h.charging and h.charge > 0.5 and h.charge < 0.7, "half a second of holding winds up ~60%% (%.2f)" % h.charge)
+	var hover_charged: float = h.get_hover_override_y()
+	check(hover_charged > h.bench_top_y + 0.25, "winding up lifts the hammer higher")
+	h.release_charge()
+	check(not h.charging and h.get_hover_override_y() < hover_charged, "releasing swings it down to the bench")
+	h.free()

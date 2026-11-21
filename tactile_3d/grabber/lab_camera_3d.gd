@@ -27,6 +27,14 @@ var _zoom_target: float = 0.0
 var _zoom_current: float = 0.0
 var _touches: Dictionary = {}
 var _last_pinch_px: float = -1.0
+## Screen-shake "trauma" 0..1 (decays). Offset scales with trauma² so small
+## taps barely nudge and big breaks really thump.
+var _trauma: float = 0.0
+var _shake_time: float = 0.0
+
+const SHAKE_MAX_METERS: float = 0.012
+const SHAKE_MAX_ROLL_RAD: float = 0.012
+const SHAKE_DECAY_PER_S: float = 2.2
 
 
 func _enter_tree() -> void:
@@ -92,7 +100,22 @@ func _unhandled_input(event: InputEvent) -> void:
 			_last_pinch_px = dist
 
 
+## Add impact shake (0..1). Ignored when the player asked for reduced motion.
+func shake(amount: float) -> void:
+	if CosmicTheme.reduced_motion:
+		return
+	_trauma = clampf(_trauma + amount, 0.0, 1.0)
+
+
 func _process(delta: float) -> void:
 	_zoom_current = lerpf(_zoom_current, _zoom_target, 1.0 - exp(-zoom_smoothing_per_s * delta))
 	var forward: Vector3 = -_base_transform.basis.z
-	transform = Transform3D(_base_transform.basis, _base_transform.origin + _station_offset + forward * _zoom_current)
+	var basis: Basis = _base_transform.basis
+	var jitter: Vector3 = Vector3.ZERO
+	if _trauma > 0.0:
+		_shake_time += delta * 38.0
+		var k: float = _trauma * _trauma
+		jitter = (basis.x * sin(_shake_time * 1.13) + basis.y * sin(_shake_time * 0.91 + 1.7)) * SHAKE_MAX_METERS * k
+		basis = basis.rotated(basis.z.normalized(), sin(_shake_time * 0.77 + 3.1) * SHAKE_MAX_ROLL_RAD * k)
+		_trauma = maxf(_trauma - SHAKE_DECAY_PER_S * delta, 0.0)
+	transform = Transform3D(basis, _base_transform.origin + _station_offset + forward * _zoom_current + jitter)

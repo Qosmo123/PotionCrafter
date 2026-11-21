@@ -20,6 +20,7 @@ var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 
 
 func _ready() -> void:
+	add_to_group(&"mineral_crates")
 	collision_layer = SimConstants.LAYER_STATIC_BENCH
 	collision_mask = 0
 	if model != null:

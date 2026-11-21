@@ -52,6 +52,8 @@ const SIZE_HERO: int = 32
 
 const GLASS_SHADER: Shader = preload("res://visuals_3d/ui/glass_blur.gdshader")
 
+## Accessibility: when true, screen shake and big scale-ins are skipped.
+static var reduced_motion: bool = false
 static var _theme: Theme = null
 static var _fonts: Dictionary = {}
 static var _orbs: Dictionary = {}
