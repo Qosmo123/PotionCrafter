@@ -1,4 +1,4 @@
-[gd_scene load_steps=144 format=3]
+[gd_scene load_steps=145 format=3]
 
 [ext_resource type="PackedScene" path="res://world_3d/vessels/vessel_3d.tscn" id="1_vessel"]
 [ext_resource type="Resource" path="res://content/substances/moonwater.tres" id="2_moon"]
@@ -26,7 +26,8 @@
 [ext_resource type="PackedScene" path="res://world_3d/props/cabinet_low.gltf" id="24_cab"]
 [ext_resource type="PackedScene" path="res://world_3d/props/magic_potion_stand.gltf" id="25_magic"]
 [ext_resource type="PackedScene" path="res://world_3d/props/science_retort_stand.gltf" id="26_sci"]
-[ext_resource type="PackedScene" path="res://world_3d/props/mortar_pestle.gltf" id="27_mortar"]
+[ext_resource type="Script" path="res://world_3d/vessels/mortar_bowl_3d.gd" id="27_mortar"]
+[ext_resource type="Script" path="res://tactile_3d/interactions/pestle_3d.gd" id="27_pestle"]
 [ext_resource type="PackedScene" path="res://world_3d/props/tools_set.gltf" id="28_tools"]
 [ext_resource type="Script" path="res://world_3d/props/prop_visual.gd" id="29_pvis"]
 [ext_resource type="Script" path="res://tactile_3d/grabber/lab_camera_3d.gd" id="30_cam"]
@@ -378,11 +379,13 @@ script = ExtResource("20_abox")
 
 [node name="Mesh" parent="Furniture/ScienceStand" instance=ExtResource("26_sci")]
 
-[node name="Mortar" type="StaticBody3D" parent="Furniture"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.55, 0.8, 0.22)
-script = ExtResource("20_abox")
+[node name="Mortar" type="RigidBody3D" parent="Furniture"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.55, 0.831, 0.22)
+script = ExtResource("27_mortar")
 
-[node name="Mesh" parent="Furniture/Mortar" instance=ExtResource("27_mortar")]
+[node name="Pestle" type="RigidBody3D" parent="Furniture"]
+transform = Transform3D(-4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, -0.44, 0.812, 0.32)
+script = ExtResource("27_pestle")
 
 [node name="Tools" type="Node3D" parent="Furniture"]
 transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0.95, 0.8, 0.3)

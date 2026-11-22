@@ -314,6 +314,8 @@ static func contents_tag_text(m: MixtureContainer, foam_m: float) -> String:
 	# Water is the solvent: name what's dissolved in it (diluted if mostly water).
 	if best_mass / maxf(total - water_mass, 1e-12) > 0.7:
 		var label: String = SubstanceRegistry.get_substance(best).display_name
+		if m.grain_surface > 2.5 and m.get_solid_mass_kg() > total * 0.5:
+			label = "Finely ground " + label
 		return label + (" (diluted)" if water_mass / total > 0.6 and not label.to_lower().contains("water") else "")
 	return PotionNamer.name_for(m, foam_m).get_slice(" [", 0)
 
@@ -1183,6 +1185,7 @@ func _update_liquid_visual() -> void:
 		color = _apply_layers()
 	_liquid_material.set_shader_parameter(&"granular", 1.0 if granular else 0.0)
 	_liquid_material.set_shader_parameter(&"powder_damp", powder_damp if granular else 0.0)
+	_liquid_material.set_shader_parameter(&"powder_fineness", (mixture.grain_surface - 1.0) / (MixtureContainer.GRAIN_SURFACE_MAX - 1.0) if granular else 0.0)
 	var surface: Color = color.lerp(Color(1.0, 1.0, 1.0, 0.9), 0.35)
 	var normal: Vector3 = Vector3(surface_slope.x, 1.0, surface_slope.y).normalized()
 	var gas_ratio: float = clampf(mixture.get_gas_moles() / maxf(mixture.get_total_moles(), 1e-9) * 20.0, 0.0, 1.0)

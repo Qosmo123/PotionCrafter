@@ -43,6 +43,9 @@ const TRANSMUTATION_RATE_PER_S: float = 0.05
 const REDOX_RATE_PER_S: float = 3.0
 const COMPLEXATION_RATE_PER_S: float = 4.0
 const DISSOLUTION_RATE_PER_S: float = 1.5
+## Finest grind (mortar and pestle): solids react on this many times the
+## surface of powder as it comes from the crusher or the shelf.
+const GRAIN_SURFACE_MAX: float = 4.0
 const CRYSTALLIZATION_RATE_PER_S: float = 2.5
 const SHEAR_GAIN: float = 60.0
 
@@ -312,12 +315,42 @@ func _append_table(products: Array[Resource], fractions: PackedFloat32Array, ind
 # --- Mutation -----------------------------------------------------------------
 
 ## Add `amount_moles` of species `index` arriving at `temp_kelvin`.
+## How finely the solids are ground: 1 = as they come (crushed powder, shelf
+## crystals), up to GRAIN_SURFACE_MAX for a fine mortar-ground powder. Solids
+## react on their exposed surface, so dissolving and reactions with a solid
+## partner run this many times faster. Mixed by solid mass on every transfer.
+var grain_surface: float = 1.0
+
+
+## Blend in `added_solid_kg` of solids ground to `surface` (by solid mass).
+func _blend_grain(existing_solid_kg: float, added_solid_kg: float, surface: float) -> void:
+	if added_solid_kg <= 0.0:
+		return
+	var total: float = existing_solid_kg + added_solid_kg
+	grain_surface = clampf((grain_surface * existing_solid_kg + surface * added_solid_kg) / maxf(total, 1e-15), 1.0, GRAIN_SURFACE_MAX)
+
+
+## Grinding (mortar and pestle): `work` 0..1 per unit of solid moves the
+## grind toward GRAIN_SURFACE_MAX, quickly at first and then slower.
+func grind(work: float) -> void:
+	if not (work > 0.0):
+		return
+	grain_surface = clampf(grain_surface + (GRAIN_SURFACE_MAX - grain_surface) * (1.0 - exp(-work)), 1.0, GRAIN_SURFACE_MAX)
+
+
+## Rate multiplier for a species: its solid share reacts on the ground surface.
+func _surface_boost(i: int, t: float) -> float:
+	return lerpf(1.0, grain_surface, _phase_fraction(i, Phase.SOLID, t))
+
+
 func add_substance(index: int, amount_moles: float, temp_kelvin: float) -> void:
 	if index < 0 or index >= species_count:
 		return
 	if not (amount_moles > 0.0) or is_inf(amount_moles):
 		return
 	var t: float = SimConstants.sanitize_temp_kelvin(temp_kelvin)
+	if grain_surface != 1.0:
+		_blend_grain(get_solid_mass_kg(), amount_moles * _molar_mass_kg_mol[index] * _phase_fraction(index, Phase.SOLID, t), 1.0)
 	moles[index] += amount_moles
 	_mark(index)
 	enthalpy_joules += amount_moles * _molar_mass_kg_mol[index] * specific_enthalpy_j_kg(index, t)
@@ -341,6 +374,8 @@ func transfer_fraction_to(dst: MixtureContainer, fraction: float) -> float:
 	if f <= 0.0:
 		return 0.0
 	var moved_mass_kg: float = 0.0
+	if dst != null:
+		dst._blend_grain(dst.get_solid_mass_kg(), get_solid_mass_kg() * f, grain_surface)
 	for _k1: int in _active_n:
 		var i: int = _active[_k1]
 		var amount: float = moles[i] * f
@@ -400,6 +435,7 @@ func clear() -> void:
 	_active_n = 0
 	enthalpy_joules = 0.0
 	swirl_rad_s = 0.0
+	grain_surface = 1.0
 
 
 # --- Reactions ----------------------------------------------------------------------
@@ -460,7 +496,7 @@ func step_reactions(delta_s: float, mixing: float, air_access: bool = true, igni
 			if ox >= 0 and _rx_start[ox + 1] != _rx_start[ox] and _rx_start[red + 1] != _rx_start[red]:
 				var act: float = maxf(_redox_act[ox], _redox_act[red])
 				if t >= act or (burning and act <= 2500.0):
-					var kr: float = REDOX_RATE_PER_S * _oxid[ox] * _reduc[red] * mix_factor * (1.0 + catalysis_sum * 300.0) * (arrhenius if act <= 0.0 else 1.0)
+					var kr: float = REDOX_RATE_PER_S * _oxid[ox] * _reduc[red] * mix_factor * (1.0 + catalysis_sum * 300.0) * (arrhenius if act <= 0.0 else 1.0) * maxf(_surface_boost(ox, t), _surface_boost(red, t))
 					var extent_r: float = minf(_condensed_moles(ox, t), _condensed_moles(red, t)) * (1.0 - exp(-kr * delta_s))
 					if extent_r > 1e-12:
 						heat_j += -extent_r * _redox_h[ox]
@@ -489,7 +525,7 @@ func step_reactions(delta_s: float, mixing: float, air_access: bool = true, igni
 			# Proton transfer (either direction).
 			var ab: float = _acid_strength[i] * _base_strength[j] + _acid_strength[j] * _base_strength[i]
 			if ab > 0.0:
-				var k: float = PROTON_TRANSFER_RATE_PER_S * ab * arrhenius * mix_factor
+				var k: float = PROTON_TRANSFER_RATE_PER_S * ab * arrhenius * mix_factor * maxf(_surface_boost(i, t), _surface_boost(j, t))
 				var extent: float = minf(_condensed_moles(i, t), _condensed_moles(j, t)) * (1.0 - exp(-k * delta_s))
 				if extent > 1e-12:
 					heat_j += -extent * (NEUTRALISATION_ENTHALPY_J_MOL * ab + _proton_enthalpy_j_mol[i] + _proton_enthalpy_j_mol[j])
@@ -573,7 +609,7 @@ func _step_single_species_channels(delta_s: float, t: float, arrhenius: float, a
 			continue
 		var n: float = _condensed_moles(i, t)
 		if _dissolves[i] > 0.0 and aqueous_fraction > 0.3:
-			var extent_s: float = n * (1.0 - exp(-DISSOLUTION_RATE_PER_S * delta_s))
+			var extent_s: float = n * (1.0 - exp(-DISSOLUTION_RATE_PER_S * _surface_boost(i, t) * delta_s))
 			if extent_s > 1e-12:
 				heat_j += -extent_s * _diss_h[i]
 				chem_j += _consume(i, extent_s, t)

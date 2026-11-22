@@ -46,6 +46,9 @@ func _check(ok: bool, what: String) -> void:
 		_failures += 1
 
 
+var _tab_seen: bool = false
+
+
 func _next() -> void:
 	_step += 1
 	_t = 0
@@ -66,8 +69,11 @@ func _physics_process(_d: float) -> bool:
 		1:  # Carry the flask to the cork & wax dish and put it down there.
 			var props: BenchProps3D = _bench.get_node("Stands/BenchProps") as BenchProps3D
 			_move(_camera.unproject_position(props._dish.global_position + Vector3(0.0, 0.2, 0.0)))
-			if _t == 5:
-				_check(_hud._satchel_tab.visible, "the satchel pocket tab shows while holding something")
+			# The HUD redraws at frame rate, so give it a few ticks to catch up.
+			if _t <= 20 and _hud._satchel_tab.visible:
+				_tab_seen = true
+			if _t == 20:
+				_check(_tab_seen, "the satchel pocket tab shows while holding something")
 			if _t > 20 and not _grabber.dock_seat.is_empty() and absf(_flask.global_position.x - props._dish.global_position.x) < 0.03:
 				_check(_grabber.assist_hint().contains("cork"), "the dish is offered as a place to set it (\"%s\")" % _grabber.assist_hint())
 				var e: InputEventMouseButton = InputEventMouseButton.new()

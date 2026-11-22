@@ -171,6 +171,8 @@ func _process(_delta: float) -> void:
 		_lab(bench)
 	if _args.has("powder"):
 		_powder(bench)
+	if _args.has("mortar"):
+		_mortar(bench)
 	if _args.has("scale") and _frames == 20 and TradersScale3D.instance != null:
 		var gem_m: MineralData = Rock3D.get_mineral("amethyst")
 		var gem: Rock3D = Rock3D.spawn(bench, gem_m, TradersScale3D.instance.pan_world() + Vector3(0.0, 0.03, 0.0), gem_m.typical_mass_kg * 1.5)
@@ -252,6 +254,25 @@ func _demo2(bench: Node) -> void:
 ## polisher, a rock in the crusher and a few logged finds.
 ## Powders: a beaker of malachite powder tipped past its angle of repose, the
 ## soda vial trickling into the round flask, and a heap on the bench.
+## The mortar: malachite being ground (half a chunk, green grit around it),
+## the pestle in the bowl; next to it a beaker of the fine powder.
+func _mortar(bench: Node) -> void:
+	var mortar: MortarBowl3D = bench.get_node("Furniture/Mortar") as MortarBowl3D
+	var pestle: Pestle3D = bench.get_node("Furniture/Pestle") as Pestle3D
+	if _frames == 2:
+		var cam: LabCamera3D = bench.get_node("Camera3D") as LabCamera3D
+		cam.set("_zoom_target", 0.3)
+		mortar.freeze = true
+		mortar.global_position = Vector3(0.21, mortar.global_position.y, 0.26)
+		mortar.mixture.add_substance(_reg(&"malachite_powder"), 0.12, 293.15)
+		mortar.mixture.grain_surface = 2.4
+		var rock: Rock3D = Rock3D.spawn(bench, Rock3D.get_mineral("malachite_ore"), mortar.global_position + Vector3(0.0, 0.12, 0.0), 0.05)
+		rock.set_meta(&"demo", true)
+	if _frames >= 2:
+		pestle.freeze = true
+		pestle.global_transform = Transform3D(Basis(Vector3.BACK, deg_to_rad(-28.0)), mortar.global_transform * Vector3(0.03, 0.075, 0.0))
+
+
 func _powder(bench: Node) -> void:
 	var beaker: Vessel3D = bench.get_node("Vessels/Beaker") as Vessel3D
 	var vial: Vessel3D = bench.get_node("Vessels/VialSoda") as Vessel3D

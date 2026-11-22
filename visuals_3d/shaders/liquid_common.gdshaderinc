@@ -68,6 +68,9 @@ uniform vec3 pour_hit_world = vec3(0.0);
 uniform float granular = 0.0;
 // 0..1: how damp the powder is (darker, clumpier).
 uniform float powder_damp = 0.0;
+// 0..1: how finely ground (MixtureContainer.grain_surface): finer powder has
+// smaller grains and looks paler (more surfaces scatter light).
+uniform float powder_fineness = 0.0;
 uniform float pour_intensity = 0.0;
 
 #ifdef LIQUID_SCREEN_REFRACTION
@@ -183,7 +186,7 @@ void fragment() {
 		if (layer3_depth_meters > 0.0) {
 			gcol = mix(gcol, layer3_color, smoothstep(layer3_depth_meters - 0.001, layer3_depth_meters + 0.001, depth_g));
 		}
-		float fine = hash13(floor(world_pos * 2400.0));
+		float fine = hash13(floor(world_pos * (2400.0 + powder_fineness * 3600.0)));
 		float coarse = vnoise(world_pos.xz * 320.0 + world_pos.y * 90.0) * 0.6 + vnoise(world_pos.xy * 1100.0) * 0.4;
 		float strata = 0.5 + 0.5 * sin(depth_g * 900.0 + vnoise(world_pos.xz * 140.0) * 5.0);
 		float shade = 0.74 + 0.2 * coarse + 0.14 * (fine - 0.5);
@@ -199,7 +202,8 @@ void fragment() {
 		float glint = step(0.995, fine) * (0.6 + 0.4 * sin(TIME * 3.0 + fine * 50.0));
 		vec3 flake_cell = floor(world_pos * 700.0);
 		float flake = step(1.0 - glitter * 0.04, hash13(flake_cell)) * (0.5 + 0.5 * sin(TIME * 7.0 + hash13(flake_cell + 7.0) * 40.0));
-		ALBEDO = gcol.rgb * shade + vec3(glint * 0.2);
+		vec3 base_g = mix(gcol.rgb, gcol.rgb * 0.75 + vec3(0.25), powder_fineness * 0.45);
+		ALBEDO = base_g * shade + vec3(glint * 0.2 * (1.0 - powder_fineness * 0.7));
 		ALPHA = 1.0;
 		ROUGHNESS = mix(0.95, 0.7, powder_damp) - glint * 0.4;
 		SPECULAR = 0.18 + glint * 0.4 + powder_damp * 0.15;

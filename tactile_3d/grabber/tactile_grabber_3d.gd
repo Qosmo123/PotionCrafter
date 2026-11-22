@@ -844,7 +844,9 @@ func _pick_assist_target(cursor_x: float, current: Vessel3D, for_stir: bool) -> 
 			continue
 		if not v.open_top or v.sealed or v.global_basis.y.y < 0.8 or v == _assist_suppressed:
 			continue
-		if for_stir and v.mixture.get_liquid_volume_m3() <= 1e-6:
+		if for_stir and v.mixture.get_liquid_volume_m3() <= 1e-6 and not (v is MortarBowl3D and held_body is Pestle3D):
+			continue
+		if for_stir and v is MortarBowl3D and not held_body is Pestle3D and v.mixture.get_liquid_volume_m3() <= 1e-6:
 			continue
 		var reach: float = (v.get_surface_radius_meters() if for_stir else v.get_lip_radius_meters())
 		reach += POUR_EXIT_METERS if v == current else POUR_ENTER_METERS
@@ -932,8 +934,12 @@ func _stir_in(tool: StirTool3D, vessel: Vessel3D, dt: float, key_stir: bool) -> 
 	var bottom_y: float = vessel.get_cavity_bottom_local_y()
 	var fill_y: float = vessel.get_fill_local_y()
 	var tip_y: float = lerpf(bottom_y + 0.004, fill_y, 0.35)
-	var axis_point: Vector3 = vessel.global_transform * Vector3(0.0, tip_y, 0.0)
 	var r: float = vessel.get_surface_radius_meters() * 0.45 * clampf(_stir_speed_rad_s / 3.0, 0.25, 1.0)
+	if vessel is MortarBowl3D:
+		# Grind round the floor of the bowl, over the rock or the powder.
+		tip_y = bottom_y + 0.009
+		r = MortarBowl3D.CAVITY_RADIUS_METERS * 0.42 * clampf(_stir_speed_rad_s / 3.0, 0.35, 1.0)
+	var axis_point: Vector3 = vessel.global_transform * Vector3(0.0, tip_y, 0.0)
 	var tip_target: Vector3 = axis_point + Vector3(cos(_stir_phase), 0.0, sin(_stir_phase)) * r
 	return tip_target - tool.global_basis * tool.get_tip_local()
 
@@ -971,6 +977,9 @@ func _describe_assist(vessel: Vessel3D, tool: StirTool3D) -> String:
 		return "Click to %s into the %s (%.0f mL in it)" % [what, _vessel_label(pour_candidate), (pour_candidate.mixture.get_liquid_volume_m3() + pour_candidate.mixture.get_solid_volume_m3()) * 1e6 if pour_candidate.mixture != null else 0.0]
 	if not dock_seat.is_empty():
 		return "Click to set it %s" % (dock_seat["stand"] as SupportStand3D).seat_phrase()
+	if stir_target != null and stir_target is MortarBowl3D and tool is Pestle3D:
+		var stage: String = (stir_target as MortarBowl3D).grind_stage()
+		return "Grinding%s  ·  circle the mouse or hold S" % ((" · " + stage) if stage != "" else "")
 	if stir_target != null:
 		return "Stirring  ·  wiggle or circle the mouse, or hold S"
 	if swirling:
@@ -981,6 +990,8 @@ func _describe_assist(vessel: Vessel3D, tool: StirTool3D) -> String:
 		return "Hold it over another vessel, then click to tip the powder in"
 	if vessel != null and vessel.mixture != null and vessel.mixture.get_liquid_volume_m3() > 1e-6:
 		return "Hold it over another vessel, then click to pour  ·  circle the mouse or hold S to swirl"
+	if tool is Pestle3D:
+		return "Hold it over the mortar to grind"
 	if tool != null:
 		return "Hold it over a vessel to stir"
 	return ""
