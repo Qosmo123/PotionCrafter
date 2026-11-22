@@ -27,6 +27,8 @@ Every script, 3D scene (`.tscn`), resource (`.tres`), and shader (`.gdshader`) m
 
 > **Cinematics & labels (2026-11-21):** `GemShowcase.play(stone, kicker, title, subtitle, rarity)` shows a hero shot in its own studio world (softbox sky `studio_sky.gdshader`, velvet backdrop, letterbox, title card); played when a gem is faceted and for special finds (Epic+, a new Rare, a first fossil). Off under `--script`. `FacetLoupe` is the round close-up inset while a stone is on the polisher or faceter. Bottle labels are `BottleLabel3D`: one curved strip that follows the glass mesh, with the stamp and text painted into a SubViewport texture (no Label3D). Glassware is built at 128 segments (`tools/blender/build_glassware.py`); vessel hulls are cached per mesh.
 
+> **Cosmic look (2026-11-21, owner request: brighter, magical):** `CosmicAtmosphere` (`visuals_3d/vfx/cosmic_atmosphere.gd`, under Atmosphere) adds star motes and shadowless violet/cyan accent lights per station; `stone_wall.gdshader` `cosmic_strength` draws a twinkling star map with constellation lines and nebula in the wall; sky/ambient are indigo-violet, exposure 1.08, vignette indigo. Ingredient rocks (`tools/minerals_more.py`, last block) crush to powders with routes to shelf reagents; `DiscoveryProgress.hint_for` derives hints (dissolve, vinegar, roast, two-step) and the HUD shows the discovery tally.
+
 * **Engine:** Godot 4.4+ (3D) with **Jolt Physics 3D** enabled as the default physics backend.
 * **Languages:**
   * **GDScript (Typed):** Strict static typing (`var temp_kelvin: float = 293.15`) for gameplay, tools, UI, and state orchestration.

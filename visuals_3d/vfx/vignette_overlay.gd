@@ -3,8 +3,8 @@ extends CanvasLayer
 ## Gentle warm vignette over the 3D view (drawn under every HUD layer):
 ## darkens and slightly warms the screen edges to frame the bench.
 
-@export var strength: float = 0.42
-@export var tint: Color = Color(0.12, 0.06, 0.02)
+@export var strength: float = 0.3
+@export var tint: Color = Color(0.05, 0.03, 0.13)
 
 const SHADER_CODE: String = """
 shader_type canvas_item;

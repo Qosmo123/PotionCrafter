@@ -1,4 +1,4 @@
-[gd_scene load_steps=142 format=3]
+[gd_scene load_steps=143 format=3]
 
 [ext_resource type="PackedScene" path="res://world_3d/vessels/vessel_3d.tscn" id="1_vessel"]
 [ext_resource type="Resource" path="res://content/substances/moonwater.tres" id="2_moon"]
@@ -94,6 +94,7 @@
 [ext_resource type="PackedScene" path="res://world_3d/props/rock_crate.gltf" id="77_cratem"]
 [ext_resource type="Script" path="res://visuals_3d/vfx/light_shafts_3d.gd" id="98_shafts"]
 [ext_resource type="Script" path="res://visuals_3d/vfx/vignette_overlay.gd" id="99_vignette"]
+[ext_resource type="Script" path="res://visuals_3d/vfx/cosmic_atmosphere.gd" id="99_cosmic"]
 [ext_resource type="Texture2D" path="res://content/textures_4k/masonry_wall_albedo.jpg" id="tex_masonry_wall_albedo"]
 [ext_resource type="Texture2D" path="res://content/textures_4k/masonry_wall_normal.jpg" id="tex_masonry_wall_normal"]
 [ext_resource type="Texture2D" path="res://content/textures_4k/masonry_wall_rough.jpg" id="tex_masonry_wall_rough"]
@@ -102,11 +103,11 @@
 [ext_resource type="Texture2D" path="res://content/textures_4k/flagstone_floor_rough.jpg" id="tex_flagstone_floor_rough"]
 
 [sub_resource type="ProceduralSkyMaterial" id="SkyMat_1"]
-sky_top_color = Color(0.09, 0.08, 0.12, 1)
-sky_horizon_color = Color(0.3, 0.24, 0.2, 1)
-sky_energy_multiplier = 0.6
-ground_bottom_color = Color(0.05, 0.04, 0.035, 1)
-ground_horizon_color = Color(0.3, 0.24, 0.2, 1)
+sky_top_color = Color(0.16, 0.12, 0.42, 1)
+sky_horizon_color = Color(0.55, 0.36, 0.72, 1)
+sky_energy_multiplier = 1.0
+ground_bottom_color = Color(0.08, 0.07, 0.16, 1)
+ground_horizon_color = Color(0.42, 0.34, 0.6, 1)
 
 [sub_resource type="Sky" id="Sky_1"]
 sky_material = SubResource("SkyMat_1")
@@ -115,7 +116,7 @@ sky_material = SubResource("SkyMat_1")
 background_mode = 2
 sky = SubResource("Sky_1")
 ambient_light_source = 3
-ambient_light_energy = 0.35
+ambient_light_energy = 0.55
 reflected_light_source = 2
 tonemap_mode = 4
 glow_enabled = true
@@ -136,8 +137,9 @@ shader = ExtResource("12_stone")
 shader_parameter/albedo_tex = ExtResource("tex_masonry_wall_albedo")
 shader_parameter/normal_tex = ExtResource("tex_masonry_wall_normal")
 shader_parameter/rough_tex = ExtResource("tex_masonry_wall_rough")
-shader_parameter/tint = Color(0.33, 0.315, 0.295, 1)
+shader_parameter/tint = Color(0.34, 0.32, 0.46, 1)
 shader_parameter/tile_meters = 1.8
+shader_parameter/cosmic_strength = 1.0
 shader_parameter/grime_strength = 0.6
 shader_parameter/soot_strength = 0.5
 
@@ -227,8 +229,8 @@ script = ExtResource("97_board")
 
 [node name="KeyLight" type="DirectionalLight3D" parent="."]
 rotation_degrees = Vector3(-38, 52, 0)
-light_color = Color(1, 0.9, 0.78, 1)
-light_energy = 1.8
+light_color = Color(1, 0.92, 0.82, 1)
+light_energy = 2.3
 light_volumetric_fog_energy = 1.6
 shadow_enabled = true
 
@@ -243,9 +245,9 @@ omni_range = 1.4
 
 [node name="FillLight" type="OmniLight3D" parent="."]
 position = Vector3(0.9, 1.9, 1.3)
-light_color = Color(0.6, 0.7, 1, 1)
-light_energy = 0.6
-omni_range = 4.5
+light_color = Color(0.68, 0.66, 1, 1)
+light_energy = 1.1
+omni_range = 5.0
 
 [node name="ReflectionProbe" type="ReflectionProbe" parent="."]
 position = Vector3(0, 1.1, 0)
@@ -862,6 +864,9 @@ script = ExtResource("20_abox")
 script = ExtResource("9_readout")
 
 [node name="Atmosphere" type="Node3D" parent="."]
+
+[node name="Cosmic" type="Node3D" parent="Atmosphere"]
+script = ExtResource("99_cosmic")
 
 [node name="LightShafts0" type="Node3D" parent="Atmosphere"]
 transform = Transform3D(0.906308, -0.422618, 0, 0.422618, 0.906308, 0, 0, 0, 1, -0.40, 1.5, -0.6)

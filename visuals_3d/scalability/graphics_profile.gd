@@ -87,11 +87,11 @@ func apply() -> void:
 	if world_environment != null and world_environment.environment != null:
 		var env: Environment = world_environment.environment
 		env.tonemap_mode = Environment.TONE_MAPPER_AGX
-		env.tonemap_exposure = 1.0
+		env.tonemap_exposure = 1.08
 		env.glow_enabled = true
-		env.glow_bloom = 0.06
+		env.glow_bloom = 0.07
 		env.glow_hdr_threshold = 1.1
-		env.glow_intensity = 0.9
+		env.glow_intensity = 1.1
 
 		env.sdfgi_enabled = high
 		env.sdfgi_use_occlusion = true
@@ -117,8 +117,8 @@ func apply() -> void:
 		# (orthographic) would just get a uniform haze, so it's skipped there.
 		var cam: Camera3D = get_viewport().get_camera_3d()
 		env.volumetric_fog_enabled = high and not (cam != null and cam.projection == Camera3D.PROJECTION_ORTHOGONAL)
-		env.volumetric_fog_density = 0.035
-		env.volumetric_fog_albedo = Color(0.95, 0.85, 0.72)
+		env.volumetric_fog_density = 0.015
+		env.volumetric_fog_albedo = Color(0.84, 0.8, 1.0)
 		env.volumetric_fog_anisotropy = 0.65
 		env.volumetric_fog_length = 6.0
 		env.volumetric_fog_ambient_inject = 0.15
