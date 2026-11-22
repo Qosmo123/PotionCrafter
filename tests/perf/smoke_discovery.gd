@@ -80,6 +80,23 @@ func _physics_process(_d: float) -> bool:
 				var packed: String = _store.pack_up_lab()
 				_check(_store.material_kg(&"calcite_powder") > 0.04 and tray.mixture.get_total_mass_kg() < 1e-4, "tray powder is packed up (%s)" % packed)
 				_check(_store.recent_found(6).size() >= 1, "packed powder shows in the Found list")
+				# Stored finds and powders survive a save and load (scratch file).
+				var gem: Rock3D = Rock3D.new()
+				gem.mineral = Rock3D.get_mineral("amethyst")
+				gem.mass_kg = gem.mineral.typical_mass_kg
+				_store.store_find(gem)
+				var kept_kg: float = _store.material_kg(&"calcite_powder")
+				_store.save_path = "user://smoke_satchel.cfg"
+				_store.persist = true
+				_store._save_found()
+				for i: int in range(_store.items.size() - 1, -1, -1):
+					var cat: int = int(_store.items[i]["category"])
+					if cat == InventoryStore.Category.FINDS or cat == InventoryStore.Category.MATERIALS:
+						_store.items.remove_at(i)
+				_store._load_found()
+				_store.persist = false
+				DirAccess.remove_absolute(ProjectSettings.globalize_path("user://smoke_satchel.cfg"))
+				_check(absf(_store.material_kg(&"calcite_powder") - kept_kg) < 1e-6 and _store.find_count(&"amethyst") == 1, "stored powder and finds reload from the save")
 				_beaker.mixture.clear()
 				_beaker.mixture.add_substance(SubstanceRegistry.index_of_id(&"water"), 4.0, 293.15)
 				_beaker.mixture.add_substance(SubstanceRegistry.index_of_id(&"acetic_acid"), 1.0, 293.15)

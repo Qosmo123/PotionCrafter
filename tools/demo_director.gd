@@ -101,6 +101,8 @@ func _process(_delta: float) -> void:
 		for id: String in DiscoveryProgress.STARTER_SUBSTANCES:
 			dp.known[id] = true
 		dp._apply_starter_kit()
+	if _args.has("reveal") and _frames == SHOT_FRAME - 45 and DiscoveryProgress.instance != null:
+		DiscoveryProgress.instance.learn(&"copper_sulfate")
 	if _args.has("pourshot") and _frames == SHOT_FRAME - 5:
 		# Mid-pour still: spirits into the beaker, honey onto the bench.
 		var beaker: Vessel3D = bench.get_node("Vessels/Beaker") as Vessel3D

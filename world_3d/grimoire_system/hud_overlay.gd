@@ -670,6 +670,100 @@ func bottle(vessel: Vessel3D) -> void:
 		AudioDirector.play_ui(&"ui_error", -8.0)
 
 
+# --- New ingredient reveal card -------------------------------------------------------
+
+const REVEAL_SECONDS: float = 4.5
+var _reveal_queue: Array[StringName] = []
+var _reveal_card: PanelContainer
+var _reveal_t: float = 0.0
+var _reveal_hooked: bool = false
+var _reveal_swatch: TextureRect
+var _reveal_name: Label
+var _reveal_formula: Label
+var _reveal_text: Label
+
+
+func _on_ingredient_revealed(substance_id: StringName) -> void:
+	_reveal_queue.append(substance_id)
+
+
+## A card drops in under the top bar for each newly discovered shelf
+## ingredient: colour, name, formula, what it is, and where its bottle went.
+func _update_reveal(delta: float) -> void:
+	var dp: DiscoveryProgress = DiscoveryProgress.instance
+	if dp != null and not _reveal_hooked:
+		_reveal_hooked = true
+		dp.ingredient_revealed.connect(_on_ingredient_revealed)
+	if _reveal_card == null:
+		_build_reveal_card()
+	if _reveal_t <= 0.0:
+		if _reveal_queue.is_empty():
+			_reveal_card.visible = false
+			return
+		var idx: int = SubstanceRegistry.index_of_id(_reveal_queue.pop_front())
+		if idx < 0:
+			return
+		var s: SubstanceData = SubstanceRegistry.get_substance(idx)
+		_reveal_swatch.texture = _swatch(s.base_albedo_rgba)
+		_reveal_swatch.modulate = Color(1.6, 1.6, 1.6)
+		_reveal_name.text = s.display_name
+		_reveal_formula.text = s.chemical_formula
+		_reveal_text.text = (s.description + "
+" if s.description != "" else "") + "Its stock bottle is now in your satchel."
+		_reveal_t = REVEAL_SECONDS
+		_reveal_card.visible = true
+	_reveal_t -= delta
+	# Drop in, hold, fade out.
+	var age: float = REVEAL_SECONDS - _reveal_t
+	var enter: float = clampf(age / 0.35, 0.0, 1.0)
+	var leave: float = clampf(_reveal_t / 0.5, 0.0, 1.0)
+	_reveal_card.modulate.a = minf(enter, leave)
+	_reveal_card.offset_top = 84.0 - 30.0 * (1.0 - ease(enter, 0.3))
+	_reveal_card.offset_bottom = _reveal_card.offset_top
+
+
+func _build_reveal_card() -> void:
+	_reveal_card = PanelContainer.new()
+	_reveal_card.anchor_left = 0.5
+	_reveal_card.anchor_right = 0.5
+	_reveal_card.offset_left = -300
+	_reveal_card.offset_right = 300
+	_reveal_card.offset_top = 84
+	_reveal_card.grow_vertical = Control.GROW_DIRECTION_END
+	_reveal_card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var bg: StyleBoxFlat = CosmicTheme.flat(Color(CosmicTheme.DEEP, 0.94), CosmicTheme.STARLIGHT_GOLD, 2, 18, 16)
+	bg.shadow_color = Color(CosmicTheme.STARLIGHT_GOLD, 0.35)
+	bg.shadow_size = 18
+	_reveal_card.add_theme_stylebox_override(&"panel", bg)
+	var row: HBoxContainer = HBoxContainer.new()
+	row.add_theme_constant_override(&"separation", 16)
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_reveal_card.add_child(row)
+	_reveal_swatch = TextureRect.new()
+	_reveal_swatch.custom_minimum_size = Vector2(72, 72)
+	_reveal_swatch.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_reveal_swatch.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_reveal_swatch.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_reveal_swatch.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(_reveal_swatch)
+	var col: VBoxContainer = VBoxContainer.new()
+	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	col.add_theme_constant_override(&"separation", 2)
+	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(col)
+	col.add_child(CosmicTheme.label("✦  NEW INGREDIENT DISCOVERED", 14, CosmicTheme.STARLIGHT_GOLD))
+	_reveal_name = CosmicTheme.label("", CosmicTheme.SIZE_TITLE, Color(1.0, 0.97, 0.88), CosmicTheme.display_font())
+	col.add_child(_reveal_name)
+	_reveal_formula = CosmicTheme.label("", 15, CosmicTheme.PRISM_CYAN, CosmicTheme.mono_font())
+	col.add_child(_reveal_formula)
+	_reveal_text = CosmicTheme.label("", 15, Color(0.86, 0.84, 0.95))
+	_reveal_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_reveal_text.custom_minimum_size = Vector2(470, 0)
+	col.add_child(_reveal_text)
+	_reveal_card.visible = false
+	_shell.add_child(_reveal_card)
+
+
 ## Found list (bottom left): the newest stored powders and finds, one click
 ## each. A click puts a scoop (or the stone) straight into the hand.
 const FOUND_ROWS: int = 6
@@ -782,6 +876,7 @@ func _process(delta: float) -> void:
 		_coins.text = "◉ %d" % GrimoireJournal.instance.coins
 	_update_discoveries()
 	_update_found()
+	_update_reveal(delta)
 	var hint: String = grabber.assist_hint() if grabber != null else ""
 	if _assist_hint.text != hint:
 		_assist_hint.text = hint

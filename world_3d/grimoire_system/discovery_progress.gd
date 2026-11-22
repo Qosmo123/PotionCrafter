@@ -16,6 +16,8 @@ extends Node
 ## Saved with the grimoire. Off for tests and demo renders (launch args).
 
 signal learned(substance_id: StringName)
+## A shelf ingredient was discovered (the HUD shows its reveal card).
+signal ingredient_revealed(substance_id: StringName)
 
 const SAVE_PATH: String = "user://grimoire.cfg"
 const STARTER_SUBSTANCES: PackedStringArray = ["water", "acetic_acid", "ethanol", "baking_soda", "honey_syrup", "soap_solution", "glowberry_juice", "emberberry_juice"]
@@ -48,6 +50,8 @@ var persist: bool = true
 var known: Dictionary = {}  # substance id (String) -> true
 var _scan_t: float = 0.0
 var _coins_given: bool = false
+## Everything that is in the starter bottles (known from the start, not counted).
+var _given: Dictionary = {}
 var _hidden: Dictionary = {}  # node path -> original collision layer
 var _hint_cache: Dictionary = {}
 
@@ -80,7 +84,7 @@ func is_known(substance_id: StringName) -> bool:
 func discovered_count() -> int:
 	var n: int = 0
 	for id: String in known:
-		if not id in STARTER_SUBSTANCES:
+		if not id in STARTER_SUBSTANCES and not _given.has(id):
 			n += 1
 	return n
 
@@ -99,9 +103,12 @@ func learn(substance_id: StringName, quiet: bool = false) -> bool:
 	if not quiet and GrimoireJournal.instance != null:
 		var shelf: bool = InventoryStore.instance != null and InventoryStore.instance.has_stock_for(substance_id)
 		var text: String = "New ingredient discovered: %s (%s)" % [s.display_name, s.chemical_formula]
-		if shelf:
-			text += "! Its stock bottle is now in your satchel"
-		GrimoireJournal.instance.toast.emit(text, &"discovery")
+		if shelf and ingredient_revealed.get_connections().size() > 0:
+			ingredient_revealed.emit(substance_id)
+		else:
+			if shelf:
+				text += "! Its stock bottle is now in your satchel"
+			GrimoireJournal.instance.toast.emit(text, &"discovery")
 		AudioDirector.play_ui(&"discover", -5.0)
 	_unlock_equipment(true)
 	if InventoryStore.instance != null:
@@ -245,6 +252,12 @@ func _apply_starter_kit() -> void:
 				v.queue_free()
 			elif String(v.name) in EMPTIED_VESSELS and v.mixture != null:
 				v.mixture.clear()
+			elif v.mixture != null:
+				# Whatever the starter bottles hold is known from the start.
+				for k: int in v.mixture.active_count():
+					var sid: String = String(SubstanceRegistry.get_substance(v.mixture.active_index(k)).substance_id)
+					known[sid] = true
+					_given[sid] = true
 	# Science Bench reference samples and berries you haven't met yet go too.
 	var science: Node = bench.get_node_or_null(^"ScienceBench")
 	if science != null:

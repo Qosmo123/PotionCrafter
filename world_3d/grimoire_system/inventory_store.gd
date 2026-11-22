@@ -44,6 +44,9 @@ func _exit_tree() -> void:
 
 func _ready() -> void:
 	_build_catalog()
+	persist = OS.get_cmdline_user_args().is_empty() and not OS.get_cmdline_args().has("--script")
+	_load_found()
+	changed.connect(func() -> void: _save_due_s = 1.0)
 
 
 func _build_catalog() -> void:
@@ -641,6 +644,66 @@ func find_count(mineral_id: StringName) -> int:
 	return n
 
 
+# --- Saving finds and materials ------------------------------------------------------
+
+## Tests point this at a scratch file.
+var save_path: String = "user://grimoire.cfg"
+## Stored finds and materials are kept between sessions (off for tests and demo renders).
+var persist: bool = false
+var _save_due_s: float = -1.0
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST or what == NOTIFICATION_EXIT_TREE:
+		_save_found()
+
+
+func _save_found() -> void:
+	_save_due_s = -1.0
+	if not persist:
+		return
+	var materials: Dictionary = {}
+	var finds: Array = []
+	for item: Dictionary in items:
+		var cat: int = int(item["category"])
+		if cat == Category.MATERIALS and float(item.get("kg", 0.0)) >= MATERIAL_MIN_KG:
+			materials[String(item["substances"][0])] = float(item["kg"])
+		elif cat == Category.FINDS and int(item["count"]) > 0:
+			finds.append({"id": item["id"], "label": item["label"], "shelf": item["shelf"], "detail": item["detail"],
+				"mineral": String((item["mineral"] as MineralData).mineral_id), "cut": item["cut"], "polish": item["polish"],
+				"cut_quality": item["cut_quality"], "mass_kg": item["mass_kg"], "count": item["count"]})
+	var cfg: ConfigFile = ConfigFile.new()
+	cfg.load(save_path)
+	cfg.set_value("satchel", "materials", materials)
+	cfg.set_value("satchel", "finds", finds)
+	cfg.save(save_path)
+
+
+func _load_found() -> void:
+	if not persist:
+		return
+	var cfg: ConfigFile = ConfigFile.new()
+	if cfg.load(save_path) != OK:
+		return
+	var materials: Dictionary = cfg.get_value("satchel", "materials", {})
+	for sid: Variant in materials:
+		var idx: int = SubstanceRegistry.index_of_id(StringName(String(sid)))
+		if idx < 0:
+			continue
+		var item: Dictionary = _material_item(SubstanceRegistry.get_substance(idx))
+		item["kg"] = float(materials[sid])
+		_refresh_material(item)
+	var finds: Array = cfg.get_value("satchel", "finds", [])
+	for f: Variant in finds:
+		var d: Dictionary = f as Dictionary
+		var m: MineralData = Rock3D.get_mineral(String(d.get("mineral", "")))
+		if m == null or not find_item(String(d.get("id", ""))).is_empty():
+			continue
+		_insert_sorted({"id": String(d["id"]), "category": Category.FINDS, "label": String(d["label"]), "shelf": String(d["shelf"]),
+			"detail": String(d["detail"]), "color": m.color, "count": int(d["count"]), "mineral": m, "cut": int(d["cut"]),
+			"polish": float(d["polish"]), "cut_quality": float(d["cut_quality"]), "mass_kg": float(d["mass_kg"])})
+
+
 ## Leaving the Mineral Lab packs up what was made there: powder left in the
 ## crusher and sifter trays is kept by weight and loose finds lying on the lab
 ## bench go into the Finds tab, so they are ready to use at the other benches.
@@ -649,7 +712,11 @@ var auto_pack: bool = true
 var _pack_station: int = 0
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	if _save_due_s >= 0.0:
+		_save_due_s -= delta
+		if _save_due_s < 0.0:
+			_save_found()
 	var cam: LabCamera3D = LabCamera3D.instance
 	if cam == null or cam.station == _pack_station:
 		return
