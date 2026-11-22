@@ -23,7 +23,8 @@ SUBSTANCES = {
     "graphite_powder": powder("Graphite Powder", "C (graphite)", 0.012, 2230, (0.15, 0.15, 0.16), "Pencil 'lead'. Slippery, black and conducts electricity.", electric_charge=0.3, flammability=0.1, combustion_enthalpy_j_kg=-32.8e6, products={"carbon_dioxide": 1.0}),
     "galena_powder": powder("Galena Powder", "PbS", 0.239, 7600, (0.3, 0.3, 0.32), "Heavy lead-grey powder. Toxic! Releases rotten-egg gas in acid.", pka_acidity=9.5, toxicity=0.8, health_hazard=0.8, environmental_hazard=0.8, products=SULFIDE_ACID),
     "sphalerite_powder": powder("Sphalerite Powder", "ZnS", 0.097, 4050, (0.75, 0.6, 0.35), "Zinc ore powder with a pale brown streak. Stinks in acid.", pka_acidity=9.5, products=SULFIDE_ACID),
-    "cinnabar_powder": powder("Vermilion", "HgS", 0.233, 8100, (0.85, 0.15, 0.1), "The ancient red pigment vermilion. Contains mercury: very toxic!", pka_acidity=9.0, toxicity=0.9, health_hazard=0.9, environmental_hazard=0.9, products=SULFIDE_ACID),
+    "cinnabar_powder": powder("Vermilion", "HgS", 0.233, 8100, (0.85, 0.15, 0.1), "The ancient red pigment vermilion. Contains mercury: very toxic! Roasted over a flame it gives up quicksilver.", toxicity=0.9, health_hazard=0.9, environmental_hazard=0.9,
+                              decomposition_rate_per_s=0.00003, decomposition_enthalpy_j_mol=20000, products={"quicksilver": 0.86, "sulfur_dioxide": 0.14}),  # roasting: slow cold, quick hot
     "chalcopyrite_powder": powder("Chalcopyrite Dust", "CuFeS₂", 0.183, 4200, (0.25, 0.3, 0.15), "Greenish-black copper-iron sulfide dust.", pka_acidity=9.5, glitter=0.3, products={"rotten_egg_gas": 0.2, "copper_sulfate": 0.3, "dissolved_salts": 0.5}),
     "stibnite_powder": powder("Stibnite Powder", "Sb₂S₃", 0.34, 4630, (0.3, 0.3, 0.33), "Antimony sulfide: once used as ancient eyeliner (kohl). Toxic.", pka_acidity=9.5, toxicity=0.6, products=SULFIDE_ACID),
     "rhodochrosite_powder": powder("Rhodochrosite Powder", "MnCO₃", 0.115, 3690, (0.95, 0.65, 0.7), "Rosy pink manganese carbonate that fizzes in warm acid.", pka_acidity=10.0, proton_transfer_enthalpy_j_mol=12000, products=CARBONATE_ACID),
@@ -47,6 +48,12 @@ SUBSTANCES = {
     "jade_powder": powder("Jade Powder", "NaAlSi₂O₆", 0.202, 3330, (0.4, 0.7, 0.45), "Pale green jadeite powder."),
     "coal_dust": powder("Coal Dust", "C (+ H, S)", 0.012, 1350, (0.08, 0.08, 0.08), "Black, sooty and flammable.", flammability=0.5, flash_point_kelvin=420, combustion_enthalpy_j_kg=-29e6, odor=0.2, products={"carbon_dioxide": 0.9, "sulfur_dioxide": 0.1}),
     "boracite_powder": powder("Borax Powder", "Na₂B₄O₇·10H₂O", 0.381, 1730, (0.98, 0.98, 0.98), "Crushed borax crystals: dissolve to make slime activator.", dissolves_in_water=True, dissolution_enthalpy_j_mol=110000, products={"borax_solution": 1.0}),
+    # Powders of the ingredient rocks: carbonates and crusts that give flame salts in acid.
+    "strontianite_powder": powder("Strontianite Powder", "SrCO₃", 0.1476, 3760, (0.9, 0.93, 0.85), "Strontium carbonate. Fizzes in acid and leaves a salt that burns scarlet.", pka_acidity=10.0, proton_transfer_enthalpy_j_mol=10000, products={"carbon_dioxide": 0.3, "water": 0.12, "strontium_chloride": 0.58}),
+    "witherite_powder": powder("Witherite Powder", "BaCO₃", 0.1973, 4290, (0.93, 0.92, 0.86), "Heavy barium carbonate. Poisonous! Fizzes in acid and leaves a salt that burns apple green.", pka_acidity=10.0, proton_transfer_enthalpy_j_mol=10000, toxicity=0.7, health_hazard=0.7, products={"carbon_dioxide": 0.22, "water": 0.09, "barium_chloride": 0.69}),
+    "atacamite_powder": powder("Atacamite Powder", "Cu₂Cl(OH)₃", 0.2136, 3760, (0.25, 0.62, 0.38), "Green copper chloride hydroxide. Acid frees its copper salt, which burns blue-green.", pka_acidity=9.5, proton_transfer_enthalpy_j_mol=8000, toxicity=0.4, environmental_hazard=0.6, products={"copper_chloride": 0.8, "water": 0.2}),
+    "lepidolite_powder": powder("Lepidolite Flakes", "K(Li,Al)₃(Al,Si)₄O₁₀(F,OH)₂", 0.388, 2840, (0.78, 0.62, 0.85), "Lilac lithium mica. Acid leaches out a lithium salt that burns crimson.", pka_acidity=9.0, proton_transfer_enthalpy_j_mol=6000, glitter=0.7, products={"lithium_chloride": 0.35, "dissolved_salts": 0.65}),
+
 }
 
 
@@ -57,4 +64,6 @@ PATCH = {
     "halite_powder": dict(dissolves_in_water=True, dissolution_enthalpy_j_mol=3900, products={"salt_brine": 1.0}),
     "luminite_dust": dict(dissolves_in_water=True, dissolution_enthalpy_j_mol=2000, products={"moonwater": 1.0}),
     "firepepper_powder": dict(decomposition_rate_per_s=0.0, dissolves_in_water=True, dissolution_enthalpy_j_mol=-150000, products={"salamander_oil": 1.0}),
+    # Acid turns borax into boric acid (the green-flame salt).
+    "borax_solution": dict(products={"boric_acid": 0.6, "water": 0.4}),
 }

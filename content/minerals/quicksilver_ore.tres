@@ -1,0 +1,44 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/cinnabar_powder.tres" id="c0"]
+[ext_resource type="Resource" path="res://content/substances/quartz_sand_fine.tres" id="c1"]
+[ext_resource type="Resource" path="res://content/minerals/cinnabar.tres" id="i0"]
+[ext_resource type="Resource" path="res://content/minerals/stibnite.tres" id="i1"]
+[ext_resource type="Resource" path="res://content/minerals/native_sulfur.tres" id="i2"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"quicksilver_ore"
+display_name = "Quicksilver Ore"
+formula = "HgS in sandstone"
+kind = 0
+rarity = 2
+hardness_mohs = 2.5
+density_kg_m3 = 4500
+typical_mass_kg = 0.12
+color = Color(0.6, 0.22, 0.18, 1)
+luster = 0
+shape = 0
+emission = Color(0, 0, 0, 1)
+value_coins = 22
+can_facet = false
+fun_fact = "Miners roasted this red ore and caught the silver metal that dripped out: quicksilver. Poisonous work!"
+crush_products = Array[Resource]([ExtResource("c0"), ExtResource("c1")])
+crush_fractions = PackedFloat32Array(0.5, 0.5)
+inclusions = Array[Resource]([ExtResource("i0"), ExtResource("i1"), ExtResource("i2")])
+inclusion_chances = PackedFloat32Array(0.4, 0.15, 0.15)
+mineral_class = "Ore (hot spring deposit)"
+crystal_system = "—"
+streak_name = "scarlet"
+streak_color = Color(0.85, 0.15, 0.1, 1)
+cleavage = 0
+fracture = "uneven"
+diaphaneity = 2
+refractive_index = 0
+dispersion = 0
+phenomenon = 0
+colors_text = "brick red streaks through pale rock"
+localities = "Almadén (Spain), Idrija (Slovenia), California"
+uses = "mercury, vermilion pigment"
+birthstone = ""

@@ -63,6 +63,7 @@ var _inspector_label: RichTextLabel
 var _toasts: VBoxContainer
 var _help: PanelContainer
 var _coins: Label
+var _discoveries: Label
 var _strike: Button
 var _station_buttons: Array[Button] = []
 var _shell: Control
@@ -237,6 +238,20 @@ func _ready() -> void:
 	_coins.tooltip_text = "Coins earned from commissions and specimens"
 	_coins.mouse_filter = Control.MOUSE_FILTER_PASS
 	_shell.add_child(_coins)
+	# Discovery tally, left of the purse (only in discovery mode).
+	_discoveries = _coins.duplicate() as Label
+	_discoveries.offset_left = -930
+	_discoveries.offset_right = -632
+	_discoveries.add_theme_color_override(&"font_color", CosmicTheme.PRISM_CYAN)
+	_discoveries.add_theme_color_override(&"font_shadow_color", Color(CosmicTheme.PRISM_CYAN, 0.4))
+	_discoveries.add_theme_font_override(&"font", CosmicTheme.body_font())
+	_discoveries.add_theme_font_size_override(&"font_size", 17)
+	var tally: StyleBoxFlat = purse.duplicate() as StyleBoxFlat
+	tally.border_color = Color(CosmicTheme.PRISM_CYAN, 0.45)
+	_discoveries.add_theme_stylebox_override(&"normal", tally)
+	_discoveries.clip_text = true
+	_discoveries.visible = false
+	_shell.add_child(_discoveries)
 
 	_inspector = PanelContainer.new()
 	# Slim pill: one line by default (hold Alt for the full card).
@@ -653,12 +668,31 @@ func bottle(vessel: Vessel3D) -> void:
 		AudioDirector.play_ui(&"ui_error", -8.0)
 
 
+## "✦ 3 found · Stove in 1 more": how far along the lab is.
+func _update_discoveries() -> void:
+	var dp: DiscoveryProgress = DiscoveryProgress.instance
+	var on: bool = dp != null and dp.active
+	_discoveries.visible = on
+	if not on:
+		return
+	var n: int = dp.discovered_count()
+	var next: Dictionary = dp.next_unlock()
+	var text: String = "✦ %d found" % n
+	if not next.is_empty():
+		text += "  ·  %s in %d more" % [next["name"], next["remaining"]]
+	if _discoveries.text != text:
+		_discoveries.text = text
+		_discoveries.tooltip_text = "Ingredients you have discovered. New things turn up when crushed rock powders meet water, vinegar or a flame.
+Locked satchel rows (???) show a hint for each."
+
+
 func _process(delta: float) -> void:
 	_place_toasts()
 	_update_satchel_tab()
 	_update_lens_panel()
 	if GrimoireJournal.instance != null:
 		_coins.text = "◉ %d" % GrimoireJournal.instance.coins
+	_update_discoveries()
 	var hint: String = grabber.assist_hint() if grabber != null else ""
 	if _assist_hint.text != hint:
 		_assist_hint.text = hint

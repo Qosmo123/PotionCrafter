@@ -138,45 +138,83 @@ func _process(delta: float) -> void:
 # --- Hints --------------------------------------------------------------------------
 
 ## How a substance can be found, worked out from the data: which powder
-## turns into it (dissolving, or reacting with an acid) and which rock gives
-## that powder. "" when there is no mineral route (buy it instead).
+## turns into it (dissolving, reacting with an acid, or roasting) and which
+## rock gives that powder. "" when there is no mineral route (buy it instead).
 func hint_for(substance_id: StringName) -> String:
 	var key: String = String(substance_id)
 	if _hint_cache.has(key):
 		return _hint_cache[key]
-	var hint: String = ""
-	var target: SubstanceData = SubstanceRegistry.get_substance(SubstanceRegistry.index_of_id(substance_id))
-	var rock: String = _rock_for(target)
-	if rock != "":
-		hint = "crush %s in the Mineral Lab" % rock
-	else:
-		for i: int in SubstanceRegistry.count():
-			var p: SubstanceData = SubstanceRegistry.get_substance(i)
-			if not target in p.reaction_products:
-				continue
-			var source: String = _rock_for(p)
-			if source == "":
-				continue
-			if p.dissolves_in_water:
-				hint = "crush %s, then stir the powder into water" % source
-			elif p.pka_acidity > 8.0:
-				hint = "crush %s, then pour vinegar on the powder" % source
-			else:
-				continue
-			break
+	var idx: int = SubstanceRegistry.index_of_id(substance_id)
+	var hint: String = _route(SubstanceRegistry.get_substance(idx), 0) if idx >= 0 else ""
 	_hint_cache[key] = hint
 	return hint
 
 
-## A rock (display name) whose crushed powder includes `s`, preferring common ones.
-func _rock_for(s: SubstanceData) -> String:
+func _route(target: SubstanceData, depth: int) -> String:
+	if target == null:
+		return ""
+	var direct: String = _source_text(target)
+	if direct != "":
+		return direct + " in the Mineral Lab"
+	var two_step: String = ""
+	for i: int in SubstanceRegistry.count():
+		var p: SubstanceData = SubstanceRegistry.get_substance(i)
+		if p == target or not target in p.reaction_products:
+			continue
+		var step: String = _step_text(p)
+		if step == "":
+			continue
+		var source: String = _source_text(p)
+		if source != "":
+			return "%s, then %s" % [source, step % "the powder"]
+		# One step further back: the powder's own product is the thing to treat.
+		if depth == 0 and two_step == "" and _route(p, 1) != "":
+			two_step = "first make %s, then %s" % [p.display_name, step % "it"]
+	return two_step
+
+
+## What to do to `p` so it turns into its products ("%s" stands for the stuff).
+func _step_text(p: SubstanceData) -> String:
+	if p.dissolves_in_water:
+		return "stir %s into water"
+	if p.pka_acidity > 8.0:
+		return "pour vinegar on %s"
+	if p.decomposition_rate_per_s > 0.0 and p.decomposition_rate_per_s < 0.01:
+		return "roast %s over the burner"
+	return ""
+
+
+## Where the powder `s` comes from: a rock from the satchel if one crushes
+## to it, else a mineral found inside a rock. "" if nothing gives it.
+func _source_text(s: SubstanceData) -> String:
 	if s == null:
 		return ""
-	var best: MineralData = null
+	# Commonest first; among equals, the one richest in the powder.
+	var rock: MineralData = null
+	var rock_score: float = INF
+	var find: MineralData = null
+	var find_score: float = INF
 	for m: MineralData in Rock3D.registry().values():
-		if s in m.crush_products and (best == null or m.rarity < best.rarity):
-			best = m
-	return best.display_name if best != null else ""
+		var k: int = m.crush_products.find(s)
+		if k < 0:
+			continue
+		var score: float = float(m.rarity) - (m.crush_fractions[k] if k < m.crush_fractions.size() else 0.0)
+		if m.kind == MineralData.Kind.ROCK or m.kind == MineralData.Kind.SAND:
+			if score < rock_score:
+				rock = m
+				rock_score = score
+		elif score < find_score:
+			find = m
+			find_score = score
+	if rock != null:
+		return "crush %s" % rock.display_name
+	if find == null:
+		return ""
+	var host: MineralData = null
+	for m: MineralData in Rock3D.registry().values():
+		if find in m.inclusions and (host == null or m.rarity < host.rarity):
+			host = m
+	return "crush %s (found inside %s)" % [find.display_name, host.display_name] if host != null else ""
 
 
 # --- Bench -------------------------------------------------------------------------
@@ -248,6 +286,16 @@ func glass_count(profile: String) -> int:
 		"apothecary_bottle": return mini(n / 2, 4)
 		"vial": return 2 + mini(n, 4)
 	return 0
+
+
+## The next piece of equipment still to earn: {"name", "remaining"}, or {}
+## once everything is on the bench.
+func next_unlock() -> Dictionary:
+	var n: int = discovered_count()
+	for step: Array in EQUIPMENT_STEPS:
+		if int(step[0]) > n:
+			return {"name": String(step[2]).get_slice(":", 0), "remaining": int(step[0]) - n}
+	return {}
 
 
 func equipment_unlocked(node_path: String) -> bool:

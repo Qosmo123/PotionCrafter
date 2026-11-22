@@ -113,3 +113,49 @@ func test_troll_snot_and_galaxy() -> void:
 	galaxy.add_substance(_idx(&"moonwater"), 6.0, 293.15)
 	galaxy.add_substance(_idx(&"stardust"), 0.2, 293.15)
 	check(_matches(&"galaxy_bottle", galaxy), "stardust in moonwater makes a galaxy")
+
+
+func _grams(m: MixtureContainer, id: StringName) -> float:
+	var i: int = _idx(id)
+	return m.moles[i] * SubstanceRegistry.get_substance(i).molar_mass_kg_mol * 1000.0
+
+
+## Ingredient rocks: a 15 g scoop of powder in vinegar (or over the flame)
+## gives a noticeable amount (>= 0.8 g) of the shelf ingredient.
+func test_ingredient_rock_routes() -> void:
+	var routes: Dictionary = {
+		&"strontianite_powder": &"strontium_chloride",
+		&"witherite_powder": &"barium_chloride",
+		&"atacamite_powder": &"copper_chloride",
+		&"lepidolite_powder": &"lithium_chloride",
+	}
+	for powder: StringName in routes:
+		var m: MixtureContainer = MixtureContainer.new()
+		m.add_substance(_idx(&"water"), 3.0, 293.15)
+		m.add_substance(_idx(&"acetic_acid"), 1.0, 293.15)
+		m.add_substance(_idx(powder), 0.015 / SubstanceRegistry.get_substance(_idx(powder)).molar_mass_kg_mol, 293.15)
+		var mass0: float = m.get_total_mass_kg()
+		_react(m, 20.0)
+		check(_grams(m, routes[powder]) >= 0.8, "%s in vinegar gives %s (%.1f g)" % [powder, routes[powder], _grams(m, routes[powder])])
+		check(absf(m.get_total_mass_kg() - mass0) < 1e-5 or m.get_total_mass_kg() < mass0, "%s route does not create mass" % powder)
+	var borax: MixtureContainer = MixtureContainer.new()
+	borax.add_substance(_idx(&"water"), 3.0, 293.15)
+	borax.add_substance(_idx(&"boracite_powder"), 0.04, 293.15)
+	_react(borax, 10.0)
+	borax.add_substance(_idx(&"acetic_acid"), 1.5, 293.15)
+	_react(borax, 20.0)
+	check(_grams(borax, &"boric_acid") >= 0.8, "borax in water, then vinegar, gives boric acid (%.1f g)" % _grams(borax, &"boric_acid"))
+
+
+func test_roasting_vermilion_gives_quicksilver() -> void:
+	var cold: MixtureContainer = MixtureContainer.new()
+	cold.add_substance(_idx(&"cinnabar_powder"), 0.015 / 0.233, 293.15)
+	_react(cold, 60.0)
+	check(_grams(cold, &"quicksilver") < 0.1, "cold vermilion keeps (%.2f g quicksilver in a minute)" % _grams(cold, &"quicksilver"))
+	var hot: MixtureContainer = MixtureContainer.new()
+	hot.add_substance(_idx(&"cinnabar_powder"), 0.015 / 0.233, 520.0)
+	for k: int in 3600:
+		hot.step_reactions(1.0 / 60.0, 0.0)
+		hot.add_heat((520.0 - hot.temperature_kelvin) * hot.get_heat_capacity_j_k())
+	check(_grams(hot, &"quicksilver") >= 0.8, "roasted vermilion gives quicksilver (%.1f g in a minute)" % _grams(hot, &"quicksilver"))
+

@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/sodium_carbonate.tres" id="c0"]
+[ext_resource type="Resource" path="res://content/substances/halite_powder.tres" id="c1"]
+[ext_resource type="Resource" path="res://content/substances/boracite_powder.tres" id="c2"]
+[ext_resource type="Resource" path="res://content/minerals/borax_crystal.tres" id="i0"]
+[ext_resource type="Resource" path="res://content/minerals/ulexite.tres" id="i1"]
+[ext_resource type="Resource" path="res://content/minerals/sylvite.tres" id="i2"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"soda_lake_crust"
+display_name = "Soda Lake Crust"
+formula = "Na₂CO₃·NaHCO₃·2H₂O (trona)"
+kind = 0
+rarity = 0
+hardness_mohs = 2.5
+density_kg_m3 = 2100
+typical_mass_kg = 0.12
+color = Color(0.9, 0.87, 0.78, 1)
+luster = 0
+shape = 0
+emission = Color(0, 0, 0, 1)
+value_coins = 4
+can_facet = false
+fun_fact = "The dried-up bed of a soda lake. Egyptians dug this crust as natron and used it for soap, glass and mummies."
+crush_products = Array[Resource]([ExtResource("c0"), ExtResource("c1"), ExtResource("c2")])
+crush_fractions = PackedFloat32Array(0.5, 0.3, 0.2)
+inclusions = Array[Resource]([ExtResource("i0"), ExtResource("i1"), ExtResource("i2")])
+inclusion_chances = PackedFloat32Array(0.35, 0.15, 0.2)
+mineral_class = "Sedimentary (evaporite)"
+crystal_system = "—"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 0
+fracture = "uneven"
+diaphaneity = 2
+refractive_index = 0
+dispersion = 0
+phenomenon = 0
+colors_text = "chalky white to buff, crusty"
+localities = "Lake Magadi (Kenya), Wyoming (USA), Egypt (Wadi El Natrun)"
+uses = "washing soda, glass making, ancient Egyptian natron"
+birthstone = ""

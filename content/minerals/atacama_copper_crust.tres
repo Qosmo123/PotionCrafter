@@ -1,0 +1,44 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/atacamite_powder.tres" id="c0"]
+[ext_resource type="Resource" path="res://content/substances/malachite_powder.tres" id="c1"]
+[ext_resource type="Resource" path="res://content/substances/quartz_sand_fine.tres" id="c2"]
+[ext_resource type="Resource" path="res://content/minerals/chrysocolla.tres" id="i0"]
+[ext_resource type="Resource" path="res://content/minerals/turquoise.tres" id="i1"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"atacama_copper_crust"
+display_name = "Atacama Copper Crust"
+formula = "Cu₂Cl(OH)₃ (atacamite) crust"
+kind = 0
+rarity = 1
+hardness_mohs = 3.25
+density_kg_m3 = 3400
+typical_mass_kg = 0.12
+color = Color(0.15, 0.5, 0.3, 1)
+luster = 0
+shape = 2
+emission = Color(0, 0, 0, 1)
+value_coins = 11
+can_facet = false
+fun_fact = "Only the driest desert on Earth keeps this copper mineral: one good rain would wash it away."
+crush_products = Array[Resource]([ExtResource("c0"), ExtResource("c1"), ExtResource("c2")])
+crush_fractions = PackedFloat32Array(0.5, 0.2, 0.3)
+inclusions = Array[Resource]([ExtResource("i0"), ExtResource("i1")])
+inclusion_chances = PackedFloat32Array(0.25, 0.1)
+mineral_class = "Ore (desert weathering)"
+crystal_system = "—"
+streak_name = "apple green"
+streak_color = Color(0.3, 0.7, 0.4, 1)
+cleavage = 6
+fracture = "uneven"
+diaphaneity = 2
+refractive_index = 0
+dispersion = 0
+phenomenon = 0
+colors_text = "dark to bright green crust on brown rock"
+localities = "Atacama Desert (Chile), South Australia"
+uses = "copper ore, green pigment"
+birthstone = ""

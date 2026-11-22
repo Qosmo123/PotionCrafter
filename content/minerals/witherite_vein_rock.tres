@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="MineralData" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://world_3d/terrarium/mineral_data.gd" id="1_min"]
+[ext_resource type="Resource" path="res://content/substances/witherite_powder.tres" id="c0"]
+[ext_resource type="Resource" path="res://content/substances/barite_powder.tres" id="c1"]
+[ext_resource type="Resource" path="res://content/substances/galena_powder.tres" id="c2"]
+[ext_resource type="Resource" path="res://content/minerals/barite.tres" id="i0"]
+[ext_resource type="Resource" path="res://content/minerals/galena.tres" id="i1"]
+[ext_resource type="Resource" path="res://content/minerals/fluorite_cube.tres" id="i2"]
+
+[resource]
+script = ExtResource("1_min")
+mineral_id = &"witherite_vein_rock"
+display_name = "Witherite Vein Rock"
+formula = "BaCO₃ in vein rock"
+kind = 0
+rarity = 1
+hardness_mohs = 3.25
+density_kg_m3 = 4200
+typical_mass_kg = 0.12
+color = Color(0.86, 0.84, 0.76, 1)
+luster = 0
+shape = 2
+emission = Color(0, 0, 0, 1)
+value_coins = 12
+can_facet = false
+fun_fact = "Surprisingly heavy for a pale rock: it is full of barium. Poisonous, and its salts burn apple green."
+crush_products = Array[Resource]([ExtResource("c0"), ExtResource("c1"), ExtResource("c2")])
+crush_fractions = PackedFloat32Array(0.6, 0.2, 0.2)
+inclusions = Array[Resource]([ExtResource("i0"), ExtResource("i1"), ExtResource("i2")])
+inclusion_chances = PackedFloat32Array(0.3, 0.2, 0.15)
+mineral_class = "Ore (hydrothermal vein)"
+crystal_system = "—"
+streak_name = "white"
+streak_color = Color(0.95, 0.95, 0.95, 1)
+cleavage = 1
+fracture = "uneven"
+diaphaneity = 2
+refractive_index = 0
+dispersion = 0
+phenomenon = 0
+colors_text = "white to yellowish grey, heavy"
+localities = "Alston Moor (England), Illinois (USA)"
+uses = "green fireworks, rat poison (once)"
+birthstone = ""
