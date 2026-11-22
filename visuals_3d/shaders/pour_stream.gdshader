@@ -19,6 +19,10 @@ instance uniform float glow = 0.0;
 instance uniform float breakup = 0.0;
 // 0..1: how much a syrup coils like a rope where it lands.
 instance uniform float coiling = 0.0;
+// 1 = a stream of powder: no surface tension, so it doesn't neck or bead;
+// it fans out a little as it falls and is drawn as matte, speckled grains
+// with gaps between them, thinning to a dusty fringe at the edges.
+instance uniform float granular = 0.0;
 uniform float gravity = 9.81;
 
 varying float side_v;
@@ -36,12 +40,14 @@ void vertex() {
 	// Thin liquids neck and ripple; viscous ones stay a smooth rope. Streams
 	// narrow as they speed up, but surface tension keeps them from going
 	// thread-thin (syrups hardly narrow at all).
-	float runny = 1.0 - clamp(viscosity * 2.0, 0.0, 1.0);
+	float runny = (1.0 - clamp(viscosity * 2.0, 0.0, 1.0)) * (1.0 - granular);
 	float narrowing = sqrt(max(length(start_velocity), 0.05) / speed);
 	float w = start_width * max(narrowing, mix(0.8, 0.45, runny));
+	// Grains spread apart as they fall (no cohesion holds them together).
+	w = mix(w, start_width * (0.7 + 0.9 * t), granular);
 	w *= 1.0 + runny * 0.05 * sin(t * 18.0 - TIME * 22.0);
 	// A small bulge where the liquid leaves the lip (it clings to the glass).
-	w *= 1.0 + 0.45 * (1.0 - smoothstep(0.0, 0.06, t));
+	w *= 1.0 + 0.45 * (1.0 - smoothstep(0.0, 0.06, t)) * (1.0 - granular);
 	// Thin, slow streams neck into travelling beads toward the bottom.
 	float pinch_zone = breakup * smoothstep(0.45, 0.9, t);
 	float wave = 0.5 + 0.5 * sin(t * 46.0 - TIME * 34.0);
@@ -82,4 +88,17 @@ void fragment() {
 	SPECULAR = 0.85;
 	METALLIC = 0.0;
 	EMISSION = c * glow;
+	if (granular > 0.5) {
+		// Falling grains: speckle that streams downward, gaps between grains,
+		// and a sparse dusty fringe toward the edges.
+		vec2 g = vec2(side_v * 9.0, along * 160.0 - TIME * 55.0);
+		vec2 cell = floor(g);
+		float h = fract(sin(dot(cell, vec2(127.1, 311.7))) * 43758.5453);
+		float density = mix(0.85, 0.25, smoothstep(0.35, 1.0, edge));
+		float grain = step(1.0 - density, h);
+		ALBEDO = liquid_color.rgb * (0.75 + 0.35 * h);
+		ALPHA = grain * smoothstep(1.0, 0.97, along) * smoothstep(0.0, 0.02, along);
+		ROUGHNESS = 0.95;
+		SPECULAR = 0.15;
+	}
 }

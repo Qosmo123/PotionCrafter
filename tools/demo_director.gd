@@ -169,6 +169,8 @@ func _process(_delta: float) -> void:
 		soap.foam_height_meters = 0.03
 	if _args.has("lab"):
 		_lab(bench)
+	if _args.has("powder"):
+		_powder(bench)
 	if _args.has("scale") and _frames == 20 and TradersScale3D.instance != null:
 		var gem_m: MineralData = Rock3D.get_mineral("amethyst")
 		var gem: Rock3D = Rock3D.spawn(bench, gem_m, TradersScale3D.instance.pan_world() + Vector3(0.0, 0.03, 0.0), gem_m.typical_mass_kg * 1.5)
@@ -248,6 +250,40 @@ func _demo2(bench: Node) -> void:
 
 ## Mineral Lab showcase: faceted gems on display, a stone on the running
 ## polisher, a rock in the crusher and a few logged finds.
+## Powders: a beaker of malachite powder tipped past its angle of repose, the
+## soda vial trickling into the round flask, and a heap on the bench.
+func _powder(bench: Node) -> void:
+	var beaker: Vessel3D = bench.get_node("Vessels/Beaker") as Vessel3D
+	var vial: Vessel3D = bench.get_node("Vessels/VialSoda") as Vessel3D
+	var flask: Vessel3D = bench.get_node("Vessels/FlaskMoonwater") as Vessel3D
+	if _frames == 2:
+		beaker.mixture.clear()
+		beaker.mixture.add_substance(_reg(&"malachite_powder"), 1.0, 293.15)
+		flask.mixture.clear()
+		flask.mixture.add_substance(_reg(&"calcite_powder"), 1.2, 293.15)
+		for v: Vessel3D in [beaker, vial, flask]:
+			v.freeze = true
+			v.show_contents_tag = false
+			v._set_label_visible(false)
+		flask.global_position = Vector3(0.12, flask.global_position.y, 0.15)
+		var cam: LabCamera3D = bench.get_node("Camera3D") as LabCamera3D
+		cam.set("_zoom_target", 0.45)
+	if _frames >= 2:
+		# The beaker tips slowly past the malachite's angle of repose.
+		var tilt: float = clampf(float(_frames - 4) / 50.0, 0.0, 1.0) * 55.0
+		beaker.global_transform = Transform3D(Basis(Vector3.BACK, deg_to_rad(tilt)), flask.global_position + Vector3(-0.24, 0.07, 0.0))
+		# The vial waits upright, then tips over the flask just before the shot.
+		var mouth: Vector3 = flask.global_transform * Vector3(0.0, flask.get_lip_local_y(), 0.0)
+		var vial_tilt: float = clampf(float(_frames - 90) / 6.0, 0.0, 1.0) * 118.0
+		vial.global_transform = Transform3D(Basis(Vector3.BACK, deg_to_rad(-vial_tilt)), mouth + Vector3(-0.045, 0.1, 0.0))
+		if vial_tilt > 0.0:
+			# Keep its pouring lip just above and before the flask's mouth.
+			vial.global_position += mouth + Vector3(0.014, 0.05, 0.0) - vial.get_pour_lip_world()
+	if _frames == 3:
+		PowderPiles3D.spill(bench, flask.global_position + Vector3(0.14, 0.05, 0.05), 1.2e-5, Color(0.92, 0.9, 0.84), 34.0)
+		PowderPiles3D.spill(bench, flask.global_position + Vector3(0.22, 0.05, 0.08), 3e-6, Color(0.2, 0.45, 0.85), 38.0)
+
+
 func _lab(bench: Node) -> void:
 	if _frames == 2:
 		var cam: LabCamera3D = bench.get_node("Camera3D") as LabCamera3D

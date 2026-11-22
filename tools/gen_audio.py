@@ -511,6 +511,16 @@ def chalk_loop(_v):
     return (band(n, 1600, 5200) + 0.5 * band(n, 2600, 3100, 4)) * (0.12 + rough)
 
 
+@sound("powder_pour_loop")
+def powder_pour_loop(_v):
+    # A steady hiss of grains sliding off a glass lip: dense tiny clicks over
+    # bright noise, with slow surges (the heap slips in little avalanches).
+    dur = 2.0
+    n = int(dur * SR)
+    x = band(n, 3000, 12000) + 1.4 * clicks(dur, 900, 2000, 9000, 0.0006)
+    return x * slow(n, 6, 0.45, 1.0)
+
+
 @sound("sand_pour")
 def sand_pour(_v):
     t = t_axis(0.8)

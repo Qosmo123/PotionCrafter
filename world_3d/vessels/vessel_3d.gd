@@ -15,6 +15,16 @@ extends RigidBody3D
 ## acceleration. Damping comes from the Stokes boundary layer,
 ## zeta ~ sqrt(nu / (sqrt(g) * R^1.5)), so water rings and honey barely moves.
 ##
+## Powder (granular mode): when the contents are mostly solid grains (liquid
+## less than POWDER_LIQUID_RATIO of the solid volume) they don't level or
+## slosh. The bed is a frictional heap that turns with the glass until its
+## face passes the angle of repose, then slips back in a small avalanche; knocks
+## and shaking slump it level. The angle comes from the data: light, fine
+## powders stand steeper, and damp powder clumps much steeper. It pours
+## Beverloo-style: only a thin moving layer of grains slides over the lip, so
+## the flow is a steady trickle in little surges whatever is behind it, and
+## what misses a vessel heaps up on the bench (PowderPiles3D).
+##
 ## Per-tick work allocates nothing (RayCast3D nodes, interned StringNames,
 ## preallocated tables).
 
@@ -87,6 +97,26 @@ var overflow_m3_s: float = 0.0
 var stream_offset_world: Vector3 = Vector3.ZERO
 ## Corked and labelled (bottled). Sealed vessels neither pour nor vent.
 var sealed: bool = false
+## Powder mode (see the class notes): the contents are a bed of grains.
+var granular: bool = false
+## 0..1 how damp the powder is (clumps, steeper heap, slower trickle).
+var powder_damp: float = 0.0
+## The powder's angle of repose, degrees.
+var repose_deg: float = 34.0
+## 0..1, the latest avalanche (decays): drives the slip sound.
+var avalanching: float = 0.0
+
+const POWDER_LIQUID_RATIO: float = 0.35
+## Thickness of the layer of grains that slides over the lip (a few grains).
+const POWDER_FLOW_LAYER_METERS: float = 0.005
+const POWDER_DISCHARGE: float = 0.58
+## A heap face holds a little past its angle of repose, then slips back a
+## little below it (stick-slip).
+const AVALANCHE_OVERSHOOT_DEG: float = 3.0
+const AVALANCHE_SETTLE_DEG: float = 2.0
+var _heap_normal_local: Vector3 = Vector3.UP
+var _powder_time_s: float = 0.0
+var _stream_landing: Vector3 = Vector3.ZERO
 
 const HISTORY_SAMPLES: int = 64
 const HISTORY_INTERVAL_S: float = 0.5
@@ -198,9 +228,13 @@ func _physics_process(delta: float) -> void:
 		var vented_kg: float = mixture.vent_gas(1.0)
 		vented_mass_kg += vented_kg
 		is_boiling = vented_kg > 0.0
+	_update_granular_state()
 	_spill_overflow()
 	_update_fill_state()
-	_update_slosh(delta)
+	if granular:
+		_update_heap(delta)
+	else:
+		_update_slosh(delta)
 	_update_foam_and_bubbles(delta)
 	_update_pouring(delta)
 	_update_audio_events()
@@ -442,6 +476,19 @@ func get_inner_radius_at_local_y(y: float) -> float:
 		if y >= y0 and y1 > y0:
 			return lerpf(_profile_r[i - 1], _profile_r[i], (y - y0) / (y1 - y0))
 	return _profile_r[0]
+
+
+## Whether the held glass has anything that can be poured out (liquid, or a
+## dry or damp powder).
+func can_pour_contents() -> bool:
+	if not open_top or sealed or mixture == null:
+		return false
+	return mixture.get_liquid_volume_m3() > 1e-6 or (granular and mixture.get_solid_volume_m3() > 1e-6)
+
+
+## The powder heap's surface normal in world space (Vector3.UP for liquids).
+func get_heap_normal_world() -> Vector3:
+	return (global_basis.orthonormalized() * _heap_normal_local).normalized() if granular else Vector3.UP
 
 
 func get_fill_fraction() -> float:
@@ -768,7 +815,14 @@ func _condensed_volume_m3() -> float:
 func _spill_overflow() -> void:
 	overflow_m3_s = 0.0
 	var excess_m3: float = _condensed_volume_m3() - capacity_m3
-	if excess_m3 > 0.0:
+	if excess_m3 > 0.0 and granular:
+		# Powder heaped over the brim slides off and piles up at the foot.
+		var powder_color: Color = mixture.get_layer_color(-1, true)
+		spilled_mass_kg += mixture.transfer_fraction_to(null, excess_m3 / maxf(_condensed_volume_m3(), 1e-12))
+		overflow_m3_s = 0.0
+		var foot_r: float = profile.outer_radius_meters if profile != null else inner_radius_meters + wall_thickness_meters
+		PowderPiles3D.spill(self, _overflow_rim_world() + _overflow_dir() * (foot_r * 0.6), excess_m3, powder_color, repose_deg)
+	elif excess_m3 > 0.0:
 		var color: Color = mixture.get_contents_color()
 		var viscosity_pas: float = mixture.get_liquid_viscosity_pas()
 		spilled_mass_kg += mixture.transfer_liquid_volume_to(null, excess_m3)
@@ -853,7 +907,8 @@ func _update_pouring(delta: float) -> void:
 	is_pouring = false
 	pour_rate_m3_s = 0.0
 	var liquid_m3: float = mixture.get_liquid_volume_m3()
-	if not open_top or liquid_m3 <= MIN_LIQUID_M3:
+	var pour_m3: float = _condensed_volume_m3() if granular else liquid_m3
+	if not open_top or pour_m3 <= MIN_LIQUID_M3:
 		_stop_stream_or_overflow()
 		return
 
@@ -874,6 +929,9 @@ func _update_pouring(delta: float) -> void:
 	if head_m <= 0.0:
 		_stop_stream_or_overflow()
 		return
+	if granular:
+		_pour_powder(delta, lip, pour_dir, head_m, pour_m3)
+		return
 
 	# Weir discharge throttled by viscosity: thin liquids gush, syrups ooze.
 	var viscosity_pas: float = mixture.get_liquid_viscosity_pas()
@@ -890,15 +948,8 @@ func _update_pouring(delta: float) -> void:
 	var forward: Vector3 = Vector3(pour_dir.x, 0.0, pour_dir.z)
 	forward = forward.normalized() if forward.length_squared() > 1e-6 else Vector3.ZERO
 	var stream_velocity: Vector3 = forward * minf(stream_speed * 0.55, 0.14) + Vector3.DOWN * stream_speed * 0.6
-	_pour_ray.global_transform = Transform3D(Basis.IDENTITY, spout)
-	_pour_ray.target_position = Vector3(0.0, -POUR_RAY_LENGTH_METERS, 0.0)
-	_pour_ray.force_raycast_update()
-	var rough_y: float = _pour_ray.get_collision_point().y if _pour_ray.is_colliding() else spout.y - POUR_RAY_LENGTH_METERS
-	var landing: Vector3 = PourStream3D.point_at_height(spout, stream_velocity, rough_y)
-	_pour_ray.global_transform = Transform3D(Basis.IDENTITY, Vector3(landing.x, spout.y, landing.z))
-	_pour_ray.force_raycast_update()
-	stream_offset_world = Vector3(landing.x - spout.x, 0.0, landing.z - spout.z)
-	var receiver: Vessel3D = _pour_ray.get_collider() as Vessel3D
+	var receiver: Vessel3D = _cast_stream(spout, stream_velocity)
+	var landing: Vector3 = _stream_landing
 	var dst: MixtureContainer = null
 	if receiver != null and receiver.open_top and _pour_ray.get_collision_normal().y > 0.5:
 		dst = receiver.mixture
@@ -942,11 +993,115 @@ func _update_pouring(delta: float) -> void:
 		_splash.emitting = false
 
 
+## Find where a stream leaving `spout` with `velocity` lands: leaves the pour
+## ray at the landing column (its collider is what it lands on), sets
+## stream_offset_world and _stream_landing, and returns the vessel it lands
+## in (or null).
+func _cast_stream(spout: Vector3, velocity: Vector3) -> Vessel3D:
+	_pour_ray.global_transform = Transform3D(Basis.IDENTITY, spout)
+	_pour_ray.target_position = Vector3(0.0, -POUR_RAY_LENGTH_METERS, 0.0)
+	_pour_ray.force_raycast_update()
+	var rough_y: float = _pour_ray.get_collision_point().y if _pour_ray.is_colliding() else spout.y - POUR_RAY_LENGTH_METERS
+	_stream_landing = PourStream3D.point_at_height(spout, velocity, rough_y)
+	_pour_ray.global_transform = Transform3D(Basis.IDENTITY, Vector3(_stream_landing.x, spout.y, _stream_landing.z))
+	_pour_ray.force_raycast_update()
+	stream_offset_world = Vector3(_stream_landing.x - spout.x, 0.0, _stream_landing.z - spout.z)
+	return _pour_ray.get_collider() as Vessel3D
+
+
+# --- Powder ---------------------------------------------------------------------------
+
+## Decide whether the contents are a powder, how damp, and its angle of repose.
+func _update_granular_state() -> void:
+	var solid_m3: float = mixture.get_solid_volume_m3()
+	var liquid_m3: float = mixture.get_liquid_volume_m3()
+	var was: bool = granular
+	granular = solid_m3 > 2e-7 and liquid_m3 < solid_m3 * POWDER_LIQUID_RATIO
+	if not granular:
+		return
+	if not was:
+		# Becoming a powder: the bed starts level with gravity.
+		_heap_normal_local = (global_basis.orthonormalized().transposed() * Vector3.UP).normalized()
+		surface_slope = Vector2.ZERO
+		_slope_velocity = Vector2.ZERO
+		foam_height_meters = 0.0
+	powder_damp = clampf(liquid_m3 / maxf(solid_m3 * POWDER_LIQUID_RATIO, 1e-12), 0.0, 1.0)
+	# Light, fine powders (flour, soot) stand steeper than dense mineral sand;
+	# a little moisture binds grains and steepens the heap a lot.
+	var bulk_kg_m3: float = mixture.get_solid_mass_kg() / maxf(solid_m3, 1e-12)
+	repose_deg = clampf(31.0 + 9.0 * clampf((3000.0 - bulk_kg_m3) / 2000.0, 0.0, 1.0) + 22.0 * powder_damp, 25.0, 58.0)
+
+
+## The heap turns with the glass (grains hold by friction) until its face
+## passes the angle of repose; then it slips back just below it. Knocks and
+## shaking slump it toward level. Sets surface_slope for pouring and drawing.
+func _update_heap(delta: float) -> void:
+	var b: Basis = global_basis.orthonormalized()
+	var up_local: Vector3 = b.transposed() * Vector3.UP
+	var surface_world: Vector3 = get_surface_point_world()
+	_prev_surface_velocity = linear_velocity + angular_velocity.cross(surface_world - global_position)
+	mixture.swirl_rad_s *= exp(-delta * 8.0)
+	avalanching = maxf(avalanching - delta * 2.5, 0.0)
+	var angle: float = _heap_normal_local.angle_to(up_local)
+	var limit: float = deg_to_rad(repose_deg)
+	if angle > limit + deg_to_rad(AVALANCHE_OVERSHOOT_DEG):
+		var settle: float = limit - deg_to_rad(AVALANCHE_SETTLE_DEG)
+		_heap_normal_local = _heap_normal_local.slerp(up_local, clampf((angle - settle) / angle, 0.0, 1.0)).normalized()
+		var slip: float = angle - settle
+		if slip > 0.03 and avalanching < 0.3:
+			AudioDirector.play(&"sand_pour", surface_world, lerpf(-24.0, -12.0, clampf(slip * 4.0 + get_fill_fraction(), 0.0, 1.0)), 1.15)
+		avalanching = clampf(avalanching + slip * 5.0, 0.0, 1.0)
+	if agitation > 0.12:
+		_heap_normal_local = _heap_normal_local.slerp(up_local, clampf((agitation - 0.12) * delta * 6.0, 0.0, 1.0)).normalized()
+	agitation *= exp(-delta * 4.0)
+	var n: Vector3 = b * _heap_normal_local
+	surface_slope = Vector2(n.x, n.z) / maxf(n.y, 0.2)
+	_slope_velocity = Vector2.ZERO
+
+
+## Grains slide off the lip: only the top few millimetres of the bed move, so
+## the flow hardly depends on how full the glass is, and it comes in small
+## surges. Lands in a vessel below or heaps up on the bench.
+func _pour_powder(delta: float, lip: Vector3, pour_dir: Vector3, head_m: float, available_m3: float) -> void:
+	_powder_time_s += delta
+	var lip_width_m: float = 2.0 * _lip_radius_meters * lip_width_fraction
+	var layer_m: float = minf(head_m, POWDER_FLOW_LAYER_METERS)
+	var surge: float = 0.75 + 0.5 * (0.5 + 0.5 * sin(_powder_time_s * 7.3) * sin(_powder_time_s * 3.1 + 1.0))
+	var flow_m3_s: float = (POWDER_DISCHARGE * lip_width_m * sqrt(_gravity_m_s2) * pow(layer_m, 1.5)
+		* surge / (1.0 + powder_damp * 4.0))
+	var volume_m3: float = minf(flow_m3_s * delta, available_m3)
+	var spout: Vector3 = lip + pour_dir * 0.003
+	var stream_speed: float = maxf(sqrt(2.0 * _gravity_m_s2 * layer_m), 0.08)
+	var forward: Vector3 = Vector3(pour_dir.x, 0.0, pour_dir.z)
+	forward = forward.normalized() if forward.length_squared() > 1e-6 else Vector3.ZERO
+	var stream_velocity: Vector3 = forward * stream_speed * 0.4 + Vector3.DOWN * stream_speed * 0.6
+	var receiver: Vessel3D = _cast_stream(spout, stream_velocity)
+	var dst: MixtureContainer = null
+	if receiver != null and receiver.open_top and not receiver.sealed and _pour_ray.get_collision_normal().y > 0.5:
+		dst = receiver.mixture
+	var color: Color = mixture.get_layer_color(-1, true)
+	var aura: Color = mixture.get_emission_hdr()
+	var moved_kg: float = mixture.transfer_fraction_to(dst, volume_m3 / maxf(_condensed_volume_m3(), 1e-12))
+	var land_y: float = _pour_ray.get_collision_point().y if _pour_ray.is_colliding() else spout.y - POUR_RAY_LENGTH_METERS
+	if dst == null:
+		spilled_mass_kg += moved_kg
+		PowderPiles3D.spill(self, Vector3(_stream_landing.x, land_y + 0.01, _stream_landing.z), volume_m3, color, repose_deg)
+	else:
+		land_y = minf(land_y, receiver.get_surface_point_world().y)
+		receiver.player_touched = true
+	is_pouring = true
+	pour_rate_m3_s = volume_m3 / maxf(delta, 1e-6)
+	var width_m: float = clampf(2.0 * sqrt(flow_m3_s / (PI * stream_speed)), 0.002, minf(0.014, _lip_radius_meters * 1.1))
+	_pour_stream.show_arc(spout, stream_velocity, land_y, width_m, color, 0.0, clampf((aura.r + aura.g + aura.b) * 0.3, 0.0, 2.0), 1.0)
+	_stream.emitting = false
+	_splash.emitting = false
+
+
 ## Foam grows from surfactant x agitation and from reaction gas (fizz head),
 ## drains at a rate set by the film stabiliser. Stable, surfactant-rich foam
 ## sheds free-floating bubbles; buoyant (low gravity-coupling) liquids make them rise.
 func _update_foam_and_bubbles(delta: float) -> void:
-	var foaming: float = mixture.get_foaming()
+	var foaming: float = 0.0 if granular else mixture.get_foaming()
 	var stability: float = mixture.get_foam_stability()
 	var gas_rate: float = mixture.gas_generation_mol_s
 	var area_m2: float = PI * _surface_radius_meters * _surface_radius_meters
@@ -1018,7 +1173,16 @@ func _update_liquid_visual() -> void:
 	_liquid_mesh.visible = fill > 0.0005
 	if not _liquid_mesh.visible:
 		return
-	var color: Color = _apply_layers()
+	var color: Color
+	if granular:
+		color = mixture.get_layer_color(-1, true)
+		color.a = 1.0
+		_liquid_material.set_shader_parameter(&"layer2_depth_meters", -1.0)
+		_liquid_material.set_shader_parameter(&"layer3_depth_meters", -1.0)
+	else:
+		color = _apply_layers()
+	_liquid_material.set_shader_parameter(&"granular", 1.0 if granular else 0.0)
+	_liquid_material.set_shader_parameter(&"powder_damp", powder_damp if granular else 0.0)
 	var surface: Color = color.lerp(Color(1.0, 1.0, 1.0, 0.9), 0.35)
 	var normal: Vector3 = Vector3(surface_slope.x, 1.0, surface_slope.y).normalized()
 	var gas_ratio: float = clampf(mixture.get_gas_moles() / maxf(mixture.get_total_moles(), 1e-9) * 20.0, 0.0, 1.0)

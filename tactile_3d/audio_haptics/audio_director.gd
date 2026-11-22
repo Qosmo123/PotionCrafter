@@ -36,7 +36,7 @@ const CATALOG: Dictionary = {
 	&"fire_loop": 1, &"candle_loop": 1, &"ignite": 1, &"explosion": 1, &"glass_shatter": 1,
 	&"arcane_loop": 1, &"arcane_chime": 2, &"spell_cast": 1,
 	&"hammer_swing": 1, &"rock_hit": 3, &"rock_crack": 2, &"gem_reveal": 1, &"crusher_loop": 1, &"sifter_loop": 1,
-	&"wheel_loop": 1, &"grind_loop": 1, &"chalk_loop": 1, &"sand_pour": 1,
+	&"wheel_loop": 1, &"grind_loop": 1, &"chalk_loop": 1, &"sand_pour": 1, &"powder_pour_loop": 1,
 	&"click": 2, &"switch": 1, &"ratchet": 1, &"hotplate_loop": 1,
 	&"ui_hover": 1, &"ui_click": 1, &"ui_open": 1, &"ui_close": 1, &"page_turn": 1, &"ui_toast": 1, &"ui_error": 1,
 	&"discover": 1, &"coin": 1, &"whoosh": 1, &"grab": 1,
@@ -469,6 +469,9 @@ func _scan_vessels() -> void:
 
 
 func _vessel_pour(key: StringName, v: Vessel3D, gain: float) -> void:
+	if v.granular:
+		_drive_loop(key, &"powder_pour_loop", _rim(v), clampf(gain * 1.3, 0.25, 1.0), 1.0, -9.0)
+		return
 	var visc: float = v.mixture.get_liquid_viscosity_pas()
 	var thick: bool = visc > 0.4
 	# Thin liquids hiss a little higher when the stream is fast.

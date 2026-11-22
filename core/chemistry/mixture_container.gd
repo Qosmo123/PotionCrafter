@@ -956,6 +956,16 @@ func get_solid_volume_m3() -> float:
 	return _phase_volume_m3(Phase.SOLID)
 
 
+## Mass of the solid phase (powders, crystals, sediment), kg.
+func get_solid_mass_kg() -> float:
+	var t: float = temperature_kelvin
+	var total: float = 0.0
+	for _k: int in _active_n:
+		var i: int = _active[_k]
+		total += moles[i] * _phase_fraction(i, Phase.SOLID, t) * _molar_mass_kg_mol[i]
+	return total
+
+
 func get_gas_moles() -> float:
 	var total: float = 0.0
 	for _k18: int in _active_n:

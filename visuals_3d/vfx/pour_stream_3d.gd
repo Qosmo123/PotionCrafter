@@ -27,7 +27,7 @@ func _ready() -> void:
 
 ## Show the stream leaving `from` with `velocity` and falling to height
 ## `land_y`. `width_m` is its width at the lip.
-func show_arc(from: Vector3, velocity: Vector3, land_y: float, width_m: float, color: Color, viscosity_pas: float, glow: float = 0.0) -> void:
+func show_arc(from: Vector3, velocity: Vector3, land_y: float, width_m: float, color: Color, viscosity_pas: float, glow: float = 0.0, granular: float = 0.0) -> void:
 	var g: float = SimConstants.GRAVITY_M_S2
 	var drop: float = maxf(from.y - land_y, 0.0)
 	var vy: float = -velocity.y  # downward speed
@@ -43,8 +43,9 @@ func show_arc(from: Vector3, velocity: Vector3, land_y: float, width_m: float, c
 	set_instance_shader_parameter(&"glow", glow)
 	# Thin, slow streams of runny liquid break into beads; syrups coil.
 	var runny: float = 1.0 - clampf(viscosity_pas / 0.05, 0.0, 1.0)
-	set_instance_shader_parameter(&"breakup", runny * (1.0 - smoothstep(0.0025, 0.0045, _width_smoothed)))
-	set_instance_shader_parameter(&"coiling", smoothstep(0.5, 3.0, viscosity_pas))
+	set_instance_shader_parameter(&"breakup", runny * (1.0 - smoothstep(0.0025, 0.0045, _width_smoothed)) * (1.0 - granular))
+	set_instance_shader_parameter(&"coiling", smoothstep(0.5, 3.0, viscosity_pas) * (1.0 - granular))
+	set_instance_shader_parameter(&"granular", granular)
 	visible = true
 
 

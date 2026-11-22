@@ -789,8 +789,8 @@ func _update_assists(cursor: Vector3, dt: float) -> Variant:
 				var center_y: float = maxf(spout.y - 0.035 - vessel.get_lip_local_y(), tap.global_position.y + 0.015 + _half_height + 0.006)
 				result = Vector3(spout.x, center_y, spout.z)
 				break
-	# Pour: a vessel with liquid, held over another open vessel.
-	if tap_target == null and vessel != null and vessel.open_top and vessel.mixture != null and vessel.mixture.get_liquid_volume_m3() > 1e-6:
+	# Pour: a vessel with liquid or powder, held over another open vessel.
+	if tap_target == null and vessel != null and vessel.can_pour_contents():
 		var target: Vessel3D = _pick_assist_target(cursor.x, pour_target if pour_target != null else pour_candidate, false) if _assist_armed and dock_seat.is_empty() else null
 		if target != null and target == pour_target:
 			result = _pour_into(vessel, target, dt)
@@ -817,7 +817,7 @@ func _update_assists(cursor: Vector3, dt: float) -> Variant:
 		_assist_dwell_s = 0.0
 	# Swirl by hand: circle the pointer (or hold S) with a vessel held.
 	swirling = false
-	if vessel != null and pour_target == null and vessel.mixture != null and vessel.mixture.get_liquid_volume_m3() > 1e-6:
+	if vessel != null and pour_target == null and vessel.mixture != null and not vessel.granular and vessel.mixture.get_liquid_volume_m3() > 1e-6:
 		if circling or key_stir:
 			swirling = true
 			result = _swirl(vessel, cursor, result, dt, circling)
@@ -966,7 +966,9 @@ func _describe_assist(vessel: Vessel3D, tool: StirTool3D) -> String:
 	if pour_target != null:
 		return "Pouring into the %s  ·  wheel: faster/slower  ·  click or move away to stop" % _vessel_label(pour_target)
 	if pour_candidate != null:
-		return "Click to pour into the %s (%.0f mL in it)" % [_vessel_label(pour_candidate), pour_candidate.mixture.get_liquid_volume_m3() * 1e6 if pour_candidate.mixture != null else 0.0]
+		var held_vessel: Vessel3D = held_body as Vessel3D
+		var what: String = "tip the powder" if held_vessel != null and held_vessel.granular else "pour"
+		return "Click to %s into the %s (%.0f mL in it)" % [what, _vessel_label(pour_candidate), (pour_candidate.mixture.get_liquid_volume_m3() + pour_candidate.mixture.get_solid_volume_m3()) * 1e6 if pour_candidate.mixture != null else 0.0]
 	if not dock_seat.is_empty():
 		return "Click to set it %s" % (dock_seat["stand"] as SupportStand3D).seat_phrase()
 	if stir_target != null:
@@ -975,6 +977,8 @@ func _describe_assist(vessel: Vessel3D, tool: StirTool3D) -> String:
 		return "Swirling"
 	if _assist_note == "That one is full" and _assist_suppressed != null:
 		return _assist_note
+	if vessel != null and vessel.granular and vessel.can_pour_contents():
+		return "Hold it over another vessel, then click to tip the powder in"
 	if vessel != null and vessel.mixture != null and vessel.mixture.get_liquid_volume_m3() > 1e-6:
 		return "Hold it over another vessel, then click to pour  ·  circle the mouse or hold S to swirl"
 	if tool != null:

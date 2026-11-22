@@ -63,6 +63,11 @@ uniform float meniscus_climb_meters = 0.0018;
 // Where a pour stream lands on this liquid and how hard (0..1): a dimple,
 // rings running outward and a column of plunge bubbles.
 uniform vec3 pour_hit_world = vec3(0.0);
+// 1 = the contents are a dry or damp powder (Vessel3D granular mode): an
+// opaque matte bed of grains whose surface is the heap, not a level liquid.
+uniform float granular = 0.0;
+// 0..1: how damp the powder is (darker, clumpier).
+uniform float powder_damp = 0.0;
 uniform float pour_intensity = 0.0;
 
 #ifdef LIQUID_SCREEN_REFRACTION
@@ -121,18 +126,18 @@ void fragment() {
 	vec3 radial = rel - dot(rel, vessel_axis_world) * vessel_axis_world;
 	float r = length(radial);
 	float R = vessel_radius_meters;
-	float vortex_k = swirl_rad_s * swirl_rad_s / (2.0 * GRAVITY);
+	float vortex_k = granular > 0.5 ? 0.0 : swirl_rad_s * swirl_rad_s / (2.0 * GRAVITY);
 	float surface_offset = vortex_k * (r * r - 0.5 * R * R);
 	// Living surface: two travelling waves (stronger when agitated) and the
 	// meniscus curling up where the liquid meets the glass.
-	float wave_amp = idle_wave_meters + agitation * 0.004 + effervescence * 0.0015;
+	float wave_amp = granular > 0.5 ? 0.0 : idle_wave_meters + agitation * 0.004 + effervescence * 0.0015;
 	float wave = (sin(world_pos.x * 190.0 + TIME * 3.1) * 0.6 + sin(world_pos.x * 330.0 - world_pos.z * 140.0 - TIME * 4.7) * 0.4) * wave_amp;
-	float climb = meniscus_climb_meters * smoothstep(0.78, 1.0, clamp(r / max(R, 1e-4), 0.0, 1.0));
+	float climb = (granular > 0.5 ? 0.0 : meniscus_climb_meters) * smoothstep(0.78, 1.0, clamp(r / max(R, 1e-4), 0.0, 1.0));
 	surface_offset -= wave + climb;
 	// Pour impact: a Gaussian dimple under the stream and rings running out.
 	float hit_d = length((world_pos - pour_hit_world).xz);
-	float dimple = pour_intensity * 0.0035 * exp(-hit_d * hit_d / 0.00002);
-	float rings_h = pour_intensity * 0.0009 * sin(hit_d * 280.0 - TIME * 16.0) * exp(-hit_d * 45.0);
+	float dimple = (granular > 0.5 ? 0.0 : pour_intensity) * 0.0035 * exp(-hit_d * hit_d / 0.00002);
+	float rings_h = (granular > 0.5 ? 0.0 : pour_intensity) * 0.0009 * sin(hit_d * 280.0 - TIME * 16.0) * exp(-hit_d * 45.0);
 	surface_offset += dimple - rings_h;
 	float signed_dist = dot(rel, surface_normal_world) - surface_offset;
 	if (fill_fraction <= 0.0005 || signed_dist > foam_thickness_meters) {
@@ -163,8 +168,44 @@ void fragment() {
 		}
 	}
 
-	// Foam head: a bubbly, nearly opaque band from the liquid surface up.
-	if (signed_dist > 0.0) {
+	// Powder: an opaque bed of grains. Seen through the glass, grains pack
+	// against the wall in faint strata (each pour leaves a layer); from above,
+	// the heap surface is speckled and bumpy. No refraction, gloss or waves.
+	if (granular > 0.5) {
+		if (signed_dist > 0.0) {
+			discard;
+		}
+		float depth_g = -signed_dist;
+		vec4 gcol = liquid_color;
+		if (layer2_depth_meters > 0.0) {
+			gcol = mix(gcol, layer2_color, smoothstep(layer2_depth_meters - 0.001, layer2_depth_meters + 0.001, depth_g));
+		}
+		if (layer3_depth_meters > 0.0) {
+			gcol = mix(gcol, layer3_color, smoothstep(layer3_depth_meters - 0.001, layer3_depth_meters + 0.001, depth_g));
+		}
+		float fine = hash13(floor(world_pos * 2400.0));
+		float coarse = vnoise(world_pos.xz * 320.0 + world_pos.y * 90.0) * 0.6 + vnoise(world_pos.xy * 1100.0) * 0.4;
+		float strata = 0.5 + 0.5 * sin(depth_g * 900.0 + vnoise(world_pos.xz * 140.0) * 5.0);
+		float shade = 0.74 + 0.2 * coarse + 0.14 * (fine - 0.5);
+		if (FRONT_FACING) {
+			shade *= 0.92 + 0.08 * strata;
+			// Grains pressed against the glass right at the top edge catch light.
+			shade += (1.0 - smoothstep(0.0, 0.0015, depth_g)) * 0.12;
+		} else {
+			vec3 bump = vec3(fine - 0.5, 0.0, coarse - 0.5) * 0.35;
+			NORMAL = normalize((VIEW_MATRIX * vec4(normalize(surface_normal_world + bump), 0.0)).xyz);
+		}
+		shade *= 1.0 - powder_damp * 0.35;
+		float glint = step(0.995, fine) * (0.6 + 0.4 * sin(TIME * 3.0 + fine * 50.0));
+		vec3 flake_cell = floor(world_pos * 700.0);
+		float flake = step(1.0 - glitter * 0.04, hash13(flake_cell)) * (0.5 + 0.5 * sin(TIME * 7.0 + hash13(flake_cell + 7.0) * 40.0));
+		ALBEDO = gcol.rgb * shade + vec3(glint * 0.2);
+		ALPHA = 1.0;
+		ROUGHNESS = mix(0.95, 0.7, powder_damp) - glint * 0.4;
+		SPECULAR = 0.18 + glint * 0.4 + powder_damp * 0.15;
+		EMISSION = emission_hdr.rgb * 0.5 + vec3(1.0, 0.95, 0.8) * flake * glitter * 2.0 + incandescence;
+	} else if (signed_dist > 0.0) {
+		// Foam head: a bubbly, nearly opaque band from the liquid surface up.
 		float cells = vnoise(world_pos.xz * 900.0 + world_pos.y * 700.0) * 0.6 + vnoise(world_pos.xy * 2300.0) * 0.4;
 		ALBEDO = foam_color * (0.82 + 0.18 * cells);
 		ALPHA = 0.92;
