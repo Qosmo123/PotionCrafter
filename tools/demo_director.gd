@@ -101,6 +101,9 @@ func _process(_delta: float) -> void:
 		for id: String in DiscoveryProgress.STARTER_SUBSTANCES:
 			dp.known[id] = true
 		dp._apply_starter_kit()
+	if _args.has("fetch") and _frames == 10:
+		for hud: Node in bench.find_children("*", "HudOverlay", true, false):
+			(hud as HudOverlay).fetch_rock(&"saltpetre_earth")
 	if _args.has("leads") and _frames == SHOT_FRAME - 20:
 		for hud: Node in bench.find_children("*", "HudOverlay", true, false):
 			(hud as HudOverlay).toggle_leads()

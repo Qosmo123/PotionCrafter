@@ -97,6 +97,12 @@ func _physics_process(_d: float) -> bool:
 				_store.persist = false
 				DirAccess.remove_absolute(ProjectSettings.globalize_path("user://smoke_satchel.cfg"))
 				_check(absf(_store.material_kg(&"calcite_powder") - kept_kg) < 1e-6 and _store.find_count(&"amethyst") == 1, "stored powder and finds reload from the save")
+				# Leads name the rock to fetch, so a click can put it in the hand.
+				_check(_dp.hint_rock(&"potassium_nitrate") == &"saltpetre_earth", "saltpetre hint starts from Saltpetre Earth (%s)" % _dp.hint_rock(&"potassium_nitrate"))
+				_check(_dp.hint_rock(&"potassium_chloride") == &"soda_lake_crust", "sylvite hint fetches its host rock (%s)" % _dp.hint_rock(&"potassium_chloride"))
+				var rocks: Array = []
+				var leads: PackedStringArray = _dp.leads(6, [0], rocks)
+				_check(leads.size() > 0 and rocks.size() == leads.size() and rocks[0] != &"", "every lead has a rock to fetch (%d leads)" % leads.size())
 				_beaker.mixture.clear()
 				_beaker.mixture.add_substance(SubstanceRegistry.index_of_id(&"water"), 4.0, 293.15)
 				_beaker.mixture.add_substance(SubstanceRegistry.index_of_id(&"acetic_acid"), 1.0, 293.15)
@@ -126,8 +132,21 @@ func _physics_process(_d: float) -> bool:
 				var crusher2: RockCrusher3D = _bench.get_node("MineralLab/RockCrusher") as RockCrusher3D
 				var off: float = absf(_vessel.global_position.x - crusher2.global_position.x)
 				_check(off > 0.06 or _vessel.global_position.y < crusher2.global_position.y + crusher2.hopper_height_meters - 0.05, "vessel pushed out of the crusher hopper (%.3f m off)" % off)
+				# A "Things to try next" line, clicked from the Potion Bench.
+				_camera.go_to_station(0)
 				_next()
 		3:
+			if _t == 70:
+				var huds: Array[Node] = _bench.find_children("*", "HudOverlay", true, false)
+				_check(huds.size() == 1, "the HUD is in the scene")
+				if huds.size() == 1:
+					(huds[0] as HudOverlay).fetch_rock(&"saltpetre_earth")
+			if _t == 200:
+				var held: Rock3D = _grabber.held_body as Rock3D
+				_check(_camera.station == 1, "a lead click goes to the Mineral Lab")
+				_check(held != null and held.mineral != null and held.mineral.mineral_id == &"saltpetre_earth", "and puts Saltpetre Earth in the hand (%s)" % (held.mineral.mineral_id if held != null and held.mineral != null else "nothing"))
+				_next()
+		4:
 			print("SMOKE %s (%d failures)" % ["PASS" if _failures == 0 else "FAIL", _failures])
 			quit(1 if _failures > 0 else 0)
 	return false

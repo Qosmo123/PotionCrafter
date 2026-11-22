@@ -705,6 +705,33 @@ func toggle_leads() -> void:
 		AudioDirector.play_ui(&"click", -10.0)
 
 
+## Go to the Mineral Lab and put a rock of `mineral_id` in the hand (from a lead).
+func fetch_rock(mineral_id: StringName) -> void:
+	if _leads_panel != null:
+		_leads_panel.visible = false
+	var cam: LabCamera3D = LabCamera3D.instance
+	var store: InventoryStore = InventoryStore.instance
+	if cam == null or store == null:
+		return
+	var id: String = "rock:" + String(mineral_id)
+	if cam.station == InventoryStore.MINERAL_LAB_STATION:
+		_hand_rock(id)
+		return
+	cam.go_to_station(InventoryStore.MINERAL_LAB_STATION)
+	# Wait for the camera to arrive so the rock appears in view, under the cursor.
+	get_tree().create_timer(1.0).timeout.connect(_hand_rock.bind(id))
+
+
+func _hand_rock(id: String) -> void:
+	var store: InventoryStore = InventoryStore.instance
+	if store == null:
+		return
+	if store.take_to_hand(id) == null:
+		show_toast(store.last_message, &"info")
+	else:
+		show_toast("Here you go. Drop it in the crusher hopper and turn the crank", &"info")
+
+
 func _fill_leads() -> void:
 	var dp: DiscoveryProgress = DiscoveryProgress.instance
 	if dp == null:
@@ -714,15 +741,28 @@ func _fill_leads() -> void:
 		child.queue_free()
 	_leads_box.add_child(CosmicTheme.label("✦ Things to try next", CosmicTheme.SIZE_SUBHEAD, CosmicTheme.STARLIGHT_GOLD, CosmicTheme.display_font()))
 	var buyable: Array = [0]
-	var leads: PackedStringArray = dp.leads(6, buyable)
-	for lead: String in leads:
-		var row: Label = CosmicTheme.label("✧  " + lead, 15, Color(0.9, 0.88, 1.0))
+	var rocks: Array = []
+	var leads: PackedStringArray = dp.leads(6, buyable, rocks)
+	for i: int in leads.size():
+		var rock_id: StringName = rocks[i] if i < rocks.size() else &""
+		var row: Button = Button.new()
+		row.text = "✧  " + leads[i]
+		row.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		row.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		row.custom_minimum_size = Vector2(380, 0)
+		row.custom_minimum_size = Vector2(400, 0)
+		row.focus_mode = Control.FOCUS_NONE
+		CosmicTheme.style_button(row, CosmicTheme.PRISM_CYAN)
+		row.add_theme_font_size_override(&"font_size", 15)
+		if rock_id != &"":
+			var m: MineralData = Rock3D.get_mineral(String(rock_id))
+			row.tooltip_text = "Click: go to the Mineral Lab with %s in your hand" % (m.display_name if m != null else "the rock")
+			row.pressed.connect(fetch_rock.bind(rock_id))
+		else:
+			row.disabled = true
 		_leads_box.add_child(row)
 	if leads.is_empty():
 		_leads_box.add_child(CosmicTheme.label("Every ingredient the rocks can give has been found.", 15, Color(0.9, 0.88, 1.0)))
-	var foot: String = "Rocks are in the satchel at the Mineral Lab (key 2)."
+	var foot: String = "Click a line to go to the Mineral Lab with that rock in your hand."
 	if int(buyable[0]) > 0:
 		foot += "
 %d other ingredients can only be bought: click a ??? row in the satchel (%d ◉ each)." % [int(buyable[0]), DiscoveryProgress.BUY_PRICE_COINS]

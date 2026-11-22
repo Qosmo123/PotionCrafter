@@ -54,6 +54,10 @@ var _coins_given: bool = false
 var _given: Dictionary = {}
 var _hidden: Dictionary = {}  # node path -> original collision layer
 var _hint_cache: Dictionary = {}
+## The satchel rock each hint starts from (substance id -> mineral id).
+var _hint_rock: Dictionary = {}
+## Set by _source_text: the rock a found source comes from.
+var _src_rock: StringName = &""
 
 
 func _enter_tree() -> void:
@@ -156,9 +160,17 @@ func hint_for(substance_id: StringName) -> String:
 	if _hint_cache.has(key):
 		return _hint_cache[key]
 	var idx: int = SubstanceRegistry.index_of_id(substance_id)
+	_src_rock = &""
 	var hint: String = _route(SubstanceRegistry.get_substance(idx), 0) if idx >= 0 else ""
 	_hint_cache[key] = hint
+	_hint_rock[key] = _src_rock if hint != "" else &""
 	return hint
+
+
+## The rock (mineral id) the hint for `substance_id` starts from, or &"".
+func hint_rock(substance_id: StringName) -> StringName:
+	hint_for(substance_id)
+	return _hint_rock.get(String(substance_id), &"")
 
 
 func _route(target: SubstanceData, depth: int) -> String:
@@ -168,6 +180,7 @@ func _route(target: SubstanceData, depth: int) -> String:
 	if direct != "":
 		return direct + " in the Mineral Lab"
 	var two_step: String = ""
+	var two_rock: StringName = &""
 	for i: int in SubstanceRegistry.count():
 		var p: SubstanceData = SubstanceRegistry.get_substance(i)
 		if p == target or not target in p.reaction_products:
@@ -181,6 +194,8 @@ func _route(target: SubstanceData, depth: int) -> String:
 		# One step further back: the powder's own product is the thing to treat.
 		if depth == 0 and two_step == "" and _route(p, 1) != "":
 			two_step = "first make %s, then %s" % [p.display_name, step % "it"]
+			two_rock = _src_rock
+	_src_rock = two_rock
 	return two_step
 
 
@@ -218,6 +233,7 @@ func _source_text(s: SubstanceData) -> String:
 			find = m
 			find_score = score
 	if rock != null:
+		_src_rock = rock.mineral_id
 		return "crush %s" % rock.display_name
 	if find == null:
 		return ""
@@ -225,7 +241,10 @@ func _source_text(s: SubstanceData) -> String:
 	for m: MineralData in Rock3D.registry().values():
 		if find in m.inclusions and (host == null or m.rarity < host.rarity):
 			host = m
-	return "crush %s (found inside %s)" % [find.display_name, host.display_name] if host != null else ""
+	if host == null:
+		return ""
+	_src_rock = host.mineral_id
+	return "crush %s (found inside %s)" % [find.display_name, host.display_name]
 
 
 # --- Bench -------------------------------------------------------------------------
@@ -313,7 +332,7 @@ func glass_count(profile: String) -> int:
 ## Things to try next: hints for undiscovered satchel ingredients that have
 ## a mineral route, simplest first, no repeats. `buyable_out[0]` receives the
 ## number of locked ingredients that can only be bought.
-func leads(limit: int, buyable_out: Array = []) -> PackedStringArray:
+func leads(limit: int, buyable_out: Array = [], rocks_out: Array = []) -> PackedStringArray:
 	var out: PackedStringArray = PackedStringArray()
 	var store: InventoryStore = InventoryStore.instance
 	if store == null or not active:
@@ -321,6 +340,7 @@ func leads(limit: int, buyable_out: Array = []) -> PackedStringArray:
 	var seen: Dictionary = {}
 	var buyable: int = 0
 	var all: Array[String] = []
+	var rock_of: Dictionary = {}
 	for item: Dictionary in store.items:
 		var cat: int = int(item["category"])
 		if cat != InventoryStore.Category.REAGENTS and cat != InventoryStore.Category.CHEMICALS:
@@ -334,6 +354,7 @@ func leads(limit: int, buyable_out: Array = []) -> PackedStringArray:
 			buyable += 1
 		elif not hint in all:
 			all.append(hint)
+			rock_of[hint] = hint_rock(lock["substance"])
 	# Fewest steps first (a plain crush, then one more step, then two).
 	all.sort_custom(func(a: String, b: String) -> bool:
 		var ka: int = a.count(", then") * 2 + (1 if a.begins_with("first") else 0)
@@ -343,6 +364,7 @@ func leads(limit: int, buyable_out: Array = []) -> PackedStringArray:
 		if out.size() >= limit:
 			break
 		out.append(hint.substr(0, 1).to_upper() + hint.substr(1))
+		rocks_out.append(rock_of.get(hint, &""))
 	if not buyable_out.is_empty():
 		buyable_out[0] = buyable
 	return out
