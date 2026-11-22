@@ -310,6 +310,44 @@ func glass_count(profile: String) -> int:
 	return 0
 
 
+## Things to try next: hints for undiscovered satchel ingredients that have
+## a mineral route, simplest first, no repeats. `buyable_out[0]` receives the
+## number of locked ingredients that can only be bought.
+func leads(limit: int, buyable_out: Array = []) -> PackedStringArray:
+	var out: PackedStringArray = PackedStringArray()
+	var store: InventoryStore = InventoryStore.instance
+	if store == null or not active:
+		return out
+	var seen: Dictionary = {}
+	var buyable: int = 0
+	var all: Array[String] = []
+	for item: Dictionary in store.items:
+		var cat: int = int(item["category"])
+		if cat != InventoryStore.Category.REAGENTS and cat != InventoryStore.Category.CHEMICALS:
+			continue
+		var lock: Dictionary = store.discovery_lock(item)
+		if not lock["locked"] or seen.has(lock["substance"]):
+			continue
+		seen[lock["substance"]] = true
+		var hint: String = String(lock["hint"])
+		if hint == "":
+			buyable += 1
+		elif not hint in all:
+			all.append(hint)
+	# Fewest steps first (a plain crush, then one more step, then two).
+	all.sort_custom(func(a: String, b: String) -> bool:
+		var ka: int = a.count(", then") * 2 + (1 if a.begins_with("first") else 0)
+		var kb: int = b.count(", then") * 2 + (1 if b.begins_with("first") else 0)
+		return ka < kb if ka != kb else a < b)
+	for hint: String in all:
+		if out.size() >= limit:
+			break
+		out.append(hint.substr(0, 1).to_upper() + hint.substr(1))
+	if not buyable_out.is_empty():
+		buyable_out[0] = buyable
+	return out
+
+
 ## The next piece of equipment still to earn: {"name", "remaining"}, or {}
 ## once everything is on the bench.
 func next_unlock() -> Dictionary:

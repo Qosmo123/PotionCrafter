@@ -67,6 +67,10 @@ func _process(delta: float) -> void:
 	for vessel: Vessel3D in Vessel3D.all_vessels:
 		if vessel.mixture == null or vessel.mixture.get_liquid_volume_m3() * 1e6 < 1.0:
 			continue
+		# Only vessels the player has worked in (poured into, stirred, heated or
+		# cooled) count: a stock bottle never discovers a recipe by sitting there.
+		if not vessel.player_touched:
+			continue
 		var traits: Dictionary = measure(vessel)
 		var best_score: float = 0.0
 		var best_hint: String = ""
@@ -76,8 +80,6 @@ func _process(delta: float) -> void:
 			if matches(recipe, traits):
 				_discover(recipe, vessel)
 				continue
-			if not vessel.player_touched:
-				continue  # untouched stock bottles never "get warm"
 			var p: Array = proximity(recipe, traits)
 			if float(p[0]) > best_score:
 				best_score = float(p[0])

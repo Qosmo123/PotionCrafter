@@ -73,6 +73,7 @@ func _physics_process(_delta: float) -> void:
 			var index: int = SubstanceRegistry.index_of(juice)
 			if index >= 0:
 				vessel.mixture.add_substance(index, berry_mass_kg / juice.molar_mass_kg_mol, SimConstants.AMBIENT_TEMP_KELVIN)
+				vessel.player_touched = true
 				vessel.add_agitation(0.4)
 			_burst = true
 			queue_free()

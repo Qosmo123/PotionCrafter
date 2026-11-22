@@ -253,6 +253,12 @@ func _ready() -> void:
 	_discoveries.add_theme_stylebox_override(&"normal", tally)
 	_discoveries.clip_text = true
 	_discoveries.visible = false
+	_discoveries.mouse_filter = Control.MOUSE_FILTER_STOP
+	_discoveries.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	_discoveries.gui_input.connect(func(event: InputEvent) -> void:
+		var mb: InputEventMouseButton = event as InputEventMouseButton
+		if mb != null and mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT:
+			toggle_leads())
 	_shell.add_child(_discoveries)
 
 	_inspector = PanelContainer.new()
@@ -670,6 +676,62 @@ func bottle(vessel: Vessel3D) -> void:
 		AudioDirector.play_ui(&"ui_error", -8.0)
 
 
+# --- Things to try next --------------------------------------------------------------
+
+var _leads_panel: PanelContainer
+var _leads_box: VBoxContainer
+var _leads_count: int = -1
+
+
+## Open or close the list of leads under the discovery tally.
+func toggle_leads() -> void:
+	if _leads_panel == null:
+		_leads_panel = PanelContainer.new()
+		_leads_panel.anchor_left = 1.0
+		_leads_panel.anchor_right = 1.0
+		_leads_panel.offset_left = -1050
+		_leads_panel.offset_right = -632
+		_leads_panel.offset_top = 70
+		_leads_panel.grow_vertical = Control.GROW_DIRECTION_END
+		_leads_panel.add_theme_stylebox_override(&"panel", CosmicTheme.flat(Color(CosmicTheme.DEEP, 0.94), Color(CosmicTheme.PRISM_CYAN, 0.55), 1, 14, 14))
+		_leads_box = VBoxContainer.new()
+		_leads_box.add_theme_constant_override(&"separation", 6)
+		_leads_panel.add_child(_leads_box)
+		_leads_panel.visible = false
+		_shell.add_child(_leads_panel)
+	_leads_panel.visible = not _leads_panel.visible
+	if _leads_panel.visible:
+		_fill_leads()
+		AudioDirector.play_ui(&"click", -10.0)
+
+
+func _fill_leads() -> void:
+	var dp: DiscoveryProgress = DiscoveryProgress.instance
+	if dp == null:
+		return
+	_leads_count = dp.discovered_count()
+	for child: Node in _leads_box.get_children():
+		child.queue_free()
+	_leads_box.add_child(CosmicTheme.label("✦ Things to try next", CosmicTheme.SIZE_SUBHEAD, CosmicTheme.STARLIGHT_GOLD, CosmicTheme.display_font()))
+	var buyable: Array = [0]
+	var leads: PackedStringArray = dp.leads(6, buyable)
+	for lead: String in leads:
+		var row: Label = CosmicTheme.label("✧  " + lead, 15, Color(0.9, 0.88, 1.0))
+		row.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		row.custom_minimum_size = Vector2(380, 0)
+		_leads_box.add_child(row)
+	if leads.is_empty():
+		_leads_box.add_child(CosmicTheme.label("Every ingredient the rocks can give has been found.", 15, Color(0.9, 0.88, 1.0)))
+	var foot: String = "Rocks are in the satchel at the Mineral Lab (key 2)."
+	if int(buyable[0]) > 0:
+		foot += "
+%d other ingredients can only be bought: click a ??? row in the satchel (%d ◉ each)." % [int(buyable[0]), DiscoveryProgress.BUY_PRICE_COINS]
+	var note: Label = CosmicTheme.label(foot, 13, Color(0.72, 0.7, 0.88))
+	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	note.custom_minimum_size = Vector2(380, 0)
+	_leads_box.add_child(note)
+
+
 # --- New ingredient reveal card -------------------------------------------------------
 
 const REVEAL_SECONDS: float = 4.5
@@ -862,9 +924,13 @@ func _update_discoveries() -> void:
 	var text: String = "✦ %d found" % n
 	if not next.is_empty():
 		text += "  ·  %s in %d more" % [next["name"], next["remaining"]]
+	text += "  ▾"
+	if _leads_panel != null and _leads_panel.visible and n != _leads_count:
+		_fill_leads()
 	if _discoveries.text != text:
 		_discoveries.text = text
-		_discoveries.tooltip_text = "Ingredients you have discovered. New things turn up when crushed rock powders meet water, vinegar or a flame.
+		_discoveries.tooltip_text = "Click for things to try next.
+Ingredients you have discovered. New things turn up when crushed rock powders meet water, vinegar or a flame.
 Locked satchel rows (???) show a hint for each."
 
 

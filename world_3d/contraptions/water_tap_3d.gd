@@ -187,6 +187,7 @@ func _physics_process(delta: float) -> void:
 		filling = v
 		var moles: float = FLOW_M3_S * delta * SubstanceRegistry.get_substance(_water_index).density_kg_m3 / SubstanceRegistry.get_substance(_water_index).molar_mass_kg_mol
 		v.mixture.add_substance(_water_index, moles, WATER_TEMP_KELVIN)
+		v.player_touched = true
 		v.add_agitation(0.15)
 		bottom_y = v.get_surface_point_world().y
 	var running: bool = filling != null or running_free

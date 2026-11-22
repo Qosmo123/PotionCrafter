@@ -361,6 +361,7 @@ func dispense_into(recipe: RecipeData, vessel: Vessel3D) -> PackedStringArray:
 			var s: SubstanceData = SubstanceRegistry.get_substance(idx)
 			var part_m3: float = share_m3 * (float(ratios[k]) if k < ratios.size() else 1.0) / maxf(ratio_sum, 1e-9)
 			vessel.mixture.add_substance(idx, part_m3 * s.density_kg_m3 / s.molar_mass_kg_mol, float(item.get("temp_k", SimConstants.AMBIENT_TEMP_KELVIN)))
+			vessel.player_touched = true
 		if int(item["count"]) > 0:
 			item["count"] = int(item["count"]) - 1
 		poured.append(String(item["label"]))

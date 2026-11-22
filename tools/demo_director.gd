@@ -101,6 +101,9 @@ func _process(_delta: float) -> void:
 		for id: String in DiscoveryProgress.STARTER_SUBSTANCES:
 			dp.known[id] = true
 		dp._apply_starter_kit()
+	if _args.has("leads") and _frames == SHOT_FRAME - 20:
+		for hud: Node in bench.find_children("*", "HudOverlay", true, false):
+			(hud as HudOverlay).toggle_leads()
 	if _args.has("reveal") and _frames == SHOT_FRAME - 45 and DiscoveryProgress.instance != null:
 		DiscoveryProgress.instance.learn(&"copper_sulfate")
 	if _args.has("pourshot") and _frames == SHOT_FRAME - 5:
