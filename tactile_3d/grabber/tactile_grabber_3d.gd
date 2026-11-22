@@ -240,6 +240,14 @@ func _ready() -> void:
 
 # --- Input routing ----------------------------------------------------------------
 
+## While something is in the hand, follow the mouse even over the HUD or
+## the satchel (those panels eat the motion before _unhandled_input), so an
+## item taken out of the satchel stays under the cursor.
+func _input(event: InputEvent) -> void:
+	if held_body != null and event is InputEventMouseMotion and not input_captured:
+		_pointer_screen = (event as InputEventMouseMotion).position
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if input_captured and held_body == null:
 		return

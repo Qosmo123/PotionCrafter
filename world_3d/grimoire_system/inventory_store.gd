@@ -269,21 +269,29 @@ func take_to_hand(id: String) -> RigidBody3D:
 		last_message = why
 		changed.emit()
 		return null
+	# Appear in the hand under the cursor (or mid-station when the cursor is
+	# over the satchel), a little above whatever is there.
+	var screen: Vector2 = grabber._pointer_screen
+	var vp: Vector2 = get_viewport().get_visible_rect().size
+	if get_viewport().gui_get_hovered_control() != null or screen == Vector2.ZERO or not Rect2(Vector2.ZERO, vp).has_point(screen):
+		screen = vp * Vector2(0.45, 0.45)
+	var at: Vector3 = grabber.global_position + Vector3(0.0, grabber.hover_plane_y_meters - grabber.global_position.y, 0.15)
+	if grabber.is_side_view():
+		var p: Vector3 = grabber.cursor_on_plane(screen, 0.1)
+		var flat_x: float = clampf(p.x - grabber.global_position.x, -grabber.reach_radius_meters * 0.8, grabber.reach_radius_meters * 0.8)
+		p.x = grabber.global_position.x + flat_x
+		var s: Vector2 = grabber.surface_under(p.x, p.y + 0.3, 0.1)
+		at = Vector3(p.x, maxf(s.x + 0.12, p.y), s.y) - Vector3(0.0, 0.12, 0.0)
 	if grabber.held_body != null and is_instance_valid(grabber.held_body):
 		var old: RigidBody3D = grabber.held_body
 		grabber.release()
 		if old.has_meta(&"inventory_id") or old is Rock3D:
 			stash(old)
-	# Appear in the hand above the middle of the station, clear of the bench.
-	var at: Vector3 = grabber.global_position + Vector3(0.0, grabber.hover_plane_y_meters - grabber.global_position.y, 0.15)
-	if grabber.is_side_view():
-		var mid: Vector3 = grabber.cursor_on_plane(get_viewport().get_visible_rect().size * Vector2(0.45, 0.4), 0.1)
-		var s: Vector2 = grabber.surface_under(mid.x, mid.y + 0.3, 0.1)
-		at = Vector3(mid.x, maxf(s.x + 0.14, mid.y), s.y) - Vector3(0.0, 0.12, 0.0)
 	var body: RigidBody3D = take(id, at)
 	if body != null:
 		body.linear_velocity = Vector3.ZERO
 		grabber.grab(body)
+		grabber._pointer_screen = grabber.camera.unproject_position(body.global_position) if grabber.camera != null else screen
 		last_message = "In hand: %s" % find_item(id).get("label", "")
 		changed.emit()
 	return body
