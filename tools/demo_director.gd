@@ -169,6 +169,10 @@ func _process(_delta: float) -> void:
 		soap.foam_height_meters = 0.03
 	if _args.has("lab"):
 		_lab(bench)
+	if _args.has("scale") and _frames == 20 and TradersScale3D.instance != null:
+		var gem_m: MineralData = Rock3D.get_mineral("amethyst")
+		var gem: Rock3D = Rock3D.spawn(bench, gem_m, TradersScale3D.instance.pan_world() + Vector3(0.0, 0.03, 0.0), gem_m.typical_mass_kg * 1.5)
+		gem.set_polish(1.0)
 	if _frames == SHOT_FRAME - 8 and _args.has("collection"):
 		var book: GrimoireBookUI = bench.get_node("GrimoireBookUI") as GrimoireBookUI
 		if GrimoireJournal.instance != null:

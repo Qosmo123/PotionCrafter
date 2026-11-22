@@ -19,6 +19,14 @@ var on_catch: Callable = Callable()
 ## What the machine takes, for the refusal hint ("rough rocks"). Things it
 ## doesn't take that end up in the zone are nudged back out.
 var wants: String = ""
+## Optional: marker text for the carried item (the trader's scale shows the
+## price). Called with the carried body; "" keeps "drop it here".
+var marker_text: Callable = Callable()
+## How far (left/right) from the drop point a carried item still counts as
+## "over" this intake. Small for intakes squeezed between other targets.
+var catch_dx_meters: float = 0.13
+## Optional hand hint while carrying over it ("Click to set it on the ...").
+var drop_note: String = ""
 
 var _marker: MeshInstance3D
 var _marker_label: Label3D
@@ -91,12 +99,12 @@ func receive(body: RigidBody3D) -> void:
 ## The intake a carried item at `x` would drop into (left/right only), or null.
 static func under(body: Node, x: float) -> MachineIntake:
 	var best: MachineIntake = null
-	var best_d: float = 0.13
+	var best_d: float = 1e9
 	for intake: MachineIntake in all_intakes:
 		if not intake.is_inside_tree() or not intake.takes(body):
 			continue
 		var d: float = absf(intake.drop_world().x - x)
-		if d < best_d:
+		if d < intake.catch_dx_meters and d < best_d:
 			best = intake
 			best_d = d
 	return best
@@ -132,6 +140,9 @@ func _refuse(rb: RigidBody3D) -> void:
 static func update_markers(body: Node, chosen: MachineIntake) -> void:
 	for intake: MachineIntake in all_intakes:
 		intake._active = 0.0 if body == null or not intake.takes(body) else (1.0 if intake == chosen else 0.5)
+		if intake._active > 0.0 and intake.marker_text.is_valid():
+			var text: String = String(intake.marker_text.call(body))
+			intake._marker_label.text = text if text != "" else "drop it here"
 
 
 func _physics_process(delta: float) -> void:

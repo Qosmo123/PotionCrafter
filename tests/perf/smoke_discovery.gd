@@ -21,6 +21,10 @@ var _step: int = 0
 var _t: int = 0
 var _beaker: Vessel3D
 var _vessel: Vessel3D
+var _gem: Rock3D
+var _coins_before: int = 0
+var _price: int = 0
+var _plain: Rock3D
 
 
 func _initialize() -> void:
@@ -128,10 +132,32 @@ func _physics_process(_d: float) -> bool:
 				_vessel = _bench.get_node("Vessels/ReagentGlue") as Vessel3D
 				_vessel.global_position = crusher.global_position + Vector3(0.0, crusher.hopper_height_meters + 0.12, 0.0)
 				_vessel.linear_velocity = Vector3.ZERO
+				# A gem and a plain rock let go over the trader's scale pan.
+				var scale: TradersScale3D = _bench.get_node("MineralLab/TradersScale") as TradersScale3D
+				var pan: Vector3 = scale.global_position + Vector3(-TradersScale3D.BEAM_HALF_METERS, 0.2, 0.0)
+				_gem = Rock3D.new()
+				_gem.mineral = Rock3D.get_mineral("amethyst")
+				_gem.mass_kg = _gem.mineral.typical_mass_kg
+				_gem.polish = 1.0
+				_bench.add_child(_gem)
+				_gem.global_position = pan
+				_price = _gem.value()
+				_coins_before = GrimoireJournal.instance.coins
+				_plain = Rock3D.new()
+				_plain.mineral = Rock3D.get_mineral("granite")
+				_plain.mass_kg = _plain.mineral.typical_mass_kg
+				_bench.add_child(_plain)
+				_plain.global_position = pan + Vector3(0.0, 0.08, 0.0)
 			if _t == 150:
 				var crusher2: RockCrusher3D = _bench.get_node("MineralLab/RockCrusher") as RockCrusher3D
 				var off: float = absf(_vessel.global_position.x - crusher2.global_position.x)
 				_check(off > 0.06 or _vessel.global_position.y < crusher2.global_position.y + crusher2.hopper_height_meters - 0.05, "vessel pushed out of the crusher hopper (%.3f m off)" % off)
+				var scale2: TradersScale3D = _bench.get_node("MineralLab/TradersScale") as TradersScale3D
+				_check(scale2.on_pan().has(_gem) and GrimoireJournal.instance.coins == _coins_before, "a gem let go over the scale rests on its pan, not sold yet")
+				_check(scale2.sell_pan() == _price, "the bell sells it")
+				_check(not is_instance_valid(_gem) or _gem.is_queued_for_deletion(), "the gem is gone")
+				_check(GrimoireJournal.instance.coins == _coins_before + _price and _price > 0, "and paid %d coins (%d -> %d)" % [_price, _coins_before, GrimoireJournal.instance.coins])
+				_check(is_instance_valid(_plain) and not _plain.is_queued_for_deletion(), "a rough rock is not sold")
 				# A "Things to try next" line, clicked from the Potion Bench.
 				_camera.go_to_station(0)
 				_next()

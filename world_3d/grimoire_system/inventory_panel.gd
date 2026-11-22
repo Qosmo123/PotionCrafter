@@ -287,7 +287,7 @@ func _on_item_pressed(button: SatchelItemButton) -> void:
 			if DiscoveryProgress.instance.buy(lock["substance"]):
 				refresh()
 			else:
-				warn("Undiscovered. It costs %d coins: earn them from commissions" % DiscoveryProgress.BUY_PRICE_COINS)
+				warn("Undiscovered. It costs %d coins: earn them from commissions or by selling finds on the trader's scale in the Mineral Lab" % DiscoveryProgress.BUY_PRICE_COINS)
 		else:
 			warn("Undiscovered. Hint: " + String(lock["hint"]))
 		return

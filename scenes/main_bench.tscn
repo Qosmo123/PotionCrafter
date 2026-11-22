@@ -1,4 +1,4 @@
-[gd_scene load_steps=143 format=3]
+[gd_scene load_steps=144 format=3]
 
 [ext_resource type="PackedScene" path="res://world_3d/vessels/vessel_3d.tscn" id="1_vessel"]
 [ext_resource type="Resource" path="res://content/substances/moonwater.tres" id="2_moon"]
@@ -95,6 +95,7 @@
 [ext_resource type="Script" path="res://visuals_3d/vfx/light_shafts_3d.gd" id="98_shafts"]
 [ext_resource type="Script" path="res://visuals_3d/vfx/vignette_overlay.gd" id="99_vignette"]
 [ext_resource type="Script" path="res://visuals_3d/vfx/cosmic_atmosphere.gd" id="99_cosmic"]
+[ext_resource type="Script" path="res://world_3d/contraptions/traders_scale_3d.gd" id="99_scale"]
 [ext_resource type="Texture2D" path="res://content/textures_4k/masonry_wall_albedo.jpg" id="tex_masonry_wall_albedo"]
 [ext_resource type="Texture2D" path="res://content/textures_4k/masonry_wall_normal.jpg" id="tex_masonry_wall_normal"]
 [ext_resource type="Texture2D" path="res://content/textures_4k/masonry_wall_rough.jpg" id="tex_masonry_wall_rough"]
@@ -714,6 +715,10 @@ script = ExtResource("101_labdress")
 [node name="StorageCabinet" type="StaticBody3D" parent="MineralLab"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.7, 0.8, -0.3)
 script = ExtResource("90_cabinet")
+
+[node name="TradersScale" type="StaticBody3D" parent="MineralLab"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.2, 0.8, -0.36)
+script = ExtResource("99_scale")
 
 [node name="StreakPlate" type="StaticBody3D" parent="MineralLab"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.55, 0.8, 0.42)

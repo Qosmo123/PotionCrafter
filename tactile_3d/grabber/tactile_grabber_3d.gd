@@ -1185,9 +1185,9 @@ func _update_machine_hints() -> void:
 		intake_target = MachineIntake.under(held_body, held_body.global_position.x)
 		var rock: Rock3D = held_body as Rock3D
 		if intake_target != null:
-			_assist_note = ("Click to put it away in the %s" if intake_target.on_catch.is_valid() else "Click to drop it into the %s") % intake_target.machine_name
+			_assist_note = intake_target.drop_note if intake_target.drop_note != "" else ("Click to put it away in the %s" if intake_target.on_catch.is_valid() else "Click to drop it into the %s") % intake_target.machine_name
 		elif InventoryStore.is_find(rock):
-			_assist_note = "Put it away: carry it over the storage cabinet's tray and click (or press E)"
+			_assist_note = "Put it away over the storage cabinet's tray (or press E), or set it on the trader's scale to sell it"
 		elif rock.mineral != null and rock.mineral.kind == MineralData.Kind.SAND:
 			_assist_note = "Carry it over the sand sifter (the glow) and click to drop it in"
 		else:
