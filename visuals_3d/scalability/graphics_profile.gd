@@ -89,7 +89,7 @@ func apply() -> void:
 		env.tonemap_mode = Environment.TONE_MAPPER_AGX
 		env.tonemap_exposure = 1.08
 		env.glow_enabled = true
-		env.glow_bloom = 0.07
+		env.glow_bloom = 0.09
 		env.glow_hdr_threshold = 1.1
 		env.glow_intensity = 1.1
 

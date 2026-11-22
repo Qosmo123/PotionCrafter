@@ -73,6 +73,13 @@ func _physics_process(_d: float) -> bool:
 				_check(String(lock["hint"]).to_lower().contains("vinegar"), "hint worked out from the data: %s" % lock["hint"])
 				_check(_store.take("reagent:Blue Vitriol") == null, "locked reagent can't be taken")
 				_check(not _store.discovery_lock(_item("reagent:Vinegar"))["locked"], "vinegar is a starter")
+				_check(not _store.discovery_lock(_item("reagent:Salt of Soda (powder)"))["locked"], "salt of soda is a starter")
+				# Leaving the Mineral Lab packs tray powder into the Found list.
+				var tray: Vessel3D = _bench.get_node("MineralLab/CrusherTray") as Vessel3D
+				tray.mixture.add_substance(SubstanceRegistry.index_of_id(&"calcite_powder"), 0.5, 293.15)
+				var packed: String = _store.pack_up_lab()
+				_check(_store.material_kg(&"calcite_powder") > 0.04 and tray.mixture.get_total_mass_kg() < 1e-4, "tray powder is packed up (%s)" % packed)
+				_check(_store.recent_found(6).size() >= 1, "packed powder shows in the Found list")
 				_beaker.mixture.clear()
 				_beaker.mixture.add_substance(SubstanceRegistry.index_of_id(&"water"), 4.0, 293.15)
 				_beaker.mixture.add_substance(SubstanceRegistry.index_of_id(&"acetic_acid"), 1.0, 293.15)

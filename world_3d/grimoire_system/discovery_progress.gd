@@ -2,7 +2,8 @@ class_name DiscoveryProgress
 extends Node
 ## Discovery mode: the lab starts nearly empty and grows with what the player
 ## finds out. A new game has a burner, a beaker and two flasks, water from the
-## tap, vinegar, spirit of wine and glowberries. Everything else on the
+## tap, vinegar, spirit of wine, salt of soda, honey, soap, glowberries and
+## emberberries, and a few coins. Everything else on the
 ## shelves is unknown until it has been made or found:
 ##   - crush rocks in the Mineral Lab for powders (a powder counts as found),
 ##   - dissolve or react those powders in the starter liquids to make new
@@ -17,7 +18,9 @@ extends Node
 signal learned(substance_id: StringName)
 
 const SAVE_PATH: String = "user://grimoire.cfg"
-const STARTER_SUBSTANCES: PackedStringArray = ["water", "acetic_acid", "ethanol", "glowberry_juice"]
+const STARTER_SUBSTANCES: PackedStringArray = ["water", "acetic_acid", "ethanol", "baking_soda", "honey_syrup", "soap_solution", "glowberry_juice", "emberberry_juice"]
+## Coins in the purse of a new lab (enough to buy two ingredients outright).
+const STARTER_COINS: int = 60
 ## A species is noticed once a vessel holds at least this much of it.
 const NOTICE_KG: float = 0.0008
 const SCAN_SECONDS: float = 0.5
@@ -32,7 +35,7 @@ const EQUIPMENT_STEPS: Array = [
 	[7, "StirTools/ArcaneWand", "Arcane wand"],
 ]
 ## Bench vessels kept in a new lab (the rest wait in the satchel, locked).
-const STARTER_VESSELS: PackedStringArray = ["Beaker", "ReagentVinegar", "FlaskSpirits", "FlaskMoonwater", "ReagentGlue"]
+const STARTER_VESSELS: PackedStringArray = ["Beaker", "ReagentVinegar", "FlaskSpirits", "FlaskHoney", "VialSoda", "BubbleBase", "FlaskMoonwater", "ReagentGlue"]
 ## Of those, the ones that start as empty glassware.
 const EMPTIED_VESSELS: PackedStringArray = ["FlaskMoonwater", "ReagentGlue"]
 
@@ -44,6 +47,7 @@ var active: bool = false
 var persist: bool = true
 var known: Dictionary = {}  # substance id (String) -> true
 var _scan_t: float = 0.0
+var _coins_given: bool = false
 var _hidden: Dictionary = {}  # node path -> original collision layer
 var _hint_cache: Dictionary = {}
 
@@ -254,6 +258,11 @@ func _apply_starter_kit() -> void:
 	for step: Array in EQUIPMENT_STEPS:
 		_set_equipment(bench.get_node_or_null(NodePath(String(step[1]))), false)
 	_unlock_equipment(false)
+	if not _coins_given and persist and GrimoireJournal.instance != null:
+		_coins_given = true
+		GrimoireJournal.instance.coins += STARTER_COINS
+		GrimoireJournal.instance.changed.emit()
+		_save()
 	if InventoryStore.instance != null:
 		InventoryStore.instance.apply_discovery_counts()
 
@@ -354,6 +363,9 @@ func _save() -> void:
 	var cfg: ConfigFile = ConfigFile.new()
 	cfg.load(SAVE_PATH)
 	cfg.set_value("discovery", "known", known.keys())
+	cfg.set_value("discovery", "starter_coins", _coins_given)
+	if GrimoireJournal.instance != null:
+		cfg.set_value("journal", "coins", GrimoireJournal.instance.coins)
 	cfg.save(SAVE_PATH)
 
 
@@ -361,5 +373,6 @@ func _load() -> void:
 	var cfg: ConfigFile = ConfigFile.new()
 	if cfg.load(SAVE_PATH) != OK:
 		return
+	_coins_given = bool(cfg.get_value("discovery", "starter_coins", false))
 	for id: Variant in cfg.get_value("discovery", "known", []):
 		known[String(id)] = true

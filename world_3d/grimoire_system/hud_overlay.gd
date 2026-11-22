@@ -64,6 +64,8 @@ var _toasts: VBoxContainer
 var _help: PanelContainer
 var _coins: Label
 var _discoveries: Label
+var _found_box: VBoxContainer
+var _found_key: String = ""
 var _strike: Button
 var _station_buttons: Array[Button] = []
 var _shell: Control
@@ -668,6 +670,92 @@ func bottle(vessel: Vessel3D) -> void:
 		AudioDirector.play_ui(&"ui_error", -8.0)
 
 
+## Found list (bottom left): the newest stored powders and finds, one click
+## each. A click puts a scoop (or the stone) straight into the hand.
+const FOUND_ROWS: int = 6
+
+
+func _update_found() -> void:
+	var store: InventoryStore = InventoryStore.instance
+	if store == null:
+		return
+	if _found_box == null:
+		_found_box = VBoxContainer.new()
+		_found_box.anchor_top = 1.0
+		_found_box.anchor_bottom = 1.0
+		_found_box.offset_left = 18
+		_found_box.offset_right = 262
+		_found_box.offset_bottom = -30
+		_found_box.grow_vertical = Control.GROW_DIRECTION_BEGIN
+		_found_box.alignment = BoxContainer.ALIGNMENT_END
+		_found_box.add_theme_constant_override(&"separation", 4)
+		_found_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_shell.add_child(_found_box)
+	var rows: Array[Dictionary] = store.recent_found(FOUND_ROWS)
+	var key: String = ""
+	for item: Dictionary in rows:
+		key += "%s:%s:%s|" % [item["id"], item["count"], item.get("detail", "")]
+	if key == _found_key:
+		return
+	_found_key = key
+	for child: Node in _found_box.get_children():
+		child.queue_free()
+	_found_box.visible = not rows.is_empty()
+	if rows.is_empty():
+		return
+	var head: Label = CosmicTheme.label("✦ Found  ·  click to use", 14, CosmicTheme.STARLIGHT_GOLD)
+	head.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var head_bg: StyleBoxFlat = CosmicTheme.flat(Color(CosmicTheme.DEEP, 0.85), Color(CosmicTheme.STARLIGHT_GOLD, 0.4), 1, 10, 4)
+	head_bg.content_margin_left = 10
+	head.add_theme_stylebox_override(&"normal", head_bg)
+	_found_box.add_child(head)
+	for item: Dictionary in rows:
+		var b: Button = Button.new()
+		var material: bool = item.has("kg")
+		var amount: String = ("%.0f g" % (float(item["kg"]) * 1000.0)) if material else ("×%d" % int(item["count"]))
+		b.text = "%s   %s" % [item["label"], amount]
+		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		b.clip_text = true
+		b.custom_minimum_size = Vector2(244, 32)
+		b.focus_mode = Control.FOCUS_NONE
+		b.icon = _swatch(item["color"] as Color)
+		b.tooltip_text = ("Click: a scoop of %s goes into your hand. Hold it over a vessel and click to tip it in." if material else "Click: %s goes into your hand.") % item["label"]
+		CosmicTheme.style_button(b, CosmicTheme.PRISM_CYAN if material else CosmicTheme.STARLIGHT_GOLD)
+		b.add_theme_font_size_override(&"font_size", 14)
+		var id: String = String(item["id"])
+		b.pressed.connect(func() -> void:
+			if InventoryStore.instance != null and InventoryStore.instance.take_to_hand(id) == null:
+				show_toast(InventoryStore.instance.last_message, &"info"))
+		_found_box.add_child(b)
+	if store.recent_found(FOUND_ROWS + 1).size() > FOUND_ROWS:
+		var more: Label = CosmicTheme.label("more in the satchel (Finds, Materials)", 12, Color(0.75, 0.72, 0.9))
+		more.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_found_box.add_child(more)
+
+
+var _swatches: Dictionary = {}
+
+
+## Small round colour dot for a Found row.
+func _swatch(color: Color) -> Texture2D:
+	var c: Color = Color(color.r, color.g, color.b, 1.0)
+	var k: String = c.to_html(false)
+	if not _swatches.has(k):
+		var g: Gradient = Gradient.new()
+		g.set_color(0, c.lightened(0.25))
+		g.set_color(1, Color(c.r, c.g, c.b, 0.0))
+		g.add_point(0.8, c)
+		var tex: GradientTexture2D = GradientTexture2D.new()
+		tex.gradient = g
+		tex.fill = GradientTexture2D.FILL_RADIAL
+		tex.fill_from = Vector2(0.5, 0.5)
+		tex.fill_to = Vector2(1.0, 0.5)
+		tex.width = 18
+		tex.height = 18
+		_swatches[k] = tex
+	return _swatches[k]
+
+
 ## "✦ 3 found · Stove in 1 more": how far along the lab is.
 func _update_discoveries() -> void:
 	var dp: DiscoveryProgress = DiscoveryProgress.instance
@@ -693,6 +781,7 @@ func _process(delta: float) -> void:
 	if GrimoireJournal.instance != null:
 		_coins.text = "◉ %d" % GrimoireJournal.instance.coins
 	_update_discoveries()
+	_update_found()
 	var hint: String = grabber.assist_hint() if grabber != null else ""
 	if _assist_hint.text != hint:
 		_assist_hint.text = hint

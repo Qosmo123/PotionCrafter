@@ -552,6 +552,7 @@ func store_find(rock: Rock3D) -> String:
 			"cut_quality": rock.cut_quality, "mass_kg": rock.mass_kg}
 		_insert_sorted(item)
 	item["count"] = int(item["count"]) + 1
+	item["stamp"] = Time.get_ticks_msec()
 	item["cut_quality"] = maxf(float(item["cut_quality"]), rock.cut_quality)
 	if GrimoireJournal.instance != null:
 		GrimoireJournal.instance.record_find(m)
@@ -576,6 +577,7 @@ func store_contents(vessel: Vessel3D) -> String:
 			continue
 		var item: Dictionary = _material_item(s)
 		item["kg"] = float(item["kg"]) + kg
+		item["stamp"] = Time.get_ticks_msec()
 		_refresh_material(item)
 		total_kg += kg
 		if parts.size() < 3:
@@ -637,6 +639,74 @@ func find_count(mineral_id: StringName) -> int:
 		if String(item["id"]).begins_with("find:%s:" % mineral_id):
 			n += int(item["count"])
 	return n
+
+
+## Leaving the Mineral Lab packs up what was made there: powder left in the
+## crusher and sifter trays is kept by weight and loose finds lying on the lab
+## bench go into the Finds tab, so they are ready to use at the other benches.
+## (The cabinet still works for putting things away by hand.)
+var auto_pack: bool = true
+var _pack_station: int = 0
+
+
+func _process(_delta: float) -> void:
+	var cam: LabCamera3D = LabCamera3D.instance
+	if cam == null or cam.station == _pack_station:
+		return
+	var left: int = _pack_station
+	_pack_station = cam.station
+	if auto_pack and left == MINERAL_LAB_STATION:
+		pack_up_lab()
+
+
+## Store tray powders and resting finds at the Mineral Lab. Returns a summary
+## ("" when there was nothing to keep).
+func pack_up_lab() -> String:
+	var bench: Node = get_parent()
+	var lab: Node3D = bench.get_node_or_null(^"MineralLab") as Node3D if bench != null else null
+	if lab == null:
+		return ""
+	var parts: PackedStringArray = PackedStringArray()
+	for child: Node in lab.get_children():
+		var tray: Vessel3D = child as Vessel3D
+		if tray == null or (grabber != null and grabber.held_body == tray):
+			continue
+		var kept: String = store_contents(tray)
+		if kept != "":
+			parts.append(kept)
+	var finds: int = 0
+	for node: Node in bench.find_children("*", "Rock3D", true, false):
+		var rock: Rock3D = node as Rock3D
+		if rock == null or rock.is_queued_for_deletion() or not is_find(rock) or rock.freeze:
+			continue
+		if grabber != null and grabber.held_body == rock:
+			continue
+		if absf(rock.global_position.x - lab.global_position.x) > 1.6 or rock.linear_velocity.length() > 0.3:
+			continue
+		store_find(rock)
+		finds += 1
+	if finds > 0:
+		parts.append("%d find%s" % [finds, "" if finds == 1 else "s"])
+	if parts.is_empty():
+		return ""
+	var text: String = ", ".join(parts)
+	changed.emit()
+	if GrimoireJournal.instance != null:
+		GrimoireJournal.instance.toast.emit("Packed into your satchel: %s. They are in the Found list, bottom left" % text, &"discovery")
+	return text
+
+
+## Stored finds and materials, newest first (for the HUD's Found list).
+func recent_found(limit: int) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for item: Dictionary in items:
+		var cat: int = int(item["category"])
+		if (cat == Category.FINDS or cat == Category.MATERIALS) and int(item["count"]) > 0:
+			out.append(item)
+	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a.get("stamp", 0)) > int(b.get("stamp", 0)))
+	if out.size() > limit:
+		out.resize(limit)
+	return out
 
 
 func _unhandled_input(event: InputEvent) -> void:

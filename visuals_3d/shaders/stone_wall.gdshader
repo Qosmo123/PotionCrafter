@@ -24,7 +24,7 @@ uniform float cosmic_strength = 0.0;
 uniform vec3 nebula_a : source_color = vec3(0.45, 0.2, 0.9);
 uniform vec3 nebula_b : source_color = vec3(0.1, 0.7, 0.85);
 uniform vec3 star_color : source_color = vec3(1.0, 0.9, 0.65);
-uniform float star_cell_meters = 0.22;
+uniform float star_cell_meters = 0.17;
 
 varying vec3 world_pos;
 varying vec3 world_normal;
@@ -48,7 +48,7 @@ vec2 star_pos(vec2 cell) {
 }
 
 float star_here(vec2 cell) {
-	return step(0.45, hash12(cell + 3.3));
+	return step(0.3, hash12(cell + 3.3));
 }
 
 float seg_dist(vec2 p, vec2 a, vec2 b) {
@@ -111,18 +111,18 @@ void fragment() {
 				float mag = 0.35 + 0.65 * hash12(c + 8.1);
 				float twinkle = 0.6 + 0.4 * sin(TIME * (0.6 + 1.8 * hash12(c + 1.7)) + 6.283 * hash12(c + 4.4));
 				float d = length(q - s);
-				stars += here * mag * twinkle * (smoothstep(0.06, 0.0, d) + 0.22 * smoothstep(0.26, 0.0, d));
+				stars += here * mag * twinkle * (smoothstep(0.05, 0.0, d) + 0.1 * smoothstep(0.2, 0.0, d));
 				vec2 cr = c + vec2(1.0, 0.0);
-				lines += here * star_here(cr) * step(0.55, hash12(c + 12.9)) * smoothstep(0.014, 0.0, seg_dist(q, s, star_pos(cr)));
+				lines += here * star_here(cr) * step(0.55, hash12(c + 12.9)) * smoothstep(0.012, 0.0, seg_dist(q, s, star_pos(cr)));
 				vec2 cu = c + vec2(0.0, 1.0);
-				lines += here * star_here(cu) * step(0.7, hash12(c + 27.3)) * smoothstep(0.014, 0.0, seg_dist(q, s, star_pos(cu)));
+				lines += here * star_here(cu) * step(0.7, hash12(c + 27.3)) * smoothstep(0.012, 0.0, seg_dist(q, s, star_pos(cu)));
 			}
 		}
 		lines *= 0.55 + 0.45 * sin(TIME * 0.35 + macro * 9.0);
 		float cloud = smoothstep(0.38, 0.9, vnoise(p * 0.9 + vec2(TIME * 0.02, 0.0)) * 0.7 + vnoise(p * 2.6 - vec2(0.0, TIME * 0.015)) * 0.3);
 		vec3 nebula = mix(nebula_a, nebula_b, vnoise(p * 0.6 + 11.0 + TIME * 0.01)) * cloud;
 		float rise = smoothstep(0.2, 1.1, world_pos.y);
-		EMISSION = cosmic_strength * rise * (star_color * stars * 3.2 + mix(star_color, nebula_b, 0.6) * lines * 0.7 + nebula * 0.4);
+		EMISSION = cosmic_strength * rise * (star_color * stars * 5.0 + mix(star_color, nebula_b, 0.6) * lines * 0.9 + nebula * 0.3);
 		col = mix(col, col * (0.75 + nebula * 1.4), cloud * 0.5 * min(cosmic_strength, 1.0));
 	}
 	ALBEDO = col;

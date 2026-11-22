@@ -7,10 +7,13 @@ extends Node3D
 
 ## Station centres along the bench (Potion Bench, Mineral Lab, Science Bench).
 @export var station_x_meters: PackedFloat32Array = PackedFloat32Array([0.0, 3.0, 6.0])
-@export var mote_count: int = 520
+@export var mote_count: int = 800
 @export var violet: Color = Color(0.62, 0.42, 1.0)
 @export var cyan: Color = Color(0.35, 0.85, 1.0)
 @export var accent_energy: float = 0.7
+@export var aurora_strength: float = 0.4
+
+const AURORA_SHADER: Shader = preload("res://visuals_3d/shaders/aurora_veil.gdshader")
 
 
 func _ready() -> void:
@@ -19,6 +22,7 @@ func _ready() -> void:
 	for x: float in station_x_meters:
 		_accent(Vector3(x - 1.1, 1.75, 0.35), violet, accent_energy)
 		_accent(Vector3(x + 1.1, 1.55, 0.55), cyan, accent_energy * 0.75)
+		_aurora(x, float(station_x_meters.find(x)))
 	_build_motes()
 
 
@@ -33,6 +37,23 @@ func _accent(at: Vector3, color: Color, energy: float, range_m: float = 2.6) -> 
 	light.shadow_enabled = false
 	light.light_volumetric_fog_energy = 0.0
 	add_child(light)
+
+
+## A curtain of aurora light hanging just in front of the wall.
+func _aurora(x: float, seed_value: float) -> void:
+	var quad: QuadMesh = QuadMesh.new()
+	quad.size = Vector2(3.0, 1.5)
+	var mat: ShaderMaterial = ShaderMaterial.new()
+	mat.shader = AURORA_SHADER
+	mat.set_shader_parameter(&"seed", seed_value * 3.7 + 1.0)
+	mat.set_shader_parameter(&"strength", aurora_strength)
+	quad.material = mat
+	var veil: MeshInstance3D = MeshInstance3D.new()
+	veil.name = "Aurora%d" % int(seed_value)
+	veil.mesh = quad
+	veil.position = Vector3(x, 1.85, -0.78)
+	veil.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(veil)
 
 
 func _build_motes() -> void:
@@ -84,7 +105,7 @@ func _build_motes() -> void:
 	process.color_ramp = life_tex
 	motes.process_material = process
 	var quad: QuadMesh = QuadMesh.new()
-	quad.size = Vector2(0.007, 0.007)
+	quad.size = Vector2(0.009, 0.009)
 	var mat: StandardMaterial3D = StandardMaterial3D.new()
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA

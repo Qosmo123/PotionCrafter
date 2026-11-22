@@ -16,6 +16,9 @@ uniform float wear = 1.0;
 // Front edge of the bench in world z (where hands and sleeves wear it).
 uniform float front_edge_z = 0.6;
 
+// Star specks inlaid in the bench top: sparse, slowly twinkling.
+uniform float star_inlay = 0.0;
+
 varying vec3 world_pos;
 varying vec3 world_normal;
 
@@ -124,6 +127,17 @@ void fragment() {
 	vec2 nd = p - nail_c;
 	float nail = 1.0 - smoothstep(0.0028, 0.0036, length(vec2(abs(nd.x) - 0.04, nd.y)));
 	base = mix(base, vec3(0.12, 0.11, 0.1), nail);
+	if (star_inlay > 0.0 && world_normal.y > 0.5) {
+		vec2 sq = world_pos.xz / 0.07;
+		vec2 sc = floor(sq);
+		float present = step(0.8, hash12(sc + 5.5));
+		vec2 sp2 = sc + 0.25 + 0.5 * vec2(hash12(sc + 1.3), hash12(sc + 9.1));
+		float sd = length(sq - sp2);
+		float tw = 0.5 + 0.5 * sin(TIME * (0.5 + 1.5 * hash12(sc + 2.2)) + 6.283 * hash12(sc + 7.7));
+		float speck = present * tw * (smoothstep(0.07, 0.0, sd) + 0.2 * smoothstep(0.3, 0.0, sd));
+		vec3 speck_col = mix(vec3(1.0, 0.85, 0.5), vec3(0.45, 0.85, 1.0), step(0.5, hash12(sc + 3.9)));
+		EMISSION = speck_col * speck * 1.6 * star_inlay;
+	}
 	ALBEDO = base;
 	METALLIC = nail * 0.8;
 	NORMAL_MAP = normalize(vec3(-hx / e * 0.002 * bump_strength, -hy / e * 0.002 * bump_strength, 1.0)) * 0.5 + 0.5;
