@@ -113,7 +113,7 @@ static func under(body: Node, x: float) -> MachineIntake:
 ## The intake under a carried `body` that won't take it (for a hint), or null.
 static func refusing(body: Node, x: float) -> MachineIntake:
 	for intake: MachineIntake in all_intakes:
-		if not intake.is_inside_tree() or intake.wants == "" or intake.takes(body) or body is MachineHandle3D:
+		if not intake.is_inside_tree() or intake.wants == "" or intake.takes(body) or body is MachineHandle3D or body is StirTool3D or body == intake.get_parent():
 			continue
 		if absf(intake.drop_world().x - x) < 0.1:
 			return intake
@@ -160,7 +160,7 @@ func _physics_process(delta: float) -> void:
 			continue
 		if not takes(rb):
 			# Never the machine's own parts (crank handle, shaker).
-			if wants != "" and rb.global_position.y < global_position.y and not rb is MachineHandle3D and not get_parent().is_ancestor_of(rb):
+			if wants != "" and rb.global_position.y < global_position.y and not rb is MachineHandle3D and not rb is StirTool3D and not get_parent().is_ancestor_of(rb):
 				_refuse(rb)
 			continue
 		if not on_catch.is_valid() and rb.global_position.distance_to(drop_world()) < 0.03:

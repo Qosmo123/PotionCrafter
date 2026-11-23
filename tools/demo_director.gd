@@ -271,6 +271,7 @@ func _mortar(bench: Node) -> void:
 	if _frames >= 2:
 		pestle.freeze = true
 		pestle.global_transform = Transform3D(Basis(Vector3.BACK, deg_to_rad(-28.0)), mortar.global_transform * Vector3(0.03, 0.075, 0.0))
+		mortar.set("_loupe_hold_s", 1.0)
 
 
 func _powder(bench: Node) -> void:

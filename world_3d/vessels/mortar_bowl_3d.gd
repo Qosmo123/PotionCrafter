@@ -41,6 +41,12 @@ var _rock_start_kg: Dictionary = {}
 var _caption: WorldPill
 var _sparks: GPUParticles3D
 var _told: bool = false
+## Seconds the top-down loupe stays up after the last grinding stroke.
+var _loupe_hold_s: float = 0.0
+## Blows struck with the pestle (pounding).
+var pound_count: int = 0
+static var _loupe: FacetLoupe = null
+var _loupe_shown: bool = false
 
 
 func _enter_tree() -> void:
@@ -69,6 +75,10 @@ func _ready() -> void:
 	intake.catch_dx_meters = 0.06
 	intake.wants = "small rocks and crystals"
 	intake.drop_note = "Click to drop it in the mortar, then grind it with the pestle"
+	# A stone worth selling says so before it is dropped in to be ground up.
+	intake.marker_text = func(b: Node) -> String:
+		var r: Rock3D = b as Rock3D
+		return ("grinds to powder · worth %d ◉" % r.value()) if r != null and InventoryStore.is_find(r) and r.value() >= 15 else "grind it here"
 	_caption = ClickSwitch.make_caption(self, Vector3(0.0, HEIGHT_METERS * 0.5 + 0.06, 0.06))
 	_caption.busy = func() -> bool: return grinding_level > 0.05
 	_build_sparks()
@@ -216,6 +226,48 @@ func _release_rocks() -> void:
 	rocks.clear()
 
 
+func _process(delta: float) -> void:
+	super._process(delta)
+	_update_loupe(delta)
+
+
+## A round top-down inset on the bowl while it is being ground (from the
+## side view the bowl hides what is in it).
+func _update_loupe(delta: float) -> void:
+	_loupe_hold_s = maxf(_loupe_hold_s - delta, 0.0)
+	if _loupe_hold_s <= 0.0:
+		if _loupe_shown:
+			_loupe_shown = false
+			if _loupe != null and is_instance_valid(_loupe):
+				_loupe.hide_loupe()
+		return
+	if _loupe == null or not is_instance_valid(_loupe):
+		_loupe = FacetLoupe.new()
+		get_tree().root.add_child(_loupe)
+	_loupe_shown = true
+	var title: String = "Mortar"
+	var progress: float = (mixture.grain_surface - 1.0) / (MixtureContainer.GRAIN_SURFACE_MAX - 1.0)
+	var tint: Color = CosmicTheme.PRISM_CYAN
+	if not rocks.is_empty() and is_instance_valid(rocks[0]):
+		var start_kg: float = float(_rock_start_kg.get(rocks[0].get_instance_id(), rocks[0].mass_kg))
+		title = rocks[0].mineral.display_name
+		progress = 1.0 - rocks[0].mass_kg / maxf(start_kg, 1e-6)
+		tint = CosmicTheme.STARLIGHT_GOLD
+	elif mixture.get_solid_mass_kg() > 1e-5:
+		title = Vessel3D.contents_tag_text(mixture, 0.0)
+	var detail: String = grind_stage()
+	if rocks.is_empty() and detail != "":
+		detail += "  ·  reacts x%.1f faster" % mixture.grain_surface
+	_loupe.show_overhead(self, progress, tint, title, detail, 0.19)
+
+
+## A blow with the pestle: a short, hard crushing stroke (and sparks).
+func pound() -> float:
+	pound_count += 1
+	AudioDirector.impact(&"stone", 1.6, global_position, 0.9)
+	return grind(0.012, 85.0, 1.0)
+
+
 func _physics_process(delta: float) -> void:
 	super._physics_process(delta)
 	grinding_level = maxf(grinding_level - delta * 2.5, 0.0)
@@ -246,6 +298,7 @@ func grind(stroke_m: float, force_n: float, pound_speed_m_s: float) -> float:
 	else:
 		return 0.0
 	player_touched = true
+	_loupe_hold_s = 1.6
 	mixture.add_heat(work_j * FRICTION_HEAT_FRACTION)
 	grinding_level = clampf(grinding_level + work_j * 2.0, 0.0, 1.0)
 	if pound_speed_m_s > SPARK_POUND_SPEED_M_S:

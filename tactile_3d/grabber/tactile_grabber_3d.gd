@@ -285,13 +285,17 @@ func _unhandled_input(event: InputEvent) -> void:
 				pass  # right-drag pans the view (LabCamera3D), even while carrying
 			MOUSE_BUTTON_WHEEL_UP:
 				if mb.pressed and held_body != null:
-					if pour_target != null:
+					if _try_pound():
+						pass
+					elif pour_target != null:
 						_pour_speed = clampf(_pour_speed * 1.25, 0.25, 3.0)
 					else:
 						_add_roll(wheel_tilt_step_rad)
 			MOUSE_BUTTON_WHEEL_DOWN:
 				if mb.pressed and held_body != null:
-					if pour_target != null:
+					if _try_pound():
+						pass
+					elif pour_target != null:
 						_pour_speed = clampf(_pour_speed / 1.25, 0.25, 3.0)
 					else:
 						_add_roll(-wheel_tilt_step_rad)
@@ -907,6 +911,15 @@ func _pour_into(vessel: Vessel3D, target: Vessel3D, dt: float) -> Variant:
 	return want
 
 
+## Pound with the pestle if it is grinding in the mortar. True if it was.
+func _try_pound() -> bool:
+	var pestle: Pestle3D = held_body as Pestle3D
+	if pestle == null or not (stir_target is MortarBowl3D):
+		return false
+	pestle.pound()
+	return true
+
+
 func _end_pour() -> void:
 	if pour_target != null or (_assist_candidate != null and held_body is Vessel3D):
 		_assist_candidate = null
@@ -936,8 +949,11 @@ func _stir_in(tool: StirTool3D, vessel: Vessel3D, dt: float, key_stir: bool) -> 
 	var tip_y: float = lerpf(bottom_y + 0.004, fill_y, 0.35)
 	var r: float = vessel.get_surface_radius_meters() * 0.45 * clampf(_stir_speed_rad_s / 3.0, 0.25, 1.0)
 	if vessel is MortarBowl3D:
-		# Grind round the floor of the bowl, over the rock or the powder.
-		tip_y = bottom_y + 0.009
+		# Grind round the floor of the bowl, over the rock or the powder; a
+		# pound (wheel or Space) lifts the pestle and brings it down hard.
+		if Input.is_key_pressed(KEY_SPACE):
+			_try_pound()
+		tip_y = bottom_y + 0.009 + ((tool as Pestle3D).pound_lift_meters() if tool is Pestle3D else 0.0)
 		r = MortarBowl3D.CAVITY_RADIUS_METERS * 0.42 * clampf(_stir_speed_rad_s / 3.0, 0.35, 1.0)
 	var axis_point: Vector3 = vessel.global_transform * Vector3(0.0, tip_y, 0.0)
 	var tip_target: Vector3 = axis_point + Vector3(cos(_stir_phase), 0.0, sin(_stir_phase)) * r
@@ -979,7 +995,7 @@ func _describe_assist(vessel: Vessel3D, tool: StirTool3D) -> String:
 		return "Click to set it %s" % (dock_seat["stand"] as SupportStand3D).seat_phrase()
 	if stir_target != null and stir_target is MortarBowl3D and tool is Pestle3D:
 		var stage: String = (stir_target as MortarBowl3D).grind_stage()
-		return "Grinding%s  ·  circle the mouse or hold S" % ((" · " + stage) if stage != "" else "")
+		return "Grinding%s  ·  circle the mouse or hold S  ·  wheel or Space: pound" % ((" · " + stage) if stage != "" else "")
 	if stir_target != null:
 		return "Stirring  ·  wiggle or circle the mouse, or hold S"
 	if swirling:

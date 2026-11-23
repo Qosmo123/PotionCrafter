@@ -11,8 +11,16 @@ const GRIND_FORCE_N: float = 22.0
 ## Extra force per m/s of downward speed (pounding).
 const POUND_FORCE_N_PER_M_S: float = 60.0
 
+## A pound in progress: the hand lifts the pestle for LIFT seconds, then
+## brings it down; the blow lands at STRIKE.
+const POUND_LIFT_S: float = 0.14
+const POUND_STRIKE_S: float = 0.22
+const POUND_TOTAL_S: float = 0.34
+const POUND_LIFT_METERS: float = 0.035
+
 var _prev_head_world: Vector3 = Vector3.ZERO
-var _grind_tick: int = 0
+var _pound_t: float = -1.0
+var _struck: bool = false
 
 
 func _init() -> void:
@@ -60,6 +68,24 @@ func _ready() -> void:
 	_prev_head_world = global_transform * get_tip_local()
 
 
+## Start a pound (ignored while one is under way). Returns true if started.
+func pound() -> bool:
+	if _pound_t >= 0.0:
+		return false
+	_pound_t = 0.0
+	_struck = false
+	return true
+
+
+## How far the hand should lift the pestle right now for the pound (m).
+func pound_lift_meters() -> float:
+	if _pound_t < 0.0:
+		return 0.0
+	if _pound_t < POUND_LIFT_S:
+		return POUND_LIFT_METERS * smoothstep(0.0, POUND_LIFT_S, _pound_t)
+	return POUND_LIFT_METERS * (1.0 - smoothstep(POUND_LIFT_S, POUND_STRIKE_S, _pound_t))
+
+
 ## Whether the head is inside the mortar's bowl.
 func head_in_bowl(bowl: MortarBowl3D) -> bool:
 	var local: Vector3 = bowl.global_transform.affine_inverse() * (global_transform * get_tip_local())
@@ -73,6 +99,14 @@ func _physics_process(delta: float) -> void:
 	var moved: Vector3 = head - _prev_head_world
 	_prev_head_world = head
 	var bowl: MortarBowl3D = MortarBowl3D.instance
+	if _pound_t >= 0.0:
+		_pound_t += delta
+		if not _struck and _pound_t >= POUND_STRIKE_S:
+			_struck = true
+			if bowl != null and head_in_bowl(bowl):
+				bowl.pound()
+		if _pound_t >= POUND_TOTAL_S:
+			_pound_t = -1.0
 	if bowl == null or not head_in_bowl(bowl):
 		return
 	var down_speed: float = maxf(-moved.y / maxf(delta, 1e-4), 0.0)

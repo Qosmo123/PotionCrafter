@@ -19,6 +19,8 @@ var _detail: Label
 var _alpha: float = 0.0
 var _target: Node3D = null
 var _orbit: float = 0.0
+var _overhead: bool = false
+var _overhead_height_m: float = 0.17
 
 
 func _ready() -> void:
@@ -69,10 +71,23 @@ func _ready() -> void:
 ## `progress` 0..1 fills the arc; `steadiness` 0..1 tints it green..pink.
 func show_on(stone: Node3D, progress: float, steadiness: float, title: String, detail: String) -> void:
 	_target = stone
+	_overhead = false
 	_mat.set_shader_parameter(&"progress", clampf(progress, 0.0, 1.0))
 	var col: Color = CosmicTheme.SUCCESS.lerp(CosmicTheme.WARNING, clampf((0.85 - steadiness) * 3.0, 0.0, 1.0))
 	col = col.lerp(CosmicTheme.PRISM_PINK, clampf((0.5 - steadiness) * 3.0, 0.0, 1.0))
 	_mat.set_shader_parameter(&"arc_color", col)
+	_title.text = title
+	_detail.text = detail
+
+
+## Show the loupe looking straight down on `target` (into a mortar) this
+## frame. `progress` 0..1 fills the arc in `tint`.
+func show_overhead(target: Node3D, progress: float, tint: Color, title: String, detail: String, height_m: float = 0.17) -> void:
+	_target = target
+	_overhead = true
+	_overhead_height_m = height_m
+	_mat.set_shader_parameter(&"progress", clampf(progress, 0.0, 1.0))
+	_mat.set_shader_parameter(&"arc_color", tint)
 	_title.text = title
 	_detail.text = detail
 
@@ -104,10 +119,16 @@ func _process(delta: float) -> void:
 			toward.y = 0.0
 			toward = toward.normalized() if toward.length() > 1e-3 else Vector3(0.0, 0.0, 1.0)
 		var side: Vector3 = toward.cross(Vector3.UP).normalized()
-		var dir: Vector3 = (toward + side * 0.45 * sin(_orbit)).normalized()
-		_cam.global_position = c + dir * 0.085 + Vector3(0.0, 0.055, 0.0)
-		_cam.look_at(c, Vector3.UP)
-		(_cam.attributes as CameraAttributesPractical).dof_blur_far_distance = _cam.global_position.distance_to(c) + 0.03
+		if _overhead:
+			# Straight down, leaning a touch toward the player; far edge up.
+			_cam.global_position = c + Vector3(0.0, _overhead_height_m, 0.0) + toward * 0.035
+			_cam.look_at(c, -toward)
+			(_cam.attributes as CameraAttributesPractical).dof_blur_far_distance = _overhead_height_m + 0.12
+		else:
+			var dir: Vector3 = (toward + side * 0.45 * sin(_orbit)).normalized()
+			_cam.global_position = c + dir * 0.085 + Vector3(0.0, 0.055, 0.0)
+			_cam.look_at(c, Vector3.UP)
+			(_cam.attributes as CameraAttributesPractical).dof_blur_far_distance = _cam.global_position.distance_to(c) + 0.03
 	# Lay out: upper right, clear of the top bar and toasts.
 	var vp: Vector2 = get_viewport().get_visible_rect().size
 	var scale_k: float = clampf(vp.y / 1080.0, 0.6, 1.4)

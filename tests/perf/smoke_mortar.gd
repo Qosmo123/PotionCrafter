@@ -23,6 +23,7 @@ var _t: int = 0
 var _phase: float = 0.0
 var _seen: Dictionary = {}
 var _powder_kg: float = 0.0
+var _pounds_before: int = 0
 
 
 func _initialize() -> void:
@@ -103,14 +104,36 @@ func _physics_process(_d: float) -> bool:
 			if _mortar.mixture.grain_surface > 2.5 or _t > int(30.0 * TICKS_PER_S):
 				_check(_mortar.mixture.grain_surface > 2.5, "grinding on makes it finer (%s, x%.2f surface, %.1f s)" % [_mortar.grind_stage(), _mortar.mixture.grain_surface, _t / TICKS_PER_S])
 				_check(_mortar.mixture.temperature_kelvin > 293.0, "grinding warms the powder a little (%.2f K)" % _mortar.mixture.temperature_kelvin)
+				_check(MortarBowl3D._loupe != null and MortarBowl3D._loupe.is_showing(), "the top-down loupe shows what is in the bowl while grinding")
+				_next()
+		3:
+			# Pound through the hand: a wheel notch while grinding.
+			_circle(_over(_mortar, 0.06), 40.0)
+			if _t == 10:
+				_pounds_before = _mortar.pound_count
 				_mortar.ignition_source = false
-				_mortar.grind(0.01, 60.0, 1.2)
-				_check(_mortar.ignition_source, "a hard blow with the pestle strikes sparks")
+				var wheel: InputEventMouseButton = InputEventMouseButton.new()
+				wheel.button_index = MOUSE_BUTTON_WHEEL_DOWN
+				wheel.pressed = true
+				wheel.position = _grabber._pointer_screen
+				_grabber._unhandled_input(wheel)
+			if _mortar.ignition_source:
+				_seen["spark"] = true
+			if _t == 50:
+				_check(_mortar.pound_count == _pounds_before + 1, "a wheel notch while grinding pounds the pestle once")
+				_check(_seen.has("spark"), "and the blow strikes sparks")
+				_check(_grabber.stir_target == _mortar, "grinding carries on afterwards")
 				_grabber.release()
+				_next()
+		4:
+			# Let go in the bowl, the pestle stays there (it isn't thrown out).
+			if _t == 45:
+				var d: Vector3 = _pestle.global_position - _mortar.global_position
+				_check(Vector2(d.x, d.z).length() < 0.09 and _pestle.linear_velocity.length() < 0.5, "the pestle let go in the bowl rests there (%.3f m off)" % Vector2(d.x, d.z).length())
 				_pestle.global_position = _mortar.global_position + Vector3(0.2, 0.05, 0.1)
 				_beaker.mixture.clear()
 				_next()
-		3:
+		5:
 			if _t == 20:
 				_grabber.grab(_mortar)
 			if _t > 20:
