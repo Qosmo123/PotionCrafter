@@ -33,6 +33,8 @@ const HELP_TEXT: String = """[b][color=#F4D06F]Hands[/color][/b]
   Drop berries into vessels to burst them
   Bottle  ·  set a filled vessel in the cork & wax dish (or B while holding it): corked, sealed, labelled
   A golden shimmer means you're getting warm; hover the vessel for a hint
+  Distil  ·  fit the still head on a flask (hold it over the flask, click), set an empty glass under its arm, heat the flask: what boils first comes over first  ·  click the head to lift it off
+  Grind  ·  drop a small rock in the mortar, hold the pestle over it and circle the mouse (or S); wheel or Space pounds  ·  finer powder reacts faster
 
 [b][color=#F4D06F]Magic[/color][/b]
   Chalk  ·  click the chalk stick (or C), draw a closed shape on the bench  ·  click the sponge (or X) to wipe
@@ -53,7 +55,7 @@ const HELP_TEXT: String = """[b][color=#F4D06F]Hands[/color][/b]
   G  ·  Grimoire (learned recipes, formulas, cellar, commissions)
 
 [b][color=#F4D06F]View[/color][/b]
-  F5 graphics preset  ·  F11 fullscreen  ·  F3 lab readout  ·  H this help"""
+  F5 graphics preset  ·  F11 fullscreen  ·  F3 lab readout  ·  T a tip  ·  H this help"""
 
 @export var grabber: TactileGrabber3D
 @export var camera: Camera3D
@@ -330,7 +332,11 @@ func _ready() -> void:
 		journal.toast.connect(show_toast)
 		journal.changed.connect(_refresh_pin)
 		_refresh_pin.call_deferred()
-	show_toast.call_deferred("Welcome to the lab. Press H for controls, G for your Grimoire.", &"info")
+	show_toast.call_deferred("Welcome to the lab. Press H for controls, G for your Grimoire, T for a tip.", &"info")
+	var tips: LabTips = LabTips.new()
+	tips.name = &"LabTips"
+	tips.hud = self
+	add_child(tips)
 
 
 func _corner_button(text: String, offset_left: float, action: Callable, width: float = 150.0) -> void:
@@ -578,6 +584,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if key.keycode == KEY_H:
 		toggle_help()
+	elif key.keycode == KEY_T and LabTips.instance != null:
+		LabTips.instance.show_next()
 	elif key.keycode == KEY_R and LabCamera3D.instance != null and LabCamera3D.instance.station == 1:
 		load_next_rock()
 	elif key.keycode == KEY_B and grabber != null and grabber.held_body is Vessel3D:

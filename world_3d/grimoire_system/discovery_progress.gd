@@ -34,6 +34,7 @@ const EQUIPMENT_STEPS: Array = [
 	[3, "StirTools/WoodenSpoon", "Wooden spoon"],
 	[4, "StirTools/Whisk", "Whisk: froths and aerates"],
 	[5, "StirTools/SilverRod", "Silver rod: stirs with a chiral twist"],
+	[6, "Furniture/StillHead", "Still head: fit it on a flask and heat it to distil"],
 	[7, "StirTools/ArcaneWand", "Arcane wand"],
 ]
 ## Bench vessels kept in a new lab (the rest wait in the satchel, locked).

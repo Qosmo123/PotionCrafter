@@ -155,6 +155,8 @@ var _marked: Node3D = null
 static var _target_mat: ShaderMaterial = null
 ## The tap the held vessel is being filled at (held under its spout).
 var tap_target: WaterTap3D = null
+## The vessel a held still head would be fitted on.
+var fit_target: Vessel3D = null
 var stir_target: Vessel3D = null
 var swirling: bool = false
 var _assist_candidate: Vessel3D = null
@@ -383,6 +385,8 @@ func _request_pick(is_touch: bool) -> void:
 ## Put a body straight into the hand (Shift-click from the satchel). It then
 ## follows the pointer through the same spring-damper as a normal pick.
 func grab(body: RigidBody3D) -> void:
+	if body is StillHead3D and (body as StillHead3D).flask != null:
+		(body as StillHead3D).unfit()
 	if body == null or body.freeze:
 		return
 	held_body = body
@@ -400,6 +404,13 @@ func put_down() -> void:
 	if held_body == null:
 		return
 	var vessel: Vessel3D = held_body as Vessel3D
+	if held_body is StillHead3D:
+		var head: StillHead3D = held_body as StillHead3D
+		var on: Vessel3D = head.fit_candidate()
+		release()
+		if on != null:
+			head.fit_on(on)
+		return
 	if vessel == null and not (held_body is StirTool3D):
 		var body: RigidBody3D = held_body
 		var intake: MachineIntake = MachineIntake.under(body, body.global_position.x)
@@ -497,6 +508,7 @@ func _physics_process(_delta: float) -> void:
 		dock_seat = {}
 		pour_candidate = null
 		intake_target = null
+		fit_target = null
 		_mark_target(null)
 		SupportStand3D.update_hints(null, {}, 1.0 / float(Engine.physics_ticks_per_second))
 		MachineIntake.update_markers(null, null)
@@ -524,7 +536,7 @@ func _physics_process(_delta: float) -> void:
 	if held_body == null:
 		return
 	_update_machine_hints()
-	_mark_target(pour_target if pour_target != null else pour_candidate)
+	_mark_target(pour_target if pour_target != null else (pour_candidate if pour_candidate != null else fit_target))
 	_drive_linear()
 	if not (held_body.has_method(&"wants_free_rotation") and held_body.call(&"wants_free_rotation")):
 		_drive_angular()
@@ -537,6 +549,8 @@ func _do_pick() -> void:
 	_pick_ray.target_position = ray
 	_pick_ray.force_raycast_update()
 	var body: RigidBody3D = _pick_ray.get_collider() as RigidBody3D
+	if body is StillHead3D and (body as StillHead3D).flask != null:
+		(body as StillHead3D).unfit()  # lift a fitted head off its flask
 	if body == null:
 		# Inflate the pick hull so small stoppers/vials are easy to grab:
 		# a 48 dp target for touch, a few pixels of slack for the mouse.
@@ -784,7 +798,7 @@ func _update_assists(cursor: Vector3, dt: float) -> Variant:
 	var circling: bool = absf(turn_rad_s) > SWIRL_TURN_THRESHOLD_RAD_S and wiggle_px_s > 60.0
 	# Tap: an open vessel held near a tap's spout is brought under it to fill.
 	tap_target = null
-	if vessel != null and vessel.open_top and not vessel.sealed and _assist_armed:
+	if vessel != null and vessel.open_top and not vessel.sealed and vessel.still_head == null and _assist_armed:
 		for tap: WaterTap3D in WaterTap3D.all_taps:
 			var spout: Vector3 = tap.spout_world()
 			if absf(spout.x - cursor.x) < 0.07 and cursor.y > tap.global_position.y + 0.06:
@@ -846,7 +860,7 @@ func _pick_assist_target(cursor_x: float, current: Vessel3D, for_stir: bool) -> 
 	for v: Vessel3D in Vessel3D.all_vessels:
 		if v == held_body or v.mixture == null or not v.is_inside_tree() or v.freeze and v.freeze_mode == RigidBody3D.FREEZE_MODE_KINEMATIC:
 			continue
-		if not v.open_top or v.sealed or v.global_basis.y.y < 0.8 or v == _assist_suppressed:
+		if not v.open_top or v.sealed or v.still_head != null or v.global_basis.y.y < 0.8 or v == _assist_suppressed:
 			continue
 		if for_stir and v.mixture.get_liquid_volume_m3() <= 1e-6 and not (v is MortarBowl3D and held_body is Pestle3D):
 			continue
@@ -1212,7 +1226,14 @@ func _start_pour(target: Vessel3D) -> void:
 ## machine hopper, machine handles, the hammer.
 func _update_machine_hints() -> void:
 	intake_target = null
-	if held_body is Rock3D:
+	fit_target = null
+	if held_body is StillHead3D:
+		fit_target = (held_body as StillHead3D).fit_candidate()
+		if fit_target != null:
+			_assist_note = "Click to fit it on the %s  ·  then heat it: what boils off drips from the arm" % Vessel3D.short_name(fit_target)
+		else:
+			_assist_note = "Hold it over a flask and click to fit it (set an empty vessel under the arm)"
+	elif held_body is Rock3D:
 		intake_target = MachineIntake.under(held_body, held_body.global_position.x)
 		var rock: Rock3D = held_body as Rock3D
 		if intake_target != null:

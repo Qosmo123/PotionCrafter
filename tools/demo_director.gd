@@ -173,6 +173,8 @@ func _process(_delta: float) -> void:
 		_powder(bench)
 	if _args.has("mortar"):
 		_mortar(bench)
+	if _args.has("still"):
+		_still(bench)
 	if _args.has("scale") and _frames == 20 and TradersScale3D.instance != null:
 		var gem_m: MineralData = Rock3D.get_mineral("amethyst")
 		var gem: Rock3D = Rock3D.spawn(bench, gem_m, TradersScale3D.instance.pan_world() + Vector3(0.0, 0.03, 0.0), gem_m.typical_mass_kg * 1.5)
@@ -272,6 +274,37 @@ func _mortar(bench: Node) -> void:
 		pestle.freeze = true
 		pestle.global_transform = Transform3D(Basis(Vector3.BACK, deg_to_rad(-28.0)), mortar.global_transform * Vector3(0.03, 0.075, 0.0))
 		mortar.set("_loupe_hold_s", 1.0)
+
+
+## Distilling: watered spirit on the burner under the still head; the spirit
+## comes over and drips from the arm into a beaker.
+func _still(bench: Node) -> void:
+	var flask: Vessel3D = bench.get_node("Vessels/FlaskMoonwater") as Vessel3D
+	var beaker: Vessel3D = bench.get_node("Vessels/Beaker") as Vessel3D
+	var head: StillHead3D = bench.get_node("Furniture/StillHead") as StillHead3D
+	var burner: Burner3D = bench.get_node("Stands/Burner") as Burner3D
+	if _frames == 2:
+		flask.mixture.clear()
+		flask.mixture.add_substance(_reg(&"water"), 2.0, 349.0)
+		flask.mixture.add_substance(_reg(&"ethanol"), 0.6, 349.0)
+		flask.freeze_mode = RigidBody3D.FREEZE_MODE_KINEMATIC
+		flask.freeze = true
+		flask.global_position = burner.global_position + Vector3(0.0, burner.gauze_height_meters + 0.106, 0.0)
+		beaker.mixture.clear()
+		beaker.freeze = true
+		head.fit_on(flask)
+		var cam: LabCamera3D = bench.get_node("Camera3D") as LabCamera3D
+		cam.set("_zoom_target", 0.25)
+		cam.set("_pan_target", Vector2(0.22, 0.0))
+		cam.set("_pan", Vector2(0.22, 0.0))
+	if _frames == 3:
+		beaker.global_position = Vector3(head.arm_tip_world().x, beaker.global_position.y, beaker.global_position.z)
+	if _frames >= 2:
+		if not burner.lit:
+			burner.set_level(3)
+		# Keep the flask just at the spirit's boil (the render runs many ticks a frame).
+		if flask.mixture.moles[_reg(&"ethanol")] < 0.25:
+			flask.mixture.add_substance(_reg(&"ethanol"), 0.2, flask.mixture.temperature_kelvin)
 
 
 func _powder(bench: Node) -> void:

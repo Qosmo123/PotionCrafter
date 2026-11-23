@@ -329,6 +329,7 @@ static func toast_color(kind: StringName) -> Color:
 		&"bottle": return PRISM_CYAN
 		&"coins": return STARLIGHT_GOLD
 		&"warning": return WARNING
+		&"tip": return PRISM_CYAN.lerp(TEXT, 0.35)
 	return TEXT_DIM
 
 

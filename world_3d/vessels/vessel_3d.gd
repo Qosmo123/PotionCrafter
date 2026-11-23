@@ -73,6 +73,9 @@ var is_boiling: bool = false
 var pour_rate_m3_s: float = 0.0
 var spilled_mass_kg: float = 0.0
 var vented_mass_kg: float = 0.0
+## A still head fitted on the mouth: vapour goes into its condenser instead of
+## the room (null = open to the air).
+var still_head: StillHead3D = null
 var capacity_m3: float = 0.0
 ## 0..1 surface agitation (slosh energy, stream impacts); drives ripples.
 var agitation: float = 0.0
@@ -225,8 +228,13 @@ func _physics_process(delta: float) -> void:
 	field_catalysis = 1.0
 	is_boiling = false
 	if open_top:
-		var vented_kg: float = mixture.vent_gas(1.0)
-		vented_mass_kg += vented_kg
+		var vented_kg: float = 0.0
+		if still_head != null:
+			vented_kg = mixture.vent_gas_to(still_head.condenser, 1.0)
+			still_head.vapour_in_kg += vented_kg
+		else:
+			vented_kg = mixture.vent_gas(1.0)
+			vented_mass_kg += vented_kg
 		is_boiling = vented_kg > 0.0
 	_update_granular_state()
 	_spill_overflow()
@@ -351,6 +359,8 @@ static func parchment_texture() -> ImageTexture:
 ## Cork the vessel and stick a parchment label on it (name + grade). Returns
 ## true if it is now sealed. Calling again uncorks it.
 func toggle_seal() -> bool:
+	if still_head != null and not sealed:
+		return false
 	if sealed:
 		sealed = false
 		open_top = true
@@ -375,6 +385,15 @@ func toggle_seal() -> bool:
 	_label.set_text("%s\n%s" % [potion_name, PotionNamer.formula_for(mixture, 2)])
 	_set_label_category(label_category(mixture))
 	return true
+
+
+## A short name for the vessel in hints ("round flask", "beaker").
+static func short_name(v: Vessel3D) -> String:
+	if v == null:
+		return "vessel"
+	if v.profile != null and v.profile.vessel_name != "":
+		return v.profile.vessel_name.replace("_", " ")
+	return "vessel"
 
 
 func _build_label() -> void:
@@ -483,7 +502,7 @@ func get_inner_radius_at_local_y(y: float) -> float:
 ## Whether the held glass has anything that can be poured out (liquid, or a
 ## dry or damp powder).
 func can_pour_contents() -> bool:
-	if not open_top or sealed or mixture == null:
+	if not open_top or sealed or mixture == null or still_head != null:
 		return false
 	return mixture.get_liquid_volume_m3() > 1e-6 or (granular and mixture.get_solid_volume_m3() > 1e-6)
 

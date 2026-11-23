@@ -411,6 +411,13 @@ func vent_gas(fraction: float) -> float:
 	return _move_phase(null, Phase.GAS, clampf(fraction, 0.0, 1.0))
 
 
+## Send `fraction` of the gas phase into `dst` (a still head) instead of the
+## room. The vapour takes its latent heat along: mass and enthalpy are moved,
+## never made or lost. Returns the mass moved in kg.
+func vent_gas_to(dst: MixtureContainer, fraction: float) -> float:
+	return _move_phase(dst, Phase.GAS, clampf(fraction, 0.0, 1.0))
+
+
 ## Relax toward ambient through a thermal conductance (W/K), unconditionally
 ## stable (exponential integrator). Stirring speeds up exchange; swirl decays
 ## faster in viscous liquids. Returns the heat exchanged with the room in joules.

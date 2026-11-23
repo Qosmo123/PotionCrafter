@@ -355,7 +355,7 @@ func update_effects(vessel: Vessel3D, lip_world: Vector3, surface_world: Vector3
 	var steam_level: float = clampf((t - 330.0) / 40.0, 0.0, 1.0)
 	if vessel.is_boiling:
 		steam_level = 1.0
-	_steam.emitting = has_liquid and steam_level > 0.02 and vessel.open_top
+	_steam.emitting = has_liquid and steam_level > 0.02 and vessel.open_top and vessel.still_head == null
 	if _steam.emitting:
 		_steam.global_position = lip_world
 		_steam.amount_ratio = clampf(steam_level, 0.1, 1.0)
