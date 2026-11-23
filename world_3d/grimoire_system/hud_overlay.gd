@@ -53,6 +53,7 @@ const HELP_TEXT: String = """[b][color=#F4D06F]Hands[/color][/b]
 [b][color=#F4D06F]Books & storage[/color][/b]
   Tab / I  ·  Satchel (reagents, berries, glass, tools)
   G  ·  Grimoire (learned recipes, formulas, cellar, commissions)
+  S  ·  empty-handed, point at a vessel: its safety data sheet (with something in hand, S swirls, stirs or grinds)
 
 [b][color=#F4D06F]View[/color][/b]
   F5 graphics preset  ·  F11 fullscreen  ·  F3 lab readout  ·  T a tip  ·  H this help"""
@@ -592,12 +593,15 @@ func _unhandled_input(event: InputEvent) -> void:
 		bottle(grabber.held_body as Vessel3D)
 	elif key.keycode == KEY_B:
 		show_toast("Pick up a vessel first, then press B to cork and label it", &"warning")
+	elif key.keycode == KEY_S and grabber != null and grabber.held_body != null:
+		pass  # with something in hand, S swirls, stirs or grinds (the grabber reads it)
 	elif key.keycode == KEY_S and SafetySheetUI.instance != null and not SafetySheetUI.instance.is_open():
-		var target: Object = grabber.held_body if grabber != null and grabber.held_body != null else (_pick(get_viewport().get_mouse_position()) if camera != null else null)
+		var at: Vector2 = grabber.pointer_screen() if grabber != null else get_viewport().get_mouse_position()
+		var target: Object = _pick(at) if camera != null else null
 		if target is Vessel3D and (target as Vessel3D).mixture != null and (target as Vessel3D).mixture.get_total_mass_kg() > 1e-6:
 			SafetySheetUI.instance.open_for_vessel(target as Vessel3D)
 		else:
-			show_toast("Hold or point at a filled vessel, then press S for its safety data sheet", &"warning")
+			show_toast("Point at a filled vessel with an empty hand, then press S for its safety data sheet", &"warning")
 
 
 func _slam_held() -> void:

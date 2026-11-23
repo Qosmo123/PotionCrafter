@@ -60,6 +60,13 @@ func _click() -> void:
 	_grabber._unhandled_input(up)
 
 
+func _press_s() -> void:
+	var k: InputEventKey = InputEventKey.new()
+	k.keycode = KEY_S
+	k.pressed = true
+	(_bench.get_node("HudOverlay") as HudOverlay)._unhandled_input(k)
+
+
 func _total_kg() -> float:
 	return _flask.mixture.get_total_mass_kg() + _head.condenser.get_total_mass_kg() + _beaker.mixture.get_total_mass_kg() \
 		+ _head.vented_kg + _head.spilled_kg + _flask.vented_mass_kg + _flask.spilled_mass_kg + _beaker.vented_mass_kg + _beaker.spilled_mass_kg
@@ -130,6 +137,20 @@ func _physics_process(_d: float) -> bool:
 			if _t == 60:
 				_check(_grabber.held_body == _head and _head.flask == null and _flask.still_head == null, "clicking the fitted head lifts it off into the hand")
 				_check(_flask.can_pour_contents(), "and the flask pours again")
+				_grabber.release()
+				_grabber.grab(_flask)
+			if _t == 70:
+				# S with a filled glass in hand swirls it; it never opens the safety sheet.
+				_press_s()
+				_check(not SafetySheetUI.instance.is_open(), "S with a glass in hand doesn't open the safety sheet")
+				_grabber.release()
+			if _t == 90:
+				# Empty-handed and pointing at the flask, S opens it.
+				_grabber._pointer_screen = _camera.unproject_position(_flask.global_position)
+			if _t == 95:
+				_press_s()
+				_check(SafetySheetUI.instance.is_open(), "S empty-handed, pointing at the flask, opens its safety sheet")
+				SafetySheetUI.instance.close()
 				print("SMOKE %s (%d failures)" % ["PASS" if _failures == 0 else "FAIL", _failures])
 				quit(1 if _failures > 0 else 0)
 	return false

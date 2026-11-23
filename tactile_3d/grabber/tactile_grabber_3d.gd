@@ -1128,6 +1128,11 @@ func _set_hovered(body: RigidBody3D) -> void:
 
 
 ## One-line hint for the HUD about what the hands are doing.
+## Where the pointer is on screen (mouse or primary touch).
+func pointer_screen() -> Vector2:
+	return _pointer_screen
+
+
 func assist_hint() -> String:
 	return _assist_note if held_body != null else ""
 
